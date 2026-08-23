@@ -521,41 +521,7 @@ window.toggleTopNavSearchBar = function() {
   }
 };
 
-// INTERACTIVE EXPANDABLE CATEGORY DROPDOWN DRAWER (Muestra artículos destacados para llamar la atención)
-let openCategoryDrawerKey = null;
-
-window.toggleDropdownCategory = function(typeKey, btnEl) {
-  const drawer = document.getElementById('categoryDropdownDrawer');
-  const strip = document.getElementById('productTypeFilterStrip');
-
-  // If clicking currently open drawer or 'all', close it
-  if (openCategoryDrawerKey === typeKey || typeKey === 'all') {
-    openCategoryDrawerKey = null;
-    if (drawer) drawer.style.display = 'none';
-    activeCategoryFilter = 'all';
-    
-    if (strip) {
-      strip.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-      document.getElementById('btnType-all')?.classList.add('active');
-    }
-
-    updateStoreHeader();
-    renderProducts();
-    return;
-  }
-
-  // Open drawer for typeKey
-  openCategoryDrawerKey = typeKey;
-  activeCategoryFilter = typeKey;
-
-  // Highlight pill
-  if (strip) {
-    strip.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-    const targetBtn = btnEl || document.getElementById(`btnType-${typeKey}`);
-    if (targetBtn) targetBtn.classList.add('active');
-  }
-
-  // Get featured products for this category to catch attention!
+// INTERACTIVE EXPANDABLE CATEGORY DROPDOWN
 window.onCategoryDropdownSelectChange = function(typeKey) {
   activeCategoryFilter = typeKey || 'all';
 
