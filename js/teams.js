@@ -209,15 +209,43 @@ const SPORTS_CATALOG = [
     leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/f1.png",
     leagues: [
       {
-        league: "Fórmula 1",
+        league: "Fórmula 1 (Escuderías & Pilotos)",
         leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/f1.png",
         teams: [
           { id: "f1-redbull", name: "Red Bull Racing", logo: "https://upload.wikimedia.org/wikipedia/commons/a/aa/Red_Bull_Racing_logo.svg" },
           { id: "f1-ferrari", name: "Scuderia Ferrari", logo: "https://upload.wikimedia.org/wikipedia/en/d/dc/Scuderia_Ferrari_Logo.svg" },
           { id: "f1-mercedes", name: "Mercedes-AMG Petronas", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fb/Mercedes_AMG_Petronas_F1_Logo.svg" },
-          { id: "f1-mclaren", name: "McLaren", logo: "https://upload.wikimedia.org/wikipedia/commons/3/30/McLaren_racing_logo.svg" },
-          { id: "f1-astonmartin", name: "Aston Martin F1", logo: "https://upload.wikimedia.org/wikipedia/commons/9/91/Aston_Martin_Aramco_Cognizant_F1_Team_logo.svg" },
-          { id: "f1-checoperez", name: "Checo Pérez #11", logo: "https://upload.wikimedia.org/wikipedia/commons/a/aa/Red_Bull_Racing_logo.svg" }
+          { id: "f1-mclaren", name: "McLaren F1 Team", logo: "https://upload.wikimedia.org/wikipedia/commons/3/30/McLaren_racing_logo.svg" },
+          { id: "f1-astonmartin", name: "Aston Martin Aramco F1", logo: "https://upload.wikimedia.org/wikipedia/commons/9/91/Aston_Martin_Aramco_Cognizant_F1_Team_logo.svg" },
+          { id: "f1-alpine", name: "Alpine F1 Team", logo: "assets/dxt_logo.png" },
+          { id: "f1-williams", name: "Williams Racing", logo: "assets/dxt_logo.png" },
+          { id: "f1-haas", name: "Haas F1 Team", logo: "assets/dxt_logo.png" },
+          { id: "f1-sauber", name: "Stake F1 Team Kick Sauber / Audi", logo: "assets/dxt_logo.png" },
+          { id: "f1-rb", name: "Visa Cash App RB / AlphaTauri", logo: "assets/dxt_logo.png" },
+          { id: "f1-cadillac", name: "Cadillac Racing F1 / WEC", logo: "assets/dxt_logo.png" },
+          { id: "f1-checoperez", name: "Checo Pérez #11", logo: "https://upload.wikimedia.org/wikipedia/commons/a/aa/Red_Bull_Racing_logo.svg" },
+          { id: "f1-verstappen", name: "Max Verstappen #1", logo: "https://upload.wikimedia.org/wikipedia/commons/a/aa/Red_Bull_Racing_logo.svg" },
+          { id: "f1-hamilton", name: "Lewis Hamilton #44", logo: "assets/dxt_logo.png" },
+          { id: "f1-leclerc", name: "Charles Leclerc #16", logo: "assets/dxt_logo.png" },
+          { id: "f1-norris", name: "Lando Norris #4", logo: "assets/dxt_logo.png" },
+          { id: "f1-alonso", name: "Fernando Alonso #14", logo: "assets/dxt_logo.png" },
+          { id: "f1-colapinto", name: "Franco Colapinto #43", logo: "assets/dxt_logo.png" },
+          { id: "f1-senna", name: "Ayrton Senna Collection", logo: "assets/dxt_logo.png" }
+        ]
+      },
+      {
+        league: "Motorsport, WEC & GT Racing",
+        leagueLogo: "assets/dxt_logo.png",
+        teams: [
+          { id: "ms-cadillac", name: "Cadillac Racing", logo: "assets/dxt_logo.png" },
+          { id: "ms-porsche", name: "Porsche Penske Motorsport", logo: "assets/dxt_logo.png" },
+          { id: "ms-corvette", name: "Corvette Racing", logo: "assets/dxt_logo.png" },
+          { id: "ms-lamborghini", name: "Lamborghini Squadra Corse", logo: "assets/dxt_logo.png" },
+          { id: "ms-bmw", name: "BMW M Motorsport", logo: "assets/dxt_logo.png" },
+          { id: "ms-toyota", name: "Toyota Gazoo Racing", logo: "assets/dxt_logo.png" },
+          { id: "ms-ford", name: "Ford Performance", logo: "assets/dxt_logo.png" },
+          { id: "ms-nascar", name: "NASCAR Cup Series", logo: "assets/dxt_logo.png" },
+          { id: "ms-motogp", name: "MotoGP Oficial", logo: "assets/dxt_logo.png" }
         ]
       }
     ]
@@ -229,7 +257,7 @@ const SPORTS_CATALOG = [
     leagueLogo: "assets/dxt_logo.png",
     leagues: [
       {
-        league: "Accesorios",
+        league: "Accesorios & Ropa",
         leagueLogo: "assets/dxt_logo.png",
         teams: [
           { id: "cat-accesorios", name: "Accesorios Deportivos", logo: "assets/dxt_logo.png" },
@@ -251,8 +279,12 @@ const GENDER_DEPARTMENTS = [
 
 const PRODUCT_CATEGORIES = [
   { id: "jerseys", label: "👕 Jerseys Oficiales", icon: "👕" },
+  { id: "polos", label: "👔 Playeras Polo", icon: "👔" },
+  { id: "tshirts", label: "👕 Playeras Casuales", icon: "👕" },
   { id: "gorras", label: "🧢 Gorras & Hats", icon: "🧢" },
   { id: "chamarras", label: "🧥 Chamarras & Hoodies", icon: "🧥" },
+  { id: "chalecos", label: "🦺 Chalecos & Vests", icon: "🦺" },
+  { id: "pants", label: "👖 Pants & Shorts", icon: "👖" },
   { id: "calzado", label: "👟 Calzado Deportivo", icon: "👟" },
   { id: "balones", label: "🏈 Balones & Pelotas", icon: "🏈" },
   { id: "accesorios", label: "🎒 Accesorios & Gear", icon: "🎒" }
@@ -273,7 +305,7 @@ const STORE_BANK_DETAILS = {
   owner: "DXT SPORTS QRO / ALBERTO MUÑOZ",
   phoneWhatsApp: "524423376955",
   catalogVersion: "1.0",
-  lastUpdated: "2026-08-27"
+  lastUpdated: "2026-08-28"
 };
 
 // Full taxonomy breadcrumb lookup with official team/league logos (Exact & Prefix-Stripped Team ID Matching)
@@ -290,14 +322,14 @@ function getFullTaxonomy(teamId) {
   }
 
   const cleanId = teamId.toLowerCase().trim();
-  const strippedClean = cleanId.replace(/^(soc|nfl|nba|mlb|f1|cat)-/, '');
+  const strippedClean = cleanId.replace(/^(soc|nfl|nba|mlb|f1|ms|cat)-/, '');
 
   for (const s of SPORTS_CATALOG) {
     for (const l of s.leagues) {
       const team = l.teams.find(t => {
         const tid = t.id.toLowerCase();
         if (tid === cleanId) return true;
-        const strippedTid = tid.replace(/^(soc|nfl|nba|mlb|f1|cat)-/, '');
+        const strippedTid = tid.replace(/^(soc|nfl|nba|mlb|f1|ms|cat)-/, '');
         return strippedTid === strippedClean;
       });
       if (team) {
@@ -336,17 +368,28 @@ function getGenderLabel(genderId) {
   return g ? g.label : "👨 Caballero";
 }
 
+// Pure, clean years catalogue (NO parentheses clutter)
 const SEASONS_CATALOG = [
-  { id: "2025-2026", label: "2025-2026 (Fútbol)", isCurrent: true },
-  { id: "2024-2025", label: "2024-2025 (Fútbol)" },
-  { id: "2023-2024", label: "2023-2024 (Fútbol)" },
-  { id: "2022-2023", label: "2022-2023 (Fútbol)" },
-  { id: "2025", label: "2025 (F1 / NFL / NBA / MLB)" },
-  { id: "2024", label: "2024 (F1 / NFL / NBA / MLB)" },
-  { id: "2023", label: "2023 (F1 / NFL / NBA / MLB)" },
-  { id: "2022", label: "2022 (F1 / NFL / NBA / MLB)" },
-  { id: "2021", label: "2021 (F1 / NFL / NBA / MLB)" },
-  { id: "retro", label: "Retro / Clásico / Vintage" },
+  { id: "2026-2027", label: "2026-2027" },
+  { id: "2025-2026", label: "2025-2026", isCurrent: true },
+  { id: "2024-2025", label: "2024-2025" },
+  { id: "2023-2024", label: "2023-2024" },
+  { id: "2022-2023", label: "2022-2023" },
+  { id: "2021-2022", label: "2021-2022" },
+  { id: "2020-2021", label: "2020-2021" },
+  { id: "2026", label: "2026" },
+  { id: "2025", label: "2025" },
+  { id: "2024", label: "2024" },
+  { id: "2023", label: "2023" },
+  { id: "2022", label: "2022" },
+  { id: "2021", label: "2021" },
+  { id: "2020", label: "2020" },
+  { id: "2019", label: "2019" },
+  { id: "2018", label: "2018" },
+  { id: "2017", label: "2017" },
+  { id: "2016", label: "2016" },
+  { id: "2015", label: "2015" },
+  { id: "retro", label: "Retro / Vintage" },
   { id: "atemporal", label: "General / Atemporal" }
 ];
 

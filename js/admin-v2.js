@@ -371,44 +371,92 @@ window.saveNewLeague = function(e) {
 };
 
 window.openNewTeamModal = () => {
-  const leagueName = document.getElementById('prodLeague')?.value;
-  if (!leagueName) {
-    alert("Por favor selecciona primero una Liga.");
-    return;
+  let sportKey = document.getElementById('prodSport')?.value;
+  let leagueName = document.getElementById('prodLeague')?.value;
+  const catalog = window.SPORTS_CATALOG || SPORTS_CATALOG;
+
+  if (!sportKey && catalog.length > 0) {
+    document.getElementById('prodSport').value = catalog[0].sportKey;
+    onAdminSportChange();
+    sportKey = catalog[0].sportKey;
   }
+
+  const sportObj = catalog.find(s => s.sportKey === sportKey);
+  if (sportObj && (!leagueName || !sportObj.leagues.some(l => l.league === leagueName))) {
+    if (sportObj.leagues.length === 0) {
+      sportObj.leagues.push({ league: "General", leagueLogo: "assets/dxt_logo.png", teams: [] });
+    }
+    document.getElementById('prodLeague').value = sportObj.leagues[0].league;
+    onAdminLeagueChange();
+  }
+
   document.getElementById('newTeamModal').classList.add('active');
 };
 window.closeNewTeamModal = () => document.getElementById('newTeamModal').classList.remove('active');
 
 window.saveNewTeam = function(e) {
   e.preventDefault();
-  const sportKey = document.getElementById('prodSport')?.value;
-  const leagueName = document.getElementById('prodLeague')?.value;
+  const sportKey = document.getElementById('prodSport')?.value || 'general';
+  let leagueName = document.getElementById('prodLeague')?.value;
   const teamName = document.getElementById('newTeamName').value.trim();
   const logo = document.getElementById('newTeamLogo').value.trim() || 'assets/dxt_logo.png';
 
-  if (!sportKey || !leagueName || !teamName) return;
+  if (!teamName) return;
 
   const teamId = teamName.toLowerCase().replace(/[^a-z0-9]/g, '-');
   const catalog = window.SPORTS_CATALOG || SPORTS_CATALOG;
-  const sportObj = catalog.find(s => s.sportKey === sportKey);
-  const leagueObj = sportObj ? sportObj.leagues.find(l => l.league === leagueName) : null;
+  let sportObj = catalog.find(s => s.sportKey === sportKey) || catalog[0];
 
-  if (leagueObj) {
-    if (!leagueObj.teams.some(t => t.id === teamId)) {
-      leagueObj.teams.push({
-        id: teamId,
-        name: teamName,
-        logo: logo
-      });
+  if (sportObj) {
+    if (!leagueName || sportObj.leagues.length === 0) {
+      sportObj.leagues.push({ league: "General", leagueLogo: "assets/dxt_logo.png", teams: [] });
+      leagueName = "General";
+    }
+    let leagueObj = sportObj.leagues.find(l => l.league === leagueName) || sportObj.leagues[0];
+    if (leagueObj) {
+      if (!leagueObj.teams.some(t => t.id === teamId)) {
+        leagueObj.teams.push({
+          id: teamId,
+          name: teamName,
+          logo: logo
+        });
+      }
     }
   }
 
   onAdminLeagueChange();
-  document.getElementById('prodTeam').value = teamId;
+  if (document.getElementById('prodTeam')) document.getElementById('prodTeam').value = teamId;
   closeNewTeamModal();
   document.getElementById('newTeamForm').reset();
-  alert(`✅ Equipo "${teamName}" registrado exitosamente.`);
+  alert(`✅ Equipo "${teamName}" registrado y seleccionado exitosamente.`);
+};
+
+// Modal: Create New Category / Tipo
+window.openNewCategoryModal = () => document.getElementById('newCategoryModal').classList.add('active');
+window.closeNewCategoryModal = () => document.getElementById('newCategoryModal').classList.remove('active');
+
+window.saveNewCategory = function(e) {
+  e.preventDefault();
+  const name = document.getElementById('newCategoryName').value.trim();
+  const icon = document.getElementById('newCategoryIcon').value.trim() || '👕';
+  if (!name) return;
+
+  const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const categories = window.PRODUCT_CATEGORIES || PRODUCT_CATEGORIES;
+
+  if (!categories.some(c => c.id === id)) {
+    categories.push({
+      id: id,
+      label: `${icon} ${name}`,
+      icon: icon
+    });
+  }
+
+  populateCategoriesSelect();
+  if (document.getElementById('prodCategory')) document.getElementById('prodCategory').value = id;
+  closeNewCategoryModal();
+  document.getElementById('newCategoryForm').reset();
+  alert(`✅ Categoría "${name}" agregada exitosamente.`);
 };
 
 function populateCategoriesSelect() {
@@ -815,7 +863,7 @@ async function compressImageForAI(dataUrl, maxDim = 280, quality = 0.5) {
   });
 }
 
-// Helper to resolve taxonomy in catalog
+// Helper to resolve taxonomy in catalog (with dynamic auto-registration of new teams)
 function resolveTaxonomyFromAI(aiResult) {
   const catalog = window.SPORTS_CATALOG || SPORTS_CATALOG;
   let foundSportKey = null;
@@ -824,6 +872,7 @@ function resolveTaxonomyFromAI(aiResult) {
 
   const teamSearch = (aiResult.team || '').toLowerCase().trim();
 
+  // Try exact or partial match
   for (const s of catalog) {
     for (const l of s.leagues) {
       for (const t of l.teams) {
@@ -841,6 +890,7 @@ function resolveTaxonomyFromAI(aiResult) {
     if (foundTeamId) break;
   }
 
+  // If sport hint matched
   if (!foundSportKey && aiResult.sport) {
     const sObj = catalog.find(s => s.sportKey.includes(aiResult.sport) || aiResult.sport.includes(s.sportKey));
     if (sObj) {
@@ -854,10 +904,35 @@ function resolveTaxonomyFromAI(aiResult) {
     }
   }
 
+  // Dynamic Auto-Registration of New Teams (e.g. Cadillac Racing, Al Nassr, etc.)
+  if (!foundTeamId && aiResult.team) {
+    const rawTeamName = aiResult.team.trim();
+    if (rawTeamName.length > 1) {
+      let targetSport = catalog.find(s => s.sportKey === foundSportKey) || (aiResult.sport && catalog.find(s => s.sportKey.includes(aiResult.sport))) || catalog.find(s => s.sportKey === 'f1') || catalog[0];
+      if (targetSport) {
+        if (targetSport.leagues.length === 0) {
+          targetSport.leagues.push({ league: "General", leagueLogo: "assets/dxt_logo.png", teams: [] });
+        }
+        let targetLeague = foundLeagueName ? targetSport.leagues.find(l => l.league === foundLeagueName) || targetSport.leagues[0] : targetSport.leagues[0];
+        const newTeamId = (targetSport.sportKey.slice(0, 3) + '-' + rawTeamName.toLowerCase().replace(/[^a-z0-9]/g, '-')).replace(/--+/g, '-');
+        if (!targetLeague.teams.some(t => t.id === newTeamId)) {
+          targetLeague.teams.push({
+            id: newTeamId,
+            name: rawTeamName,
+            logo: "assets/dxt_logo.png"
+          });
+        }
+        foundSportKey = targetSport.sportKey;
+        foundLeagueName = targetLeague.league;
+        foundTeamId = newTeamId;
+      }
+    }
+  }
+
   return {
-    sport: foundSportKey || 'futbol-americano',
-    league: foundLeagueName || 'General',
-    teamId: foundTeamId || 'sin-categoria'
+    sport: foundSportKey || 'f1',
+    league: foundLeagueName || 'Fórmula 1 (Escuderías & Pilotos)',
+    teamId: foundTeamId || 'f1-cadillac'
   };
 }
 
