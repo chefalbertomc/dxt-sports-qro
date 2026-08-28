@@ -735,19 +735,25 @@ async function analyzeImageWithGeminiVision(base64Image) {
     pureBase64 = pureBase64.split(',')[1];
   }
 
-  const promptText = `Identifica la prenda deportiva en la foto. Responde ÚNICAMENTE un JSON con:
-{
-  "team": "Nombre del equipo (ej. Baltimore Ravens, Seattle Seahawks, Real Madrid, América, Dodgers)",
-  "league": "NFL, NBA, MLB, Liga MX, Futbol Europeo o Formula 1",
-  "sport": "futbol-americano, futbol-soccer, basquetbol, beisbol o formula-1",
-  "season": "2024-2025 (o 2025-2026, 2023-2024, retro o atemporal)",
-  "category": "jerseys, gorras, chamarras, calzado o balones",
-  "gender": "caballero, dama, nino o unisex",
-  "player": "Nombre y dorsal del jugador si tiene, o Edición Oficial",
-  "name": "Título comercial formal en español (ej. Jersey Fútbol Real Madrid 2024-2025 #7 Vinicius Jr Local)",
-  "price": 1499,
-  "description": "Descripción breve del producto (1 oración)"
-}`;
+  const promptText = `Eres un catalogador deportivo profesional de máxima precisión visual.
+Analiza detenidamente la fotografía de la prenda deportiva y extrae la información exacta sin inventar ni poner valores por defecto:
+
+1. "team": Nombre del equipo/escudería oficial (ej. "Real Madrid", "Barcelona", "América", "Chivas", "Red Bull Racing", "Ferrari", "Mercedes AMG F1", "McLaren F1", "Baltimore Ravens", "Steelers", "Dodgers", "Yankees", "Lakers", etc.).
+2. "sport": "futbol-soccer", "formula-1", "futbol-americano", "basquetbol" o "beisbol".
+3. "league": "La Liga (España)", "Liga MX (México)", "Fórmula 1", "NFL", "NBA", "MLB", "Premier League (Inglaterra)", "Serie A (Italia)".
+4. "season": Temporada o año EXACTO de la prenda:
+   - EN FÚTBOL: identifica la temporada real según diseño de cuello, color de vivos/franjas, patrocinador frontal (Teka, Siemens, Bwin, Fly Emirates, Emirates FLY BETTER, Spotify) y tipografía del dorsal (ej. "2017-2018", "2022-2023", "2023-2024", "2024-2025", "2025-2026", "2011-2012", etc.).
+   - EN FÓRMULA 1 (F1): identifica el año calendario exacto de la escudería según patrocinadores (ej. Puma vs Castore, Oracle Bybit, HP en Ferrari) y ediciones de Grandes Premios (ej. "2024", "2023", "2022", "2021", etc.).
+   - EN NFL / NBA / MLB: año o "2024", "2025", "retro", o "atemporal".
+   ¡MUY IMPORTANTE: NO asumas 2024-2025 si la prenda es de otro año o temporada!
+5. "player": Nombre y dorsal del jugador/piloto si lo tiene (ej. "Checo Pérez #11", "Max Verstappen #1", "Vinicius Jr #7", "Cristiano Ronaldo #7", "Bellingham #5", "Mbappé #9", "Lamar Jackson #8", o "Edición Oficial").
+6. "name": Título comercial formal en español con Deporte, Equipo, Temporada/Año, Jugador/Dorsal y Versión (ej. "Playera Polo F1 Red Bull Racing 2024 #11 Checo Pérez", "Jersey Fútbol Real Madrid 2017-2018 #7 Cristiano Ronaldo Local Kiev", "Jersey NFL Baltimore Ravens #8 Lamar Jackson Morado").
+7. "price": Precio sugerido entero en MXN (ej. 1499).
+8. "gender": "caballero", "dama", "nino" o "unisex".
+9. "category": "jerseys", "gorras", "chamarras", "calzado" o "balones".
+10. "description": Descripción breve de 1 oración destacando tela y detalles bordados oficiales.
+
+Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
 
@@ -1363,6 +1369,19 @@ window.deleteAllProducts = async function() {
   }
 };
 
+// Helper to determine if a product is pending inventory/classification
+function isProductPending(p) {
+  if (!p) return false;
+  if (p.isPendingInventory === true) return true;
+  if (!p.team || p.team === 'sin-categoria' || p.team === 'otros') return true;
+  if (!p.category || p.category === 'sin-categoria') return true;
+  if (!p.price || p.price === 0) return true;
+  const sizeMap = p.sizeStockMap || [];
+  const hasStock = sizeMap.some(s => (Number(s.immediateQty || 0) + Number(s.warehouseQty || 0)) > 0);
+  if (sizeMap.length === 0 || !hasStock) return true;
+  return false;
+}
+
 // Load & Search Products (Unlimited snapshot listener with memory sorting)
 function loadAdminProducts() {
   const countEl = document.getElementById('adminProdCount');
@@ -1378,7 +1397,7 @@ function loadAdminProducts() {
     });
     if (countEl) countEl.textContent = currentProducts.length;
 
-    const uncatCount = currentProducts.filter(p => p.category === 'sin-categoria' || p.team === 'sin-categoria' || !p.team || p.team === 'otros' || p.price === 0).length;
+    const uncatCount = currentProducts.filter(isProductPending).length;
     if (badgeEl) badgeEl.textContent = uncatCount;
 
     renderAdminCatalogSequenceNav();
@@ -1640,9 +1659,9 @@ function renderAdminProductsList(products) {
 
   // Filter by Admin Pending or 5-Step Sequence Selector
   if (adminFilterOnlyPending) {
-    filtered = filtered.filter(p => p.category === 'sin-categoria' || p.team === 'sin-categoria' || !p.team || p.team === 'otros' || p.price === 0);
+    filtered = filtered.filter(isProductPending);
   } else if (adminFilterSportKey === 'sin-categoria') {
-    filtered = filtered.filter(p => p.category === 'sin-categoria' || p.team === 'sin-categoria' || !p.team || p.team === 'otros' || p.price === 0);
+    filtered = filtered.filter(isProductPending);
   } else if (adminFilterGenderId) {
     filtered = filtered.filter(p => (p.team === adminFilterTeamId || !adminFilterTeamId) && (p.category === adminFilterCategoryId || !adminFilterCategoryId) && p.gender === adminFilterGenderId);
   } else if (adminFilterCategoryId) {
@@ -1675,7 +1694,7 @@ function renderAdminProductsList(products) {
   }
   
   list.innerHTML = filtered.map(product => {
-    const isUncat = product.category === 'sin-categoria' || product.team === 'sin-categoria' || !product.team || product.team === 'otros' || product.price === 0 || product.isPendingInventory;
+    const isUncat = isProductPending(product);
     
     // Dedicated styling for Pending / Uncataloged items
     if (isUncat) {

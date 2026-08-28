@@ -337,11 +337,16 @@ function getGenderLabel(genderId) {
 }
 
 const SEASONS_CATALOG = [
-  { id: "2025-2026", label: "2025-2026", isCurrent: true },
-  { id: "2024-2025", label: "2024-2025" },
-  { id: "2023-2024", label: "2023-2024" },
-  { id: "2022-2023", label: "2022-2023" },
-  { id: "retro", label: "Retro / Vintage" },
+  { id: "2025-2026", label: "2025-2026 (Fútbol)", isCurrent: true },
+  { id: "2024-2025", label: "2024-2025 (Fútbol)" },
+  { id: "2023-2024", label: "2023-2024 (Fútbol)" },
+  { id: "2022-2023", label: "2022-2023 (Fútbol)" },
+  { id: "2025", label: "2025 (F1 / NFL / NBA / MLB)" },
+  { id: "2024", label: "2024 (F1 / NFL / NBA / MLB)" },
+  { id: "2023", label: "2023 (F1 / NFL / NBA / MLB)" },
+  { id: "2022", label: "2022 (F1 / NFL / NBA / MLB)" },
+  { id: "2021", label: "2021 (F1 / NFL / NBA / MLB)" },
+  { id: "retro", label: "Retro / Clásico / Vintage" },
   { id: "atemporal", label: "General / Atemporal" }
 ];
 
