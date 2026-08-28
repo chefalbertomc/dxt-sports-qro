@@ -368,31 +368,96 @@
         </form>
       </div>
 
-      <!-- VISTA 3: CARGA MASIVA DE FOTOS (SIN CLASIFICAR) -->
-      <div id="bulkUploadCard" class="admin-card" style="display: none; padding: 16px; margin-bottom: 16px;">
-        <h2 style="font-size: 18px; color: var(--accent-color); margin-bottom: 6px;">⚡ Carga Masiva Directa por Fotos</h2>
-        <p class="text-secondary" style="font-size: 12px; margin-bottom: 14px;">
-          Selecciona todas las fotos que quieras. Se subirán automáticamente a tu inventario como <strong>"⚠️ Sin Categoría"</strong> para que puedas editarlas y clasificarlas una por una cuando quieras.
-        </p>
-
-        <div class="form-group" style="margin-bottom: 12px;">
-          <input type="file" id="bulkImagesInput" class="form-control" multiple accept="image/*" style="padding: 14px; border: 2px dashed var(--accent-color); background: rgba(250, 204, 21, 0.05); text-align: center; cursor: pointer;">
+      <!-- VISTA 3: CARGA MASIVA CON GEMINI AI VISION (AUTOCLASIFICADOR INTELIGENTE) -->
+      <div id="bulkUploadCard" class="admin-card" style="display: none; padding: 18px; margin-bottom: 16px; border: 1px solid rgba(250, 204, 21, 0.4);">
+        
+        <!-- HEADER WITH GEMINI AI BADGE -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #333;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 22px;">🤖</span>
+              <h2 style="font-size: 18px; color: var(--accent-color); margin: 0; font-weight: 900;">Carga Masiva con Gemini AI Vision</h2>
+              <span style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 12px;">AUTO-DETECT</span>
+            </div>
+            <p class="text-secondary" style="font-size: 12px; margin: 4px 0 0 0;">
+              Sube tus fotos: <strong>Gemini AI detectará automáticamente el Equipo, Jugador, Número, Edición (Local/Visita/Color Rush), Género y Título</strong>. Tú solo ajustas el inventario de tallas que tengas.
+            </p>
+          </div>
+          
+          <button type="button" onclick="toggleGeminiKeySettings()" class="btn btn-outline" style="font-size: 11px; padding: 4px 10px; border-color: #555; color: #bbb;">
+            ⚙️ Configurar Gemini API Key
+          </button>
         </div>
 
-        <div id="bulkPreviewContainer" style="display: none; margin-top: 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <h3 style="font-size: 13px; color: #fff; margin: 0;">Fotos listas para subir (<span id="bulkCount" style="color: var(--accent-color);">0</span>)</h3>
+        <!-- GEMINI API KEY DRAWER (COLLAPSIBLE) -->
+        <div id="geminiKeySettingsBox" style="display: none; background: #000; border: 1px dashed var(--accent-color); border-radius: 10px; padding: 12px; margin-bottom: 14px;">
+          <label style="font-size: 11px; font-weight: 800; color: var(--accent-color); display: block; margin-bottom: 4px;">
+            🔑 Clave API de Google Gemini (AI Studio):
+          </label>
+          <div style="display: flex; gap: 8px;">
+            <input type="password" id="geminiApiKeyInput" class="form-control" placeholder="Pega tu API Key de Gemini aquí..." style="padding: 8px 10px; font-size: 12px; flex: 1;">
+            <button type="button" onclick="saveGeminiApiKey()" class="btn" style="padding: 8px 14px; font-size: 12px; font-weight: 900;">Guardar</button>
+          </div>
+          <p style="font-size: 11px; color: #777; margin: 6px 0 0 0;">
+            Tu clave se guarda de forma segura en tu navegador. Puedes generar una gratis en <a href="https://aistudio.google.com/" target="_blank" style="color: var(--accent-color); text-decoration: underline;">Google AI Studio</a>.
+          </p>
+        </div>
+
+        <!-- AI AUTO-SCAN CHECKBOX -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 10px 14px; border-radius: 10px;">
+          <input type="checkbox" id="chkAutoScanGemini" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+          <label for="chkAutoScanGemini" style="font-size: 12px; font-weight: 800; color: #fff; cursor: pointer; margin: 0;">
+            ⚡ Activar Análisis y Clasificación Automática con Inteligencia Artificial (Gemini Vision)
+          </label>
+        </div>
+
+        <!-- FILE UPLOAD DROPZONE -->
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label for="bulkImagesInput" style="display: block; padding: 22px; border: 2px dashed var(--accent-color); background: rgba(250, 204, 21, 0.04); border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
+            <div style="font-size: 32px; margin-bottom: 6px;">📸 ➔ 🤖</div>
+            <div style="font-size: 15px; font-weight: 900; color: var(--accent-color); margin-bottom: 4px;">
+              Haz clic aquí para seleccionar o arrastrar tus fotos deportivas
+            </div>
+            <div style="font-size: 12px; color: #aaa;">
+              Puedes subir múltiples imágenes de jerseys, gorras, sudaderas o balones a la vez.
+            </div>
+          </label>
+          <input type="file" id="bulkImagesInput" multiple accept="image/*" style="display: none;">
+        </div>
+
+        <!-- AI SCANNING STATUS & PROGRESS BAR -->
+        <div id="aiScanProgressBox" style="display: none; background: #0f111a; border: 1px solid #3b82f6; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span id="aiScanStatusText" style="font-size: 12px; font-weight: 800; color: #38bdf8;">🤖 Escaneando fotos con Gemini Vision...</span>
+            <span id="aiScanProgressPercent" style="font-size: 12px; font-weight: 900; color: #fff;">0%</span>
+          </div>
+          <div style="width: 100%; height: 8px; background: #222; border-radius: 4px; overflow: hidden;">
+            <div id="aiScanProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3b82f6, #a855f7); transition: width 0.3s;"></div>
+          </div>
+        </div>
+
+        <!-- BULK PREVIEW & CLASSIFIED CARDS CONTAINER -->
+        <div id="bulkPreviewContainer" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <h3 style="font-size: 14px; color: #fff; margin: 0; font-weight: 900;">
+              Artículos detectados (<span id="bulkCount" style="color: var(--accent-color);">0</span>)
+            </h3>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" onclick="applyDefaultStockToAllBulk(2, 5)" class="btn btn-outline" style="font-size: 10px; padding: 4px 8px; border-color: #22c55e; color: #22c55e;">
+                ⚡ Llenar Stock Rápido (2 Tienda / 5 Bodega) a Todos
+              </button>
+            </div>
           </div>
 
-          <!-- MINI PREVIEW GRID -->
-          <div id="bulkGridPreview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; max-height: 200px; overflow-y: auto; padding: 8px; background: #000; border-radius: 8px; border: 1px solid #333; margin-bottom: 12px;">
-            <!-- Thumbnail grid -->
+          <!-- DYNAMIC INTERACTIVE BULK CARDS LIST -->
+          <div id="bulkCardsList" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+            <!-- Generated dynamically -->
           </div>
 
           <div id="bulkPublishStatus" style="font-size: 13px; margin-bottom: 10px; font-weight: bold;"></div>
 
-          <button type="button" id="btnPublishBulk" onclick="publishAllBulkProducts()" class="btn btn-whatsapp" style="width: 100%; font-size: 14px; padding: 12px;">
-            🚀 Subir Todo al Inventario (Como Sin Categoría) →
+          <button type="button" id="btnPublishBulk" onclick="publishAllBulkProducts()" class="btn btn-whatsapp" style="width: 100%; font-size: 15px; font-weight: 900; padding: 14px;">
+            🚀 Publicar Todos los Artículos al Catálogo Oficial →
           </button>
         </div>
       </div>

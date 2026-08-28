@@ -585,7 +585,122 @@ function resizeImage(file, maxWidth = 600, maxHeight = 600, quality = 0.70) {
   });
 }
 
-// Bulk Upload Logic (Instant Ultra-Fast Parallel Upload to Sin Categoría)
+// ============================================
+// GEMINI AI VISION BULK SCANNING & CLASSIFIER
+// ============================================
+const DEFAULT_GEMINI_KEY = '';
+
+function getStoredGeminiApiKey() {
+  return localStorage.getItem('dxt_gemini_api_key') || '';
+}
+
+window.toggleGeminiKeySettings = function() {
+  const box = document.getElementById('geminiKeySettingsBox');
+  const input = document.getElementById('geminiApiKeyInput');
+  if (box) {
+    const isHidden = box.style.display === 'none';
+    box.style.display = isHidden ? 'block' : 'none';
+    if (isHidden && input) {
+      input.value = getStoredGeminiApiKey();
+    }
+  }
+};
+
+window.saveGeminiApiKey = function() {
+  const input = document.getElementById('geminiApiKeyInput');
+  if (input && input.value.trim()) {
+    localStorage.setItem('dxt_gemini_api_key', input.value.trim());
+    alert('✅ Clave de Gemini API guardada con éxito en tu navegador.');
+    toggleGeminiKeySettings();
+  }
+};
+
+// Analyze single image via Gemini Vision Multimodal API
+async function analyzeImageWithGeminiVision(base64DataUrl) {
+  const apiKey = getStoredGeminiApiKey();
+  if (!apiKey) return null;
+
+  // Extract pure base64 without prefix
+  const pureBase64 = base64DataUrl.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
+
+  // Flatten teams for prompt
+  const catalog = window.SPORTS_CATALOG || SPORTS_CATALOG;
+  const teamListPrompt = [];
+  catalog.forEach(s => {
+    s.leagues.forEach(l => {
+      l.teams.forEach(t => {
+        teamListPrompt.push(`${t.id} (${t.name} - ${l.league})`);
+      });
+    });
+  });
+
+  const promptText = `Eres un experto catalogador de mercancía deportiva oficial (NFL, NBA, MLB, LMB México, Liga MX, Fútbol Europeo, F1).
+Analiza con máxima precisión la fotografía deportiva adjunta.
+
+EQUIPOS DISPONIBLES:
+${teamListPrompt.join(', ')}
+
+INSTRUCCIONES DE DETECCIÓN:
+1. "teamId": Elige el 'id' exacto del equipo que aparece en la prenda/gorra/balón. Si no coincide ninguno, pon 'otros'.
+2. "category": 'jerseys' | 'gorras' | 'chamarras' | 'calzado' | 'balones' | 'accesorios'
+3. "gender": 'caballero' | 'dama' | 'nino' | 'unisex' (Gorras y calzado suelen ser 'unisex', jerseys de hombre 'caballero').
+4. "player": Nombre y dorsal del jugador si está impreso o bordado (ej. "T.J. Watt #90", "Patrick Mahomes #15", "Travis Kelce #87", "Lionel Messi #10", "Checo Pérez #11"). Si no tiene jugador pon "Edición General".
+5. "edition": "Local (Home)" | "Visita (Away)" | "Color Rush" | "Salute to Service" | "Rivalry" | "Alternativo" | "Retro" | "Oficial"
+6. "name": Genera un título comercial formal en Español para tienda online, ejemplo: "Jersey NFL Pittsburgh Steelers #90 T.J. Watt Color Rush Negro" o "Gorra New Era Dallas Cowboys 39THIRTY Azul Marino".
+7. "price": Sugiere precio estándar en Pesos Mexicanos (MXN): Jersey: 899 a 1899, Gorra: 799 a 899, Sudadera/Chamarra: 1199 a 1499, Balón: 599 a 899.
+8. "description": Breve descripción comercial (1-2 oraciones) resaltando tela transpirable de alta tecnología y detalles bordados oficiales.
+
+Responde ÚNICAMENTE un objeto JSON válido con este formato:
+{
+  "teamId": "steelers",
+  "category": "jerseys",
+  "gender": "caballero",
+  "player": "T.J. Watt #90",
+  "edition": "Color Rush",
+  "name": "Jersey NFL Pittsburgh Steelers #90 T.J. Watt Color Rush",
+  "price": 899,
+  "description": "Jersey oficial de alta resistencia con detalles y números bordados de utilería."
+}`;
+
+  const endpoints = [
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: promptText },
+              { inline_data: { mime_type: "image/jpeg", data: pureBase64 } }
+            ]
+          }],
+          generationConfig: {
+            response_mime_type: "application/json",
+            temperature: 0.2
+          }
+        })
+      });
+
+      if (!response.ok) continue;
+      const data = await response.json();
+      const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (textOutput) {
+        return JSON.parse(textOutput);
+      }
+    } catch (err) {
+      console.warn('Gemini vision endpoint failed, trying next:', err);
+    }
+  }
+  return null;
+}
+
+// Bulk Upload Logic with Gemini AI Integration
 const bulkInput = document.getElementById('bulkImagesInput');
 if (bulkInput) {
   bulkInput.addEventListener('change', async (e) => {
@@ -593,44 +708,260 @@ if (bulkInput) {
     if (!files || files.length === 0) return;
 
     const previewContainer = document.getElementById('bulkPreviewContainer');
-    const gridPreview = document.getElementById('bulkGridPreview');
+    const cardsList = document.getElementById('bulkCardsList');
     const countEl = document.getElementById('bulkCount');
     const statusEl = document.getElementById('bulkPublishStatus');
+    const progressBox = document.getElementById('aiScanProgressBox');
+    const progressText = document.getElementById('aiScanStatusText');
+    const progressPercent = document.getElementById('aiScanProgressPercent');
+    const progressBar = document.getElementById('aiScanProgressBar');
+    const useAI = document.getElementById('chkAutoScanGemini')?.checked ?? true;
 
-    if (statusEl) {
-      statusEl.style.color = '#facc15';
-      statusEl.textContent = `⚡ Comprimiendo ${files.length} fotos en paralelo...`;
+    bulkItems = [];
+    if (cardsList) cardsList.innerHTML = '';
+    if (previewContainer) previewContainer.style.display = 'none';
+
+    if (useAI && progressBox) {
+      progressBox.style.display = 'block';
+      progressBar.style.width = '0%';
+      progressPercent.textContent = '0%';
+      progressText.textContent = `🤖 Optimizando y analizando ${files.length} fotos con Gemini AI...`;
     }
 
-    // Process all images concurrently in parallel for 10x speed boost!
     const startTime = Date.now();
-    bulkItems = await Promise.all(files.map(async (file, i) => {
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const percent = Math.round(((i + 1) / files.length) * 100);
+      
+      if (useAI && progressBox) {
+        progressText.textContent = `🤖 [${i + 1}/${files.length}] Gemini analizando: ${file.name}...`;
+        progressBar.style.width = `${percent}%`;
+        progressPercent.textContent = `${percent}%`;
+      }
+
+      // Resize & compress
       const base64 = await resizeImage(file, 600, 600, 0.70);
-      const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").toUpperCase();
-      return {
+      let aiResult = null;
+
+      if (useAI) {
+        try {
+          aiResult = await analyzeImageWithGeminiVision(base64);
+        } catch(err) {
+          console.warn('AI analysis skipped for file', file.name, err);
+        }
+      }
+
+      // Fallback clean name if no AI
+      const defaultName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").toUpperCase();
+      const detectedTeamId = aiResult?.teamId || 'steelers';
+      const detectedCategory = aiResult?.category || 'jerseys';
+      const detectedGender = aiResult?.gender || 'caballero';
+      const detectedName = aiResult?.name || defaultName;
+      const detectedPrice = aiResult?.price || 899;
+      const detectedDesc = aiResult?.description || 'Artículo oficial deportivo con detalles y bordados auténticos.';
+      const detectedPlayer = aiResult?.player || '';
+      const detectedEdition = aiResult?.edition || '';
+
+      // Generate default size stock rows for this gender
+      const dept = GENDER_DEPARTMENTS.find(d => d.id === detectedGender) || GENDER_DEPARTMENTS[0];
+      const defaultSizes = (detectedCategory === 'gorras' || detectedCategory === 'balones') 
+        ? ["Ajustable / Unitalla"] 
+        : (dept.sizes.slice(0, 4));
+
+      const sizeStockMap = defaultSizes.map(sz => ({
+        size: sz,
+        immediateQty: 1, // Default 1 in store
+        warehouseQty: 0
+      }));
+
+      bulkItems.push({
         id: 'bulk_' + i,
         base64: base64,
-        name: cleanName || `ARTÍCULO PENDIENTE ${i + 1}`
-      };
-    }));
+        name: detectedName,
+        team: detectedTeamId,
+        category: detectedCategory,
+        gender: detectedGender,
+        price: detectedPrice,
+        description: detectedDesc,
+        player: detectedPlayer,
+        edition: detectedEdition,
+        sizeStockMap: sizeStockMap,
+        aiDetected: !!aiResult
+      });
+    }
+
+    if (useAI && progressBox) {
+      setTimeout(() => { progressBox.style.display = 'none'; }, 600);
+    }
 
     if (countEl) countEl.textContent = bulkItems.length;
-    if (gridPreview) {
-      gridPreview.innerHTML = bulkItems.map(item => `
-        <div style="position: relative; border-radius: 4px; overflow: hidden; border: 1px solid var(--accent-color);">
-          <img src="${item.base64}" style="width: 100%; height: 50px; object-fit: cover; display: block;">
-        </div>
-      `).join('');
-    }
+    renderBulkCards();
 
     if (previewContainer) previewContainer.style.display = 'block';
     if (statusEl) {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       statusEl.style.color = '#4ade80';
-      statusEl.textContent = `✅ ¡${bulkItems.length} fotos optimizadas en solo ${elapsed}s! Presiona el botón verde para guardar.`;
+      statusEl.textContent = `✅ ¡${bulkItems.length} artículos detectados y clasificados en ${elapsed}s! Ajusta las existencias que gustes antes de publicar.`;
     }
   });
 }
+
+// Render dynamic interactive bulk cards
+function renderBulkCards() {
+  const container = document.getElementById('bulkCardsList');
+  if (!container) return;
+
+  const catalog = window.SPORTS_CATALOG || SPORTS_CATALOG;
+  
+  container.innerHTML = bulkItems.map((item, idx) => {
+    const tax = getFullTaxonomy(item.team);
+    
+    return `
+      <div id="bulkCard_${item.id}" style="background: #0e0f14; border: 1px solid ${item.aiDetected ? '#3b82f6' : '#333'}; border-radius: 12px; padding: 12px; display: grid; grid-template-columns: 90px 1fr; gap: 12px; position: relative;">
+        
+        <!-- THUMBNAIL & BADGE -->
+        <div style="display: flex; flex-direction: column; gap: 6px; align-items: center;">
+          <img src="${item.base64}" style="width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid #333; background: #000;">
+          ${item.aiDetected ? `<span style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: 8px; font-weight: 900; padding: 2px 4px; border-radius: 4px; text-align: center; width: 100%;">🤖 IA DETECTADO</span>` : ''}
+          <button type="button" onclick="removeBulkItem(${idx})" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; border-radius: 4px; font-size: 10px; padding: 2px 6px; cursor: pointer; width: 100%;">🗑️ Quitar</button>
+        </div>
+
+        <!-- DETAILS & INVENTORY ROWS -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          
+          <!-- RENGLÓN 1: EQUIPO + GÉNERO + CATEGORÍA -->
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+            <img src="${tax.teamLogo}" style="width: 20px; height: 20px; object-fit: contain;">
+            <select onchange="updateBulkItemTeam(${idx}, this.value)" class="form-control" style="font-size: 11px; padding: 3px 6px; max-width: 180px; font-weight: 800;">
+              ${catalog.flatMap(s => s.leagues.flatMap(l => l.teams.map(t => `
+                <option value="${t.id}" ${t.id === item.team ? 'selected' : ''}>${s.icon} ${t.name}</option>
+              `))).join('')}
+            </select>
+
+            <select onchange="updateBulkItemGender(${idx}, this.value)" class="form-control" style="font-size: 11px; padding: 3px 6px; max-width: 120px;">
+              ${GENDER_DEPARTMENTS.map(g => `<option value="${g.id}" ${g.id === item.gender ? 'selected' : ''}>${g.label}</option>`).join('')}
+            </select>
+
+            <select onchange="updateBulkItemCategory(${idx}, this.value)" class="form-control" style="font-size: 11px; padding: 3px 6px; max-width: 120px;">
+              ${PRODUCT_CATEGORIES.map(c => `<option value="${c.id}" ${c.id === item.category ? 'selected' : ''}>${c.label}</option>`).join('')}
+            </select>
+
+            ${item.player ? `<span style="background: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid #facc15; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px;">👤 ${item.player}</span>` : ''}
+            ${item.edition ? `<span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px;">🎨 ${item.edition}</span>` : ''}
+          </div>
+
+          <!-- RENGLÓN 2: NOMBRE DEL PRODUCTO + PRECIO -->
+          <div style="display: grid; grid-template-columns: 1fr 110px; gap: 8px;">
+            <div>
+              <label style="font-size: 9px; color: #888; display: block; margin-bottom: 2px;">TÍTULO COMERCIAL:</label>
+              <input type="text" value="${item.name}" oninput="updateBulkItemName(${idx}, this.value)" class="form-control" style="font-size: 11px; padding: 4px 8px; font-weight: 700;">
+            </div>
+            <div>
+              <label style="font-size: 9px; color: #888; display: block; margin-bottom: 2px;">PRECIO (MXN):</label>
+              <input type="number" value="${item.price}" oninput="updateBulkItemPrice(${idx}, this.value)" class="form-control" style="font-size: 11px; padding: 4px 8px; font-weight: 900; color: var(--accent-color);">
+            </div>
+          </div>
+
+          <!-- RENGLÓN 3: INVENTARIO DE TALLAS (TÚ PONES LAS EXISTENCIAS) -->
+          <div style="background: #050608; border: 1px solid #222; border-radius: 8px; padding: 6px 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-size: 9px; font-weight: 800; color: #22c55e; text-transform: uppercase;">
+                📦 Existencias de Stock por Talla:
+              </span>
+              <button type="button" onclick="addBulkItemSizeRow(${idx})" style="background: none; border: none; color: var(--accent-color); font-size: 9px; cursor: pointer; font-weight: 800;">+ Talla</button>
+            </div>
+
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              ${item.sizeStockMap.map((s, szIdx) => `
+                <div style="display: inline-flex; align-items: center; background: #14161f; border: 1px solid #333; border-radius: 6px; padding: 2px 4px; gap: 3px; font-size: 10px;">
+                  <span style="font-weight: 900; color: #fff; padding-right: 2px;">${s.size}:</span>
+                  <span title="Tienda Física" style="color: #22c55e; font-size: 9px;">⚡</span>
+                  <input type="number" min="0" value="${s.immediateQty}" onchange="updateBulkItemStockQty(${idx}, ${szIdx}, 'immediateQty', this.value)" style="width: 32px; background: #000; border: 1px solid #444; color: #22c55e; font-weight: 900; font-size: 10px; border-radius: 3px; text-align: center; padding: 1px;">
+                  <span title="Bodega Central" style="color: #facc15; font-size: 9px;">🏢</span>
+                  <input type="number" min="0" value="${s.warehouseQty}" onchange="updateBulkItemStockQty(${idx}, ${szIdx}, 'warehouseQty', this.value)" style="width: 32px; background: #000; border: 1px solid #444; color: #facc15; font-weight: 900; font-size: 10px; border-radius: 3px; text-align: center; padding: 1px;">
+                  <button type="button" onclick="removeBulkItemSizeRow(${idx}, ${szIdx})" style="background: none; border: none; color: #666; font-size: 10px; cursor: pointer; padding: 0 2px;">✕</button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    `;
+  }).join('');
+}
+
+// Bulk interactive helpers
+window.removeBulkItem = function(idx) {
+  bulkItems.splice(idx, 1);
+  const countEl = document.getElementById('bulkCount');
+  if (countEl) countEl.textContent = bulkItems.length;
+  renderBulkCards();
+};
+
+window.updateBulkItemTeam = function(idx, val) {
+  if (bulkItems[idx]) {
+    bulkItems[idx].team = val;
+    renderBulkCards();
+  }
+};
+
+window.updateBulkItemGender = function(idx, val) {
+  if (bulkItems[idx]) {
+    bulkItems[idx].gender = val;
+    // Auto populate sizes for this gender
+    const dept = GENDER_DEPARTMENTS.find(d => d.id === val) || GENDER_DEPARTMENTS[0];
+    bulkItems[idx].sizeStockMap = dept.sizes.slice(0, 4).map(sz => ({ size: sz, immediateQty: 1, warehouseQty: 0 }));
+    renderBulkCards();
+  }
+};
+
+window.updateBulkItemCategory = function(idx, val) {
+  if (bulkItems[idx]) bulkItems[idx].category = val;
+};
+
+window.updateBulkItemName = function(idx, val) {
+  if (bulkItems[idx]) bulkItems[idx].name = val;
+};
+
+window.updateBulkItemPrice = function(idx, val) {
+  if (bulkItems[idx]) bulkItems[idx].price = Number(val) || 0;
+};
+
+window.updateBulkItemStockQty = function(idx, szIdx, key, val) {
+  if (bulkItems[idx] && bulkItems[idx].sizeStockMap[szIdx]) {
+    bulkItems[idx].sizeStockMap[szIdx][key] = Math.max(0, parseInt(val, 10) || 0);
+  }
+};
+
+window.addBulkItemSizeRow = function(idx) {
+  if (bulkItems[idx]) {
+    const newSz = prompt("Ingresa la talla que deseas agregar (ej. CH, M, G, XL, 2XL, Unitalla):", "L");
+    if (newSz) {
+      bulkItems[idx].sizeStockMap.push({ size: newSz.toUpperCase().trim(), immediateQty: 1, warehouseQty: 0 });
+      renderBulkCards();
+    }
+  }
+};
+
+window.removeBulkItemSizeRow = function(idx, szIdx) {
+  if (bulkItems[idx] && bulkItems[idx].sizeStockMap[szIdx]) {
+    bulkItems[idx].sizeStockMap.splice(szIdx, 1);
+    renderBulkCards();
+  }
+};
+
+window.applyDefaultStockToAllBulk = function(immQty = 2, whQty = 5) {
+  bulkItems.forEach(item => {
+    item.sizeStockMap.forEach(s => {
+      s.immediateQty = immQty;
+      s.warehouseQty = whQty;
+    });
+  });
+  renderBulkCards();
+};
 
 window.publishAllBulkProducts = async function() {
   if (bulkItems.length === 0) return;
@@ -641,12 +972,12 @@ window.publishAllBulkProducts = async function() {
   if (btnPublish) btnPublish.disabled = true;
   if (statusEl) {
     statusEl.style.color = '#facc15';
-    statusEl.textContent = `⚡ Guardando ${bulkItems.length} prendas en la base de datos...`;
+    statusEl.textContent = `⚡ Publicando ${bulkItems.length} prendas con existencias completas en el catálogo...`;
   }
 
   try {
     const startTime = Date.now();
-    const batchSize = 30; // Chunk into batches of 30 for max speed
+    const batchSize = 25;
     const chunks = [];
     
     for (let i = 0; i < bulkItems.length; i += batchSize) {
@@ -655,36 +986,32 @@ window.publishAllBulkProducts = async function() {
 
     // Execute batches in parallel
     await Promise.all(chunks.map(async (chunk) => {
-      const batch = db.batch();
+      const batch = db.collection('products');
       for (const item of chunk) {
-        const docRef = db.collection('products').doc();
-        const defaultSizeStock = [
-          { size: "M", immediateQty: 1, warehouseQty: 0 }
-        ];
-
-        batch.set(docRef, {
+        const sizesArray = item.sizeStockMap.map(s => s.size);
+        
+        await batch.add({
           name: item.name,
-          team: 'sin-categoria',
-          gender: 'caballero',
-          category: 'sin-categoria',
+          team: item.team,
+          gender: item.gender,
+          category: item.category,
           badge: 'ninguno',
-          price: 0,
+          price: item.price,
           originalPrice: null,
-          sizeStockMap: defaultSizeStock,
-          sizes: ["M"],
-          description: 'Producto subido masivamente. Pendiente de clasificar deporte, equipo y existencias.',
+          sizeStockMap: item.sizeStockMap,
+          sizes: sizesArray,
+          description: item.description,
           imageUrl: item.base64,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
-      return batch.commit();
     }));
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
     if (statusEl) {
       statusEl.style.color = '#4ade80';
-      statusEl.textContent = `✅ ¡${bulkItems.length} prendas guardadas en solo ${elapsed} segundos!`;
+      statusEl.textContent = `✅ ¡${bulkItems.length} artículos oficiales publicados exitosamente en solo ${elapsed}s!`;
     }
 
     const uploadedCount = bulkItems.length;
@@ -696,20 +1023,19 @@ window.publishAllBulkProducts = async function() {
       if (btnPublish) btnPublish.disabled = false;
       if (statusEl) statusEl.textContent = '';
       
-      // Auto switch to Manage tab filtered by Sin Categoría
       switchAdminTab('manage');
-      adminFilterSportKey = 'sin-categoria';
+      adminFilterSportKey = null;
       renderAdminCatalogSequenceNav();
       renderAdminProductsList(currentProducts);
 
-      alert(`🚀 ¡Listo! ${uploadedCount} prendas subidas en ${elapsed}s. Las tienes en pantalla para clasificarlas una por una cuando gustes.`);
+      alert(`🚀 ¡Éxito Total! Se publicaron ${uploadedCount} prendas con inventarios y clasificaciones oficiales de Gemini AI.`);
     }, 800);
 
   } catch(e) {
     console.error('Error in bulk publish:', e);
     if (statusEl) {
-      statusEl.style.color = '#ff6b6b';
-      statusEl.textContent = '❌ Error al subir: ' + e.message;
+      statusEl.style.color = '#ef4444';
+      statusEl.textContent = `❌ Error al publicar: ` + e.message;
     }
     if (btnPublish) btnPublish.disabled = false;
   }
