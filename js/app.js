@@ -15,7 +15,7 @@ let activePromoFilter = urlParams.get('promo') || 'all';
 let searchQuery = '';
 
 // Shopping Cart State
-let cart = JSON.parse(localStorage.getItem('catch_sports_cart') || '[]');
+let cart = JSON.parse(localStorage.getItem('dxt_sports_cart') || '[]');
 let allProducts = [];
 
 // DOM References
@@ -111,7 +111,7 @@ function renderWizardStep() {
 
     cardsGrid.innerHTML = wizardSportObj.leagues.map(l => {
       const totalTeams = l.teams.length;
-      const logoHtml = l.leagueLogo ? `<img src="${l.leagueLogo}" class="wizard-card-img" onerror="this.src='assets/catch_sports_logo.png'"/>` : `<div class="wizard-card-icon">${wizardSportObj.icon}</div>`;
+      const logoHtml = l.leagueLogo ? `<img src="${l.leagueLogo}" class="wizard-card-img" onerror="this.src='assets/dxt_logo.png'"/>` : `<div class="wizard-card-icon">${wizardSportObj.icon}</div>`;
       return `
         <div class="wizard-card" onclick="selectWizardLeague('${l.league}')">
           ${logoHtml}
@@ -128,7 +128,7 @@ function renderWizardStep() {
     if (subTitleEl) subTitleEl.textContent = `Explora los artículos oficiales de tu franquicia favorita`;
 
     cardsGrid.innerHTML = wizardLeagueObj.teams.map(t => {
-      const logoHtml = t.logo ? `<img src="${t.logo}" class="wizard-card-img" onerror="this.src='assets/catch_sports_logo.png'"/>` : `<div class="wizard-card-icon">🛡️</div>`;
+      const logoHtml = t.logo ? `<img src="${t.logo}" class="wizard-card-img" onerror="this.src='assets/dxt_logo.png'"/>` : `<div class="wizard-card-icon">🛡️</div>`;
       const isSelected = wizardTeamObj && wizardTeamObj.id === t.id;
       return `
         <div class="wizard-card ${isSelected ? 'selected-card' : ''}" style="${isSelected ? 'border-color: var(--accent-color); background: #242424;' : ''}" onclick="selectWizardTeam('${t.id}')">
@@ -269,7 +269,7 @@ function renderSingleLineCascadingBar() {
       </span>
       ${wizardSportObj.leagues.map(l => `
         <button onclick="onSingleLineLeagueClick('${l.league}')" class="league-dock-chip ${wizardLeagueObj && wizardLeagueObj.league === l.league ? 'active' : ''}">
-          <img src="${l.leagueLogo}" referrerpolicy="no-referrer" style="width: 18px; height: 18px; object-fit: contain;" onerror="this.src='assets/catch_sports_logo.png'"/>
+          <img src="${l.leagueLogo}" referrerpolicy="no-referrer" style="width: 18px; height: 18px; object-fit: contain;" onerror="this.src='assets/dxt_logo.png'"/>
           ${l.league}
         </button>
       `).join('')}
@@ -287,7 +287,7 @@ function renderSingleLineCascadingBar() {
       </button>
       ${wizardLeagueObj.teams.map(t => `
         <button onclick="onSingleLineTeamClick('${t.id}')" class="league-dock-chip ${activeTeamFilter === t.id ? 'active' : ''}">
-          <img src="${t.logo}" referrerpolicy="no-referrer" style="width: 18px; height: 18px; object-fit: contain;" onerror="this.src='assets/catch_sports_logo.png'"/>
+          <img src="${t.logo}" referrerpolicy="no-referrer" style="width: 18px; height: 18px; object-fit: contain;" onerror="this.src='assets/dxt_logo.png'"/>
           ${t.name}
         </button>
       `).join('')}
@@ -588,7 +588,7 @@ function updateCategorySlideshowNow() {
     if (cardJ) cardJ.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(10,10,12,0.92) 100%), url('${p.imageUrl}')`;
     if (subJ) subJ.textContent = p.name;
   } else {
-    if (cardJ) cardJ.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(10,10,12,0.9) 100%), url('assets/catch_sports_logo.png')`;
+    if (cardJ) cardJ.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(10,10,12,0.9) 100%), url('assets/dxt_logo.png')`;
     if (subJ) subJ.textContent = 'Ver Jerseys...';
   }
 
@@ -598,7 +598,7 @@ function updateCategorySlideshowNow() {
     if (cardH) cardH.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(10,10,12,0.92) 100%), url('${p.imageUrl}')`;
     if (subH) subH.textContent = p.name;
   } else {
-    if (cardH) cardH.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(10,10,12,0.9) 100%), url('assets/catch_sports_logo.png')`;
+    if (cardH) cardH.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(10,10,12,0.9) 100%), url('assets/dxt_logo.png')`;
     if (subH) subH.textContent = 'Ver Sudaderas...';
   }
 
@@ -608,7 +608,7 @@ function updateCategorySlideshowNow() {
     if (cardC) cardC.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(10,10,12,0.92) 100%), url('${p.imageUrl}')`;
     if (subC) subC.textContent = p.name;
   } else {
-    if (cardC) cardC.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(10,10,12,0.9) 100%), url('assets/catch_sports_logo.png')`;
+    if (cardC) cardC.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(10,10,12,0.9) 100%), url('assets/dxt_logo.png')`;
     if (subC) subC.textContent = 'Ver Gorras...';
   }
 
@@ -618,7 +618,7 @@ function updateCategorySlideshowNow() {
     if (cardD) cardD.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(10,10,12,0.92) 100%), url('${p.imageUrl}')`;
     if (subD) subD.textContent = p.name;
   } else {
-    if (cardD) cardD.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(10,10,12,0.9) 100%), url('assets/catch_sports_logo.png')`;
+    if (cardD) cardD.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(10,10,12,0.9) 100%), url('assets/dxt_logo.png')`;
     if (subD) subD.textContent = 'Ver Colección Dama...';
   }
 }
@@ -764,7 +764,7 @@ function updateStoreHeader() {
   const heroContainer = document.getElementById('dynamicPortalHero');
 
   if (wizardTeamObj) {
-    const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(wizardTeamObj.id) : { team: wizardTeamObj.name, teamLogo: 'assets/catch_sports_logo.png' };
+    const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(wizardTeamObj.id) : { team: wizardTeamObj.name, teamLogo: 'assets/dxt_logo.png' };
     const colors = getTeamOfficialColors(wizardTeamObj.id);
     
     // Apply Team Official Color Dynamic Branding Theme!
@@ -787,7 +787,7 @@ function updateStoreHeader() {
             <div style="background: rgba(20, 18, 12, 0.95); border: 2px solid ${colors.primary}; border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: flex-start; gap: 12px; text-align: left; margin-bottom: 8px; box-shadow: 0 4px 16px ${colors.glow};">
               
               <!-- Giant Team Logo Left (100px sin Círculo Amarillo) -->
-              <img src="${tax.teamLogo}" referrerpolicy="no-referrer" style="width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 6px 16px rgba(0,0,0,0.9)); flex-shrink: 0; margin-right: 2px;" onerror="this.src='assets/catch_sports_logo.png'"/>
+              <img src="${tax.teamLogo}" referrerpolicy="no-referrer" style="width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 6px 16px rgba(0,0,0,0.9)); flex-shrink: 0; margin-right: 2px;" onerror="this.src='assets/dxt_logo.png'"/>
 
               <!-- Right Info Block (Right-Aligned Text: text-align: right) -->
               <div style="display: flex; flex-direction: column; align-items: flex-end; text-align: right; width: 100%;">
@@ -911,7 +911,7 @@ function createProductCard(product, id) {
   const card = document.createElement('div');
   card.className = 'product-card';
   
-  const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(product.team) : { sport: 'Deportes', icon: '🏆', league: 'Oficial', team: product.team, teamLogo: 'assets/catch_sports_logo.png' };
+  const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(product.team) : { sport: 'Deportes', icon: '🏆', league: 'Oficial', team: product.team, teamLogo: 'assets/dxt_logo.png' };
   const genderLabel = typeof getGenderLabel !== 'undefined' ? getGenderLabel(product.gender) : '👨 Caballero';
   const categoryLabel = typeof getCategoryLabel !== 'undefined' ? getCategoryLabel(product.category) : '👕 Artículo';
   
@@ -1133,12 +1133,12 @@ function createCompactProductCard(product, id) {
   card.className = 'compact-product-card';
   card.onclick = () => openProductDetailModal(id);
   
-  const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(product.team) : { teamLogo: 'assets/catch_sports_logo.png' };
+  const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(product.team) : { teamLogo: 'assets/dxt_logo.png' };
   const formattedPrice = typeof formatPrice !== 'undefined' ? formatPrice(product.price) : `$${product.price} MXN`;
 
   card.innerHTML = `
     <div class="compact-prod-img-box">
-      <img src="${product.imageUrl}" class="compact-prod-img" onerror="this.src='assets/catch_sports_logo.png'"/>
+      <img src="${product.imageUrl}" class="compact-prod-img" onerror="this.src='assets/dxt_logo.png'"/>
       ${tax.teamLogo ? `<img src="${tax.teamLogo}" class="compact-prod-team-logo"/>` : ''}
       ${product.badge && product.badge !== 'ninguno' ? `<span class="compact-prod-badge">OFICIAL</span>` : ''}
     </div>
@@ -1161,7 +1161,7 @@ window.openProductDetailModal = function(productId) {
   const modal = document.getElementById('productDetailModal');
   if (!overlay || !modal) return;
 
-  const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(product.team) : { sport: 'Deportes', icon: '🏆', league: 'Oficial', team: product.team, teamLogo: 'assets/catch_sports_logo.png' };
+  const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(product.team) : { sport: 'Deportes', icon: '🏆', league: 'Oficial', team: product.team, teamLogo: 'assets/dxt_logo.png' };
   const formattedPrice = typeof formatPrice !== 'undefined' ? formatPrice(product.price) : `$${product.price} MXN`;
   const formattedOrig = product.originalPrice ? (typeof formatPrice !== 'undefined' ? formatPrice(product.originalPrice) : `$${product.originalPrice} MXN`) : null;
 
@@ -1182,13 +1182,13 @@ window.openProductDetailModal = function(productId) {
     <button onclick="closeProductDetailModal()" style="position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.1); border: 1px solid #444; color: #fff; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 20;">✕</button>
 
     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-      <img src="${tax.teamLogo}" style="height: 28px; width: 28px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));" onerror="this.src='assets/catch_sports_logo.png'"/>
+      <img src="${tax.teamLogo}" style="height: 28px; width: 28px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));" onerror="this.src='assets/dxt_logo.png'"/>
       <span style="font-size: 11px; font-weight: 900; color: var(--accent-color); text-transform: uppercase;">
         ${tax.icon} ${tax.sport} · ${tax.league} · ${tax.team}
       </span>
     </div>
 
-    <img src="${product.imageUrl}" style="width: 100%; height: 260px; object-fit: contain; background: #000; border-radius: 12px; border: 1px solid #333; margin-bottom: 14px;" onerror="this.src='assets/catch_sports_logo.png'"/>
+    <img src="${product.imageUrl}" style="width: 100%; height: 260px; object-fit: contain; background: #000; border-radius: 12px; border: 1px solid #333; margin-bottom: 14px;" onerror="this.src='assets/dxt_logo.png'"/>
 
     <h2 style="font-size: 20px; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 6px;">${product.name}</h2>
     
@@ -1267,12 +1267,12 @@ window.buyNowWhatsApp = function(productId) {
   const size = window.selectedSizesState[productId] || 'M';
   const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(prod.team) : { team: prod.team };
   
-  const msg = `¡Hola Catch Sports! 👋 Me interesa comprar directamente este artículo de la tienda:%0A%0A` +
+  const msg = `¡Hola DXT Sports QRO! 👋 Me interesa comprar directamente este artículo de la tienda:%0A%0A` +
               `🏆 *${prod.name}*%0A` +
               `🛡️ Equipo: ${tax.team}%0A` +
               `📏 Talla seleccionada: ${size}%0A` +
               `💵 Precio: $${prod.price} MXN%0A%0A` +
-              `¿Tienen disponibilidad inmediata para envío?`;
+              `¿Tienen disponibilidad inmediata para envío en Querétaro / México?`;
               
   window.open(`https://wa.me/524423376955?text=${msg}`, '_blank');
 };
@@ -1318,7 +1318,7 @@ function updateCartUI() {
   if (badge) badge.textContent = totalCount;
   if (totalPriceEl) totalPriceEl.textContent = formatPrice(totalPrice);
   
-  localStorage.setItem('catch_sports_cart', JSON.stringify(cart));
+  localStorage.setItem('dxt_sports_cart', JSON.stringify(cart));
 
   if (!itemsContainer) return;
 
@@ -1468,7 +1468,7 @@ window.submitCheckoutOrder = async function(event) {
   }).join('\n');
   
   const whatsappMessage = 
-`🏆 *NUEVO PEDIDO - CATCH SPORTS* 🏆
+`🏆 *NUEVO PEDIDO - DXT SPORTS QRO* 🏆
 ----------------------------------
 👤 *Cliente:* ${name}
 📱 *Teléfono:* ${phone}

@@ -188,7 +188,7 @@ window.saveNewSport = function(e) {
       sport: name,
       sportKey: key,
       icon: icon,
-      leagueLogo: "assets/catch_sports_logo.png",
+      leagueLogo: "assets/dxt_logo.png",
       leagues: []
     });
   }
@@ -215,7 +215,7 @@ window.saveNewLeague = function(e) {
   e.preventDefault();
   const sportKey = document.getElementById('prodSport')?.value;
   const leagueName = document.getElementById('newLeagueName').value.trim();
-  const logo = document.getElementById('newLeagueLogo').value.trim() || 'assets/catch_sports_logo.png';
+  const logo = document.getElementById('newLeagueLogo').value.trim() || 'assets/dxt_logo.png';
 
   if (!sportKey || !leagueName) return;
 
@@ -254,7 +254,7 @@ window.saveNewTeam = function(e) {
   const sportKey = document.getElementById('prodSport')?.value;
   const leagueName = document.getElementById('prodLeague')?.value;
   const teamName = document.getElementById('newTeamName').value.trim();
-  const logo = document.getElementById('newTeamLogo').value.trim() || 'assets/catch_sports_logo.png';
+  const logo = document.getElementById('newTeamLogo').value.trim() || 'assets/dxt_logo.png';
 
   if (!sportKey || !leagueName || !teamName) return;
 

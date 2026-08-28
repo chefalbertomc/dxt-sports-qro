@@ -160,16 +160,16 @@ const SPORTS_CATALOG = [
     sport: "Fitness & General",
     sportKey: "general",
     icon: "🎒",
-    leagueLogo: "assets/catch_sports_logo.png",
+    leagueLogo: "assets/dxt_logo.png",
     leagues: [
       {
         league: "Accesorios",
-        leagueLogo: "assets/catch_sports_logo.png",
+        leagueLogo: "assets/dxt_logo.png",
         teams: [
-          { id: "cat-accesorios", name: "Accesorios Deportivos", logo: "assets/catch_sports_logo.png" },
-          { id: "cat-memorabilia", name: "Memorabilia y Coleccionables", logo: "assets/catch_sports_logo.png" },
-          { id: "cat-ropa", name: "Ropa Casual Deportiva", logo: "assets/catch_sports_logo.png" },
-          { id: "otros", name: "Otro / General", logo: "assets/catch_sports_logo.png" }
+          { id: "cat-accesorios", name: "Accesorios Deportivos", logo: "assets/dxt_logo.png" },
+          { id: "cat-memorabilia", name: "Memorabilia y Coleccionables", logo: "assets/dxt_logo.png" },
+          { id: "cat-ropa", name: "Ropa Casual Deportiva", logo: "assets/dxt_logo.png" },
+          { id: "otros", name: "Otro / General", logo: "assets/dxt_logo.png" }
         ]
       }
     ]
@@ -204,8 +204,10 @@ const STORE_BANK_DETAILS = {
   bank: "BBVA Bancomer",
   clabe: "012680015948392019",
   account: "1594839201",
-  owner: "CATCH SPORTS QRO / ALBERTO MUÑOZ",
-  phoneWhatsApp: "524423376955"
+  owner: "DXT SPORTS QRO / ALBERTO MUÑOZ",
+  phoneWhatsApp: "524423376955",
+  catalogVersion: "1.0",
+  lastUpdated: "2026-08-27"
 };
 
 // Full taxonomy breadcrumb lookup with official team/league logos (Exact & Prefix-Stripped Team ID Matching)
@@ -215,9 +217,9 @@ function getFullTaxonomy(teamId) {
       sport: "Deportes",
       icon: "🏆",
       league: "Oficial",
-      leagueLogo: "assets/catch_sports_logo.png",
-      team: "Catch Sports",
-      teamLogo: "assets/catch_sports_logo.png"
+      leagueLogo: "assets/dxt_logo.png",
+      team: "DXT Sports QRO",
+      teamLogo: "assets/dxt_logo.png"
     };
   }
 
@@ -239,7 +241,7 @@ function getFullTaxonomy(teamId) {
           league: l.league,
           leagueLogo: l.leagueLogo || s.leagueLogo,
           team: team.name,
-          teamLogo: team.logo || "assets/catch_sports_logo.png"
+          teamLogo: team.logo || "assets/dxt_logo.png"
         };
       }
     }
@@ -248,9 +250,9 @@ function getFullTaxonomy(teamId) {
     sport: "Deportes",
     icon: "🏆",
     league: "Oficial",
-    leagueLogo: "assets/catch_sports_logo.png",
+    leagueLogo: "assets/dxt_logo.png",
     team: teamId.toUpperCase(),
-    teamLogo: "assets/catch_sports_logo.png"
+    teamLogo: "assets/dxt_logo.png"
   };
 }
 

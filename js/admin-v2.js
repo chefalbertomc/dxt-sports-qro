@@ -224,7 +224,7 @@ window.saveNewSport = function(e) {
       sport: name,
       sportKey: key,
       icon: icon,
-      leagueLogo: "assets/catch_sports_logo.png",
+      leagueLogo: "assets/dxt_logo.png",
       leagues: []
     });
   }
@@ -251,7 +251,7 @@ window.saveNewLeague = function(e) {
   e.preventDefault();
   const sportKey = document.getElementById('prodSport')?.value;
   const leagueName = document.getElementById('newLeagueName').value.trim();
-  const logo = document.getElementById('newLeagueLogo').value.trim() || 'assets/catch_sports_logo.png';
+  const logo = document.getElementById('newLeagueLogo').value.trim() || 'assets/dxt_logo.png';
 
   if (!sportKey || !leagueName) return;
 
@@ -290,7 +290,7 @@ window.saveNewTeam = function(e) {
   const sportKey = document.getElementById('prodSport')?.value;
   const leagueName = document.getElementById('prodLeague')?.value;
   const teamName = document.getElementById('newTeamName').value.trim();
-  const logo = document.getElementById('newTeamLogo').value.trim() || 'assets/catch_sports_logo.png';
+  const logo = document.getElementById('newTeamLogo').value.trim() || 'assets/dxt_logo.png';
 
   if (!sportKey || !leagueName || !teamName) return;
 
@@ -700,9 +700,9 @@ function createTeamProductMockupBase64(category, teamName) {
     ctx.fillText(teamName.toUpperCase(), 175, 300);
   }
 
-  ctx.fillStyle = 'rgba(250, 204, 21, 0.9)';
+  ctx.fillStyle = 'rgba(255, 30, 56, 0.9)';
   ctx.font = 'bold 9px sans-serif';
-  ctx.fillText('PRODUCTO OFICIAL · CATCH SPORTS', 175, 325);
+  ctx.fillText('PRODUCTO OFICIAL · DXT SPORTS QRO', 175, 325);
 
   return canvas.toDataURL('image/jpeg', 0.65);
 }
