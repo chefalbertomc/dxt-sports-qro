@@ -79,14 +79,14 @@
           <span style="color:#ff1e38;">DXT</span>
           <span style="color:#00b0ff;">SPORTS</span>
           <span style="background:#ff1e38; color:#fff; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:2px;">ADMIN</span>
-          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v329.0</span>
+          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v330.0</span>
         </div>
-        <div class="logo-text-sub">LOGÍSTICA INTEGRAL · COMPRAS CDMX (MARTES) & ANTICIPO 50% / SALDO JUEVES</div>
+        <div class="logo-text-sub">LOGÍSTICA INTEGRAL · ADMIN PANEL v330.0 · OPTIMIZADO MÓVIL & LAPTOP</div>
       </div>
     </a>
     <div class="nav-actions">
       <span style="background:rgba(34, 197, 94, 0.15); border:1px solid #22c55e; color:#22c55e; font-size:10px; font-weight:800; padding:4px 8px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
-        🟢 v329.0 (Compras CDMX & Anticipo 50%)
+        🟢 v330.0 (Panel Admin Rediseñado)
       </span>
       <a href="index.html" target="_blank" rel="noopener" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">👁️ Ver Tienda ↗</a>
       <button id="btnLogout" class="btn btn-outline" style="display: none; font-size: 11px; padding: 6px 12px; border-color: #ef4444; color: #ef4444;">Salir</button>
@@ -119,11 +119,11 @@
       
       <div class="form-group" style="margin-bottom: 12px; text-align: left;">
         <label style="font-size: 11px; font-weight: 800; color: var(--accent-color);">CORREO ELECTRÓNICO</label>
-        <input type="email" id="adminEmail" class="form-control" value="chefalbertomc@gmail.com" placeholder="tu-correo@gmail.com" style="padding: 10px; font-size: 13px;">
+        <input type="email" id="adminEmail" class="form-control" placeholder="tu-correo@gmail.com" style="padding: 10px; font-size: 13px;" autocomplete="email">
       </div>
       <div class="form-group" style="margin-bottom: 16px; text-align: left;">
         <label style="font-size: 11px; font-weight: 800; color: var(--accent-color);">CONTRASEÑA</label>
-        <input type="password" id="adminPassword" class="form-control" value="admin123" placeholder="••••••••" style="padding: 10px; font-size: 13px;">
+        <input type="password" id="adminPassword" class="form-control" placeholder="••••••••" style="padding: 10px; font-size: 13px;" autocomplete="current-password">
       </div>
       
       <button id="btnLogin" class="btn" style="width: 100%; padding: 10px; font-size: 13px; margin-bottom: 10px;">Entrar con Contraseña →</button>
@@ -136,14 +136,13 @@
     <!-- Admin Section Tabs & Views -->
     <div id="adminSection" style="display: none;">
       
-      <!-- Mode Tabs (INVENTARIO ES EL BOTÓN PRINCIPAL Y PREDETERMINADO) -->
-      <div style="display: flex; gap: 8px; margin-bottom: 14px; justify-content: center; flex-wrap: wrap;">
-        <button type="button" class="btn active" id="tabManageBtn" onclick="switchAdminTab('manage')" style="padding: 8px 12px; font-size: 12px;">📦 Catálogo e Inventario</button>
-        <button type="button" class="btn btn-outline" id="tabOrdersBtn" onclick="switchAdminTab('orders')" style="padding: 8px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
-          🛍️ Pedidos & Bodega <span id="ordersBadgeCount" style="background: #eab308; color: #000; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 10px; display: none;">0</span>
+      <!-- Mode Tabs - Scrollable on mobile -->
+      <div style="display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
+        <button type="button" class="btn active" id="tabManageBtn" onclick="switchAdminTab('manage')" style="padding: 10px 16px; font-size: 12px; white-space: nowrap; min-width: fit-content; flex-shrink: 0;">📦 Catálogo e Inventario</button>
+        <button type="button" class="btn btn-outline" id="tabOrdersBtn" onclick="switchAdminTab('orders')" style="padding: 10px 16px; font-size: 12px; white-space: nowrap; min-width: fit-content; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;">
+          🛍️ Pedidos &amp; Bodega <span id="ordersBadgeCount" style="background: #eab308; color: #000; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 10px; display: none;">0</span>
         </button>
-        <button type="button" class="btn btn-outline" id="tabSingleBtn" onclick="switchAdminTab('single')" style="padding: 8px 12px; font-size: 12px;">➕ Publicar Nuevo</button>
-        <button type="button" class="btn btn-outline" id="tabBulkBtn" onclick="switchAdminTab('bulk')" style="padding: 8px 12px; font-size: 12px;">⚡ Carga Masiva</button>
+        <button type="button" class="btn btn-outline" id="tabReportesBtn" onclick="switchAdminTab('reportes')" style="padding: 10px 16px; font-size: 12px; white-space: nowrap; min-width: fit-content; flex-shrink: 0; border-color: #a855f7; color: #a855f7;">📊 Reportes</button>
       </div>
 
       <!-- VISTA 1: CATÁLOGO E INVENTARIO (PREDETERMINADA AL ENTRAR) -->
@@ -210,15 +209,19 @@
 
           <!-- TOOLBAR & RESET BTN -->
           <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #333; flex-wrap: wrap; gap: 8px;">
-            <div style="display: flex; gap: 6px; align-items: center;">
-              <input type="text" id="adminSearchInput" class="form-control" placeholder="🔍 O busca por nombre..." style="max-width: 200px; padding: 4px 8px; font-size: 11px;">
-              <button type="button" class="btn" id="btnFilterPending" onclick="filterOnlyPendingCatalog()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; font-size: 11px; padding: 4px 10px; font-weight: 800; border-radius: 6px; cursor: pointer;">
-                ⚠️ Pendientes (<span id="pendingCountBadge">0</span>)
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+              <input type="text" id="adminSearchInput" class="form-control" placeholder="🔍 Buscar por nombre..." style="max-width: 180px; padding: 6px 10px; font-size: 12px;">
+              <button type="button" id="btnFilterPending" onclick="filterOnlyPendingCatalog()" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(239, 68, 68, 0.12); border: 1.5px solid #ef4444; color: #ef4444; font-size: 12px; padding: 6px 12px; font-weight: 800; border-radius: 8px; cursor: pointer; letter-spacing: 0.3px;">
+                <span style="font-size: 14px;">⚠️</span>
+                Pendientes&nbsp;<span id="pendingCountBadge" style="background: #ef4444; color: #fff; font-size: 11px; font-weight: 900; padding: 1px 7px; border-radius: 20px; min-width: 20px; text-align: center; line-height: 1.4;">0</span>
               </button>
             </div>
-            <button type="button" class="btn btn-outline" style="font-size: 10px; padding: 4px 8px;" onclick="resetAdminCatalogFilter()">
-              🌐 Ver Todo Sin Filtros
-            </button>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" onclick="openPublishModal()" style="display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(135deg, #ff1e38, #c2001f); border: none; color: #fff; font-size: 12px; padding: 6px 12px; font-weight: 800; border-radius: 8px; cursor: pointer;">➕ Publicar Nuevo</button>
+              <button type="button" onclick="switchAdminTab('bulk')" style="display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(135deg, #eab308, #a16207); border: none; color: #000; font-size: 12px; padding: 6px 12px; font-weight: 800; border-radius: 8px; cursor: pointer;">⚡ Carga Masiva</button>
+              <button type="button" onclick="confirmDeleteAllProducts()" style="display: inline-flex; align-items: center; gap: 5px; background: rgba(239, 68, 68, 0.08); border: 1.5px solid #ef4444; color: #ef4444; font-size: 11px; padding: 6px 10px; font-weight: 700; border-radius: 8px; cursor: pointer;">🗑️ Limpiar Todo</button>
+              <button type="button" class="btn btn-outline" style="font-size: 11px; padding: 6px 10px;" onclick="resetAdminCatalogFilter()">🌐 Ver Todo</button>
+            </div>
           </div>
 
         </div>
@@ -236,7 +239,7 @@
 
       </div>
 
-      <!-- VISTA 2: FORMULARIO PRINCIPAL DE PUBLICACIÓN / EDICIÓN -->
+      <!-- VISTA 2: FORMULARIO PRINCIPAL DE PUBLICACIÓN / EDICIÓN (También accesible via modal) -->
       <div id="singleUploadCard" class="admin-card" style="display: none; padding: 16px; margin-bottom: 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <h2 id="formTitle" style="font-size: 18px; color: var(--accent-color); margin: 0;">➕ Publicar Nuevo Artículo</h2>
@@ -590,6 +593,58 @@
 
         </div>
 
+      </div>
+
+      <!-- VISTA 5: REPORTES -->
+      <div id="reportesSection" class="admin-card" style="display: none; margin-bottom: 16px; padding: 16px;">
+        <div style="margin-bottom: 16px;">
+          <h2 style="font-size: 18px; color: #a855f7; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">📊 Reportes &amp; Configuración DXT</h2>
+          <p class="text-secondary" style="font-size: 12px; margin-bottom: 0;">Estadísticas de ventas, configuración de datos bancarios, gestión de administradores y ajustes de la tienda.</p>
+        </div>
+
+        <!-- BANK DETAILS CONFIG -->
+        <div style="background: rgba(0,176,255,0.07); border: 1px solid #00b0ff; border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+          <div style="font-size: 12px; font-weight: 800; color: #00b0ff; margin-bottom: 10px; text-transform: uppercase;">🏦 Datos Bancarios SPEI (Tienda Web)</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
+            <div>
+              <label style="font-size: 10px; font-weight: 700; color: #aaa; display: block; margin-bottom: 3px;">Banco</label>
+              <input type="text" id="cfgBank" class="form-control" placeholder="BBVA México" style="padding: 6px 10px; font-size: 12px;">
+            </div>
+            <div>
+              <label style="font-size: 10px; font-weight: 700; color: #aaa; display: block; margin-bottom: 3px;">Beneficiario</label>
+              <input type="text" id="cfgBenef" class="form-control" placeholder="DXT SPORTS QRO" style="padding: 6px 10px; font-size: 12px;">
+            </div>
+            <div>
+              <label style="font-size: 10px; font-weight: 700; color: #aaa; display: block; margin-bottom: 3px;">CLABE (18 dígitos)</label>
+              <input type="text" id="cfgClabe" class="form-control" placeholder="012680015897463219" maxlength="18" style="padding: 6px 10px; font-size: 12px; font-family: monospace; letter-spacing: 1px;">
+            </div>
+            <div>
+              <label style="font-size: 10px; font-weight: 700; color: #aaa; display: block; margin-bottom: 3px;">WhatsApp Admin (10 dígitos)</label>
+              <input type="tel" id="cfgWA" class="form-control" placeholder="4421234567" maxlength="10" style="padding: 6px 10px; font-size: 12px;">
+            </div>
+          </div>
+          <button type="button" onclick="saveStoreConfig()" class="btn" style="margin-top: 10px; font-size: 12px; padding: 8px 16px;">💾 Guardar Configuración</button>
+        </div>
+
+        <!-- ADMIN EMAILS CONFIG -->
+        <div style="background: rgba(168,85,247,0.07); border: 1px solid #a855f7; border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+          <div style="font-size: 12px; font-weight: 800; color: #a855f7; margin-bottom: 8px; text-transform: uppercase;">🔐 Administradores Autorizados (Google)</div>
+          <p style="font-size: 11px; color: #aaa; margin-bottom: 10px;">Estos correos pueden acceder al panel de admin con Google Sign-In. Los cambios se guardan en Firestore → colección <code style="color:#a855f7;">admins</code>.</p>
+          <div id="adminEmailsList" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
+            <!-- dynamic -->
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="email" id="newAdminEmailInput" class="form-control" placeholder="nuevo-admin@gmail.com" style="padding: 6px 10px; font-size: 12px; flex: 1;">
+            <button type="button" onclick="addNewAdminEmail()" class="btn" style="font-size: 12px; padding: 6px 14px; white-space: nowrap;">➕ Agregar Admin</button>
+          </div>
+        </div>
+
+        <!-- STATS PLACEHOLDER -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px dashed #333; border-radius: 10px; padding: 20px; text-align: center;">
+          <div style="font-size: 28px; margin-bottom: 6px;">📈</div>
+          <div style="font-size: 13px; font-weight: 800; color: #fff;">Estadísticas Avanzadas (Próximamente)</div>
+          <p style="font-size: 11px; color: #666; margin: 4px 0 0;">Gráficas de ventas por semana, por vendedor y por equipo deportivo.</p>
+        </div>
       </div>
 
     </div>
@@ -959,8 +1014,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   
-  <script src="js/firebase-config.js?v=329.0"></script>
-  <script src="js/teams.js?v=329.0"></script>
-  <script src="js/admin-v2.js?v=329.0"></script>
+  <script src="js/firebase-config.js?v=330.0"></script>
+  <script src="js/teams.js?v=330.0"></script>
+  <script src="js/admin-v2.js?v=330.0"></script>
 </body>
 </html>

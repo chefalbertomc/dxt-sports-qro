@@ -165,42 +165,51 @@ window.switchAdminTab = function(tabName, skipPushHistory = false) {
   const singleCard = document.getElementById('singleUploadCard');
   const bulkCard = document.getElementById('bulkUploadCard');
   const ordersCard = document.getElementById('ordersSection');
-  
+  const reportesCard = document.getElementById('reportesSection');
+
   const manageBtn = document.getElementById('tabManageBtn');
-  const singleBtn = document.getElementById('tabSingleBtn');
-  const bulkBtn = document.getElementById('tabBulkBtn');
   const ordersBtn = document.getElementById('tabOrdersBtn');
+  const reportesBtn = document.getElementById('tabReportesBtn');
 
   if (!skipPushHistory && history.pushState) {
     history.pushState({ adminTab: tabName, adminLock: true }, '', `#tab-${tabName}`);
   }
 
   // Hide all sections first
-  if (manageCard) manageCard.style.display = 'none';
-  if (singleCard) singleCard.style.display = 'none';
-  if (bulkCard) bulkCard.style.display = 'none';
-  if (ordersCard) ordersCard.style.display = 'none';
+  [manageCard, singleCard, bulkCard, ordersCard, reportesCard].forEach(el => { if (el) el.style.display = 'none'; });
 
-  // Deactivate all buttons
+  // Deactivate all tab buttons
+  [manageBtn, ordersBtn, reportesBtn].forEach(btn => {
+    if (btn) btn.className = btn.style.borderColor ? 'btn btn-outline' : 'btn btn-outline';
+  });
   if (manageBtn) manageBtn.className = 'btn btn-outline';
-  if (singleBtn) singleBtn.className = 'btn btn-outline';
-  if (bulkBtn) bulkBtn.className = 'btn btn-outline';
   if (ordersBtn) ordersBtn.className = 'btn btn-outline';
+  if (reportesBtn) { reportesBtn.className = 'btn btn-outline'; reportesBtn.style.borderColor = '#a855f7'; reportesBtn.style.color = '#a855f7'; }
 
   if (tabName === 'manage') {
     if (manageCard) manageCard.style.display = 'block';
     if (manageBtn) manageBtn.className = 'btn active';
   } else if (tabName === 'single') {
     if (singleCard) singleCard.style.display = 'block';
-    if (singleBtn) singleBtn.className = 'btn active';
+    if (manageBtn) manageBtn.className = 'btn active'; // Publicar stays under Catalog
   } else if (tabName === 'bulk') {
     if (bulkCard) bulkCard.style.display = 'block';
-    if (bulkBtn) bulkBtn.className = 'btn active';
+    if (manageBtn) manageBtn.className = 'btn active'; // Bulk stays under Catalog
   } else if (tabName === 'orders') {
     if (ordersCard) ordersCard.style.display = 'block';
     if (ordersBtn) ordersBtn.className = 'btn active';
     if (typeof loadAdminOrders === 'function') loadAdminOrders();
+  } else if (tabName === 'reportes') {
+    if (reportesCard) reportesCard.style.display = 'block';
+    if (reportesBtn) { reportesBtn.className = 'btn active'; reportesBtn.style.borderColor = ''; reportesBtn.style.color = ''; }
+    loadReportesData();
   }
+};
+
+// Open Publish form as a sub-view inside Catalog tab
+window.openPublishModal = function() {
+  switchAdminTab('single');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 // Intercept Physical Phone / Browser Back Button to stay inside Admin
@@ -3676,4 +3685,170 @@ window.viewTransferProof = function(proofUrl) {
 };
 
 window.closeProofViewerModal = () => document.getElementById('proofViewerModal')?.classList.remove('active');
+
+// ============================================
+// 🗑️ DELETE ALL PRODUCTS FROM CATALOG
+// ============================================
+window.confirmDeleteAllProducts = function() {
+  const count = (window.currentProducts || []).length;
+  if (count === 0) {
+    alert('El catálogo ya está vacío.');
+    return;
+  }
+  const confirmed = confirm(`⚠️ ATENCIÓN: Esto eliminará PERMANENTEMENTE los ${count} productos del catálogo de Firestore.\n\nEsta acción NO SE PUEDE DESHACER.\n\n¿Estás 100% seguro?`);
+  if (!confirmed) return;
+  const confirmed2 = confirm(`🔴 SEGUNDA CONFIRMACIÓN\n\nVas a borrar ${count} productos. Escribe "BORRAR" en el siguiente cuadro para continuar.`);
+  if (!confirmed2) return;
+  const word = prompt('Escribe exactamente: BORRAR');
+  if (word !== 'BORRAR') {
+    alert('Cancelado. No escribiste BORRAR correctamente.');
+    return;
+  }
+  deleteAllProducts();
+};
+
+async function deleteAllProducts() {
+  const prods = window.currentProducts || [];
+  if (prods.length === 0) return;
+
+  try {
+    const batchSize = 400;
+    for (let i = 0; i < prods.length; i += batchSize) {
+      const batch = db.batch();
+      const chunk = prods.slice(i, i + batchSize);
+      chunk.forEach(p => {
+        batch.delete(db.collection('products').doc(p.id));
+      });
+      await batch.commit();
+    }
+    alert(`✅ Catálogo limpiado. Se eliminaron ${prods.length} productos correctamente.`);
+    window.currentProducts = [];
+    window.allProductsList = [];
+    const countEl = document.getElementById('adminProdCount');
+    if (countEl) countEl.textContent = '0';
+    const listEl = document.getElementById('adminProductList');
+    if (listEl) listEl.innerHTML = '<div style="padding:24px; text-align:center; color:#666;">Catálogo vacío. Usa ➕ Publicar Nuevo o ⚡ Carga Masiva para agregar productos.</div>';
+  } catch (err) {
+    alert('Error al eliminar productos: ' + err.message);
+  }
+}
+
+// ============================================
+// 📊 REPORTES TAB - Load Data
+// ============================================
+async function loadReportesData() {
+  // Load current store config
+  try {
+    const doc = await db.collection('config').doc('store').get();
+    if (doc.exists) {
+      const d = doc.data();
+      const cfgBank = document.getElementById('cfgBank');
+      const cfgBenef = document.getElementById('cfgBenef');
+      const cfgClabe = document.getElementById('cfgClabe');
+      const cfgWA = document.getElementById('cfgWA');
+      if (cfgBank && d.bank) cfgBank.value = d.bank;
+      if (cfgBenef && d.beneficiary) cfgBenef.value = d.beneficiary;
+      if (cfgClabe && d.clabe) cfgClabe.value = d.clabe;
+      if (cfgWA && d.phoneWhatsApp) cfgWA.value = d.phoneWhatsApp;
+    }
+  } catch (e) {}
+
+  // Load admins list
+  try {
+    const snapshot = await db.collection('admins').get();
+    const listEl = document.getElementById('adminEmailsList');
+    if (!listEl) return;
+    if (snapshot.empty) {
+      listEl.innerHTML = '<div style="font-size:11px; color:#666;">Sin administradores en Firestore.</div>';
+      return;
+    }
+    listEl.innerHTML = snapshot.docs.map(d => `
+      <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(168,85,247,0.08); border:1px solid #a855f7; border-radius:6px; padding:6px 10px;">
+        <span style="font-size:12px; color:#fff;">${d.id} ${d.data().active === false ? '<span style="color:#ef4444; font-size:10px;">(Desactivado)</span>' : '<span style="color:#22c55e; font-size:10px;">✅ Activo</span>'}</span>
+        <button type="button" onclick="removeAdminEmail('${d.id}')" style="background:none; border:1px solid #ef4444; color:#ef4444; border-radius:4px; padding:2px 8px; font-size:10px; cursor:pointer;">Quitar</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.warn('Load admins error:', e);
+  }
+}
+
+window.saveStoreConfig = async function() {
+  const bank = document.getElementById('cfgBank')?.value.trim();
+  const benef = document.getElementById('cfgBenef')?.value.trim();
+  const clabe = document.getElementById('cfgClabe')?.value.trim();
+  const wa = document.getElementById('cfgWA')?.value.trim();
+
+  if (!bank || !benef || !clabe || !wa) {
+    alert('Por favor completa todos los campos de configuración.');
+    return;
+  }
+  if (clabe.length !== 18) {
+    alert('La CLABE debe tener exactamente 18 dígitos.');
+    return;
+  }
+  if (wa.length !== 10) {
+    alert('El WhatsApp debe tener exactamente 10 dígitos (sin código de país).');
+    return;
+  }
+
+  try {
+    await db.collection('config').doc('store').set({
+      bank, beneficiary: benef, clabe,
+      phoneWhatsApp: `521${wa}`,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    alert('✅ Configuración guardada correctamente. Los cambios aplican de inmediato en la tienda web.');
+  } catch (err) {
+    alert('Error al guardar: ' + err.message);
+  }
+};
+
+window.addNewAdminEmail = async function() {
+  const email = document.getElementById('newAdminEmailInput')?.value.trim().toLowerCase();
+  if (!email || !email.includes('@')) {
+    alert('Por favor escribe un correo válido.');
+    return;
+  }
+  try {
+    await db.collection('admins').doc(email).set({ active: true, addedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    document.getElementById('newAdminEmailInput').value = '';
+    alert(`✅ ${email} ahora tiene acceso como administrador.`);
+    loadReportesData();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+};
+
+window.removeAdminEmail = async function(email) {
+  if (!confirm(`¿Quitar el acceso de administrador a ${email}?`)) return;
+  try {
+    await db.collection('admins').doc(email).update({ active: false });
+    alert(`🔒 Acceso desactivado para ${email}.`);
+    loadReportesData();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+};
+
+// ============================================
+// 🔐 AUTO-SEED FIRESTORE ADMIN ACCOUNT
+// ============================================
+async function ensureAdminEmailInFirestore() {
+  const emails = ['chefalbertomc@gmail.com', 'dxtsportsqro@gmail.com'];
+  try {
+    for (const email of emails) {
+      const docRef = db.collection('admins').doc(email);
+      const doc = await docRef.get();
+      if (!doc.exists) {
+        await docRef.set({ active: true, seeded: true, addedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      }
+    }
+  } catch (e) {
+    console.warn('Admin seed warning (non-critical):', e);
+  }
+}
+
+// Run seed once on load
+ensureAdminEmailInFirestore();
 
