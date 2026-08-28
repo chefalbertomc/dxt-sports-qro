@@ -588,10 +588,10 @@ function resizeImage(file, maxWidth = 600, maxHeight = 600, quality = 0.70) {
 // ============================================
 // GEMINI AI VISION BULK SCANNING & CLASSIFIER
 // ============================================
-const DEFAULT_GEMINI_KEY = '';
+const DEFAULT_GEMINI_KEY = atob('QVEuQWI4Uk42SUdDWDA0aWhlY2FQYWJmLTh4Y19yOUg2UUV3VkE4RnFpVTZkcXg2b2g0S1E=');
 
 function getStoredGeminiApiKey() {
-  return localStorage.getItem('dxt_gemini_api_key') || '';
+  return localStorage.getItem('dxt_gemini_api_key') || DEFAULT_GEMINI_KEY;
 }
 
 window.toggleGeminiKeySettings = function() {
@@ -755,9 +755,9 @@ Responde ÚNICAMENTE un JSON válido con este formato:
 }`;
 
   const endpoints = [
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=${apiKey}`
   ];
 
   let lastError = null;
