@@ -615,10 +615,105 @@ window.saveGeminiApiKey = function() {
   }
 };
 
+// Local Sports Keyword Parser (Secondary Fallback)
+function parseSportsInfoFromFilename(filename) {
+  const fn = (filename || '').toLowerCase().replace(/[-_]/g, ' ');
+  const catalog = window.SPORTS_CATALOG || SPORTS_CATALOG;
+  
+  let matchedTeamId = 'otros';
+  let matchedPlayer = '';
+  let matchedCategory = 'jerseys';
+  let matchedGender = 'caballero';
+
+  // Categories
+  if (fn.includes('gorra') || fn.includes('cap') || fn.includes('hat') || fn.includes('39thirty') || fn.includes('59fifty')) {
+    matchedCategory = 'gorras';
+    matchedGender = 'unisex';
+  } else if (fn.includes('hoodie') || fn.includes('sudadera') || fn.includes('jacket') || fn.includes('chamarra')) {
+    matchedCategory = 'chamarras';
+  } else if (fn.includes('balon') || fn.includes('ball')) {
+    matchedCategory = 'balones';
+  }
+
+  // Genders
+  if (fn.includes('dama') || fn.includes('women') || fn.includes('womens') || fn.includes('mujer')) {
+    matchedGender = 'dama';
+  } else if (fn.includes('nino') || fn.includes('youth') || fn.includes('infantil') || fn.includes('kids')) {
+    matchedGender = 'nino';
+  }
+
+  // Famous players lookup
+  const PLAYERS = [
+    { key: 'brady', name: 'Tom Brady #12', team: 'nfl-patriots' },
+    { key: 'lamar', name: 'Lamar Jackson #8', team: 'nfl-ravens' },
+    { key: 'jackson', name: 'Lamar Jackson #8', team: 'nfl-ravens' },
+    { key: 'mahomes', name: 'Patrick Mahomes #15', team: 'nfl-chiefs' },
+    { key: 'kelce', name: 'Travis Kelce #87', team: 'nfl-chiefs' },
+    { key: 'allen', name: 'Josh Allen #17', team: 'nfl-bills' },
+    { key: 'smith-njigba', name: 'Jaxon Smith-Njigba #11', team: 'nfl-seahawks' },
+    { key: 'njigba', name: 'Jaxon Smith-Njigba #11', team: 'nfl-seahawks' },
+    { key: 'manning', name: 'Peyton Manning #18', team: 'nfl-broncos' },
+    { key: 'watt', name: 'T.J. Watt #90', team: 'steelers' },
+    { key: 'prescott', name: 'Dak Prescott #4', team: 'nfl-cowboys' },
+    { key: 'purdy', name: 'Brock Purdy #13', team: 'nfl-49ers' },
+    { key: 'mccaffrey', name: 'Christian McCaffrey #23', team: 'nfl-49ers' },
+    { key: 'hurts', name: 'Jalen Hurts #1', team: 'nfl-eagles' },
+    { key: 'burrow', name: 'Joe Burrow #9', team: 'nfl-bengals' },
+    { key: 'rodgers', name: 'Aaron Rodgers #8', team: 'nfl-jets' },
+    { key: 'messi', name: 'Lionel Messi #10', team: 'soc-barcelona' },
+    { key: 'cr7', name: 'Cristiano Ronaldo #7', team: 'soc-realmadrid' },
+    { key: 'ronaldo', name: 'Cristiano Ronaldo #7', team: 'soc-realmadrid' },
+    { key: 'checo', name: 'Checo Pérez #11', team: 'f1-checoperez' },
+    { key: 'perez', name: 'Checo Pérez #11', team: 'f1-checoperez' }
+  ];
+
+  for (const p of PLAYERS) {
+    if (fn.includes(p.key)) {
+      matchedPlayer = p.name;
+      matchedTeamId = p.team;
+      break;
+    }
+  }
+
+  // Team keywords lookup if player didn't match team
+  if (matchedTeamId === 'otros') {
+    for (const s of catalog) {
+      for (const l of s.leagues) {
+        for (const t of l.teams) {
+          const tWords = t.name.toLowerCase().split(' ');
+          if (tWords.some(w => w.length > 3 && fn.includes(w))) {
+            matchedTeamId = t.id;
+            break;
+          }
+        }
+        if (matchedTeamId !== 'otros') break;
+      }
+      if (matchedTeamId !== 'otros') break;
+    }
+  }
+
+  const tax = getFullTaxonomy(matchedTeamId);
+  const teamLabel = (matchedTeamId !== 'otros') ? `${tax.league} ${tax.team}` : '';
+  const cleanTitle = `Jersey ${teamLabel} ${matchedPlayer}`.trim().replace(/\s+/g, ' ');
+
+  return {
+    teamId: matchedTeamId,
+    category: matchedCategory,
+    gender: matchedGender,
+    player: matchedPlayer,
+    edition: 'Oficial',
+    name: cleanTitle.length > 10 ? cleanTitle : filename.replace(/\.[^/.]+$/, "").toUpperCase(),
+    price: 899,
+    description: 'Artículo deportivo de utilería bordada oficial de alta resistencia.'
+  };
+}
+
 // Analyze single image via Gemini Vision Multimodal API
 async function analyzeImageWithGeminiVision(base64DataUrl) {
   const apiKey = getStoredGeminiApiKey();
-  if (!apiKey) return null;
+  if (!apiKey) {
+    throw new Error("MISSING_API_KEY");
+  }
 
   // Extract pure base64 without prefix
   const pureBase64 = base64DataUrl.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
@@ -634,32 +729,29 @@ async function analyzeImageWithGeminiVision(base64DataUrl) {
     });
   });
 
-  const promptText = `Eres un experto catalogador de mercancía deportiva oficial (NFL, NBA, MLB, LMB México, Liga MX, Fútbol Europeo, F1).
-Analiza con máxima precisión la fotografía deportiva adjunta.
-
-EQUIPOS DISPONIBLES:
+  const promptText = `Eres un catalogador deportivo profesional de máxima precisión.
+Analiza la foto deportiva adjunta e identifica:
+1. Equipo exacto: busca el logo/escudo/letras y emparéjalo con uno de estos IDs:
 ${teamListPrompt.join(', ')}
 
-INSTRUCCIONES DE DETECCIÓN:
-1. "teamId": Elige el 'id' exacto del equipo que aparece en la prenda/gorra/balón. Si no coincide ninguno, pon 'otros'.
-2. "category": 'jerseys' | 'gorras' | 'chamarras' | 'calzado' | 'balones' | 'accesorios'
-3. "gender": 'caballero' | 'dama' | 'nino' | 'unisex' (Gorras y calzado suelen ser 'unisex', jerseys de hombre 'caballero').
-4. "player": Nombre y dorsal del jugador si está impreso o bordado (ej. "T.J. Watt #90", "Patrick Mahomes #15", "Travis Kelce #87", "Lionel Messi #10", "Checo Pérez #11"). Si no tiene jugador pon "Edición General".
-5. "edition": "Local (Home)" | "Visita (Away)" | "Color Rush" | "Salute to Service" | "Rivalry" | "Alternativo" | "Retro" | "Oficial"
-6. "name": Genera un título comercial formal en Español para tienda online, ejemplo: "Jersey NFL Pittsburgh Steelers #90 T.J. Watt Color Rush Negro" o "Gorra New Era Dallas Cowboys 39THIRTY Azul Marino".
-7. "price": Sugiere precio estándar en Pesos Mexicanos (MXN): Jersey: 899 a 1899, Gorra: 799 a 899, Sudadera/Chamarra: 1199 a 1499, Balón: 599 a 899.
-8. "description": Breve descripción comercial (1-2 oraciones) resaltando tela transpirable de alta tecnología y detalles bordados oficiales.
+2. Tipo de producto: 'jerseys' | 'gorras' | 'chamarras' | 'calzado' | 'balones' | 'accesorios'
+3. Género: 'caballero' | 'dama' | 'nino' | 'unisex'
+4. Jugador y número: si tiene dorsal/nombre (ej. "Lamar Jackson #8", "Tom Brady #12", "Josh Allen #17", "Jaxon Smith-Njigba #11", "Peyton Manning #18", "T.J. Watt #90"). Si no tiene pon "Edición General".
+5. Edición / Versión: "Local", "Visita", "Color Rush", "Salute to Service", "Rivalry", "Throwback", "Alternativo".
+6. Título Comercial en Español: ej. "Jersey NFL Baltimore Ravens #8 Lamar Jackson Morado Local".
+7. Precio sugerido en MXN (número entero, ej. 899 o 1899).
+8. Descripción breve en español (1-2 oraciones).
 
-Responde ÚNICAMENTE un objeto JSON válido con este formato:
+Responde ÚNICAMENTE un JSON válido con este formato:
 {
-  "teamId": "steelers",
+  "teamId": "nfl-ravens",
   "category": "jerseys",
   "gender": "caballero",
-  "player": "T.J. Watt #90",
-  "edition": "Color Rush",
-  "name": "Jersey NFL Pittsburgh Steelers #90 T.J. Watt Color Rush",
+  "player": "Lamar Jackson #8",
+  "edition": "Local",
+  "name": "Jersey NFL Baltimore Ravens #8 Lamar Jackson Morado",
   "price": 899,
-  "description": "Jersey oficial de alta resistencia con detalles y números bordados de utilería."
+  "description": "Jersey oficial de utilería con números bordados y tela de alto rendimiento."
 }`;
 
   const endpoints = [
@@ -667,6 +759,8 @@ Responde ÚNICAMENTE un objeto JSON válido con este formato:
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`
   ];
+
+  let lastError = null;
 
   for (const url of endpoints) {
     try {
@@ -682,22 +776,28 @@ Responde ÚNICAMENTE un objeto JSON válido con este formato:
           }],
           generationConfig: {
             response_mime_type: "application/json",
-            temperature: 0.2
+            temperature: 0.1
           }
         })
       });
 
-      if (!response.ok) continue;
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        lastError = errJson?.error?.message || `HTTP ${response.status}`;
+        continue;
+      }
+
       const data = await response.json();
       const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (textOutput) {
         return JSON.parse(textOutput);
       }
     } catch (err) {
-      console.warn('Gemini vision endpoint failed, trying next:', err);
+      lastError = err.message;
     }
   }
-  return null;
+
+  throw new Error(lastError || "No response from Gemini API");
 }
 
 // Bulk Upload Logic with Gemini AI Integration
@@ -715,17 +815,33 @@ if (bulkInput) {
     const progressText = document.getElementById('aiScanStatusText');
     const progressPercent = document.getElementById('aiScanProgressPercent');
     const progressBar = document.getElementById('aiScanProgressBar');
-    const useAI = document.getElementById('chkAutoScanGemini')?.checked ?? true;
+    let useAI = document.getElementById('chkAutoScanGemini')?.checked ?? true;
+
+    // Check if API key is present before starting
+    let currentApiKey = getStoredGeminiApiKey();
+    if (useAI && !currentApiKey) {
+      const enteredKey = prompt(
+        "🤖 Para activar el escaneo inteligente con Gemini Vision, ingresa tu API Key de Google (de aistudio.google.com):",
+        ""
+      );
+      if (enteredKey && enteredKey.trim()) {
+        localStorage.setItem('dxt_gemini_api_key', enteredKey.trim());
+        currentApiKey = enteredKey.trim();
+      } else {
+        useAI = false;
+        alert("ℹ️ Escaneando en modo local por nombre de archivo. Puedes configurar tu clave de Gemini arriba en cualquier momento.");
+      }
+    }
 
     bulkItems = [];
     if (cardsList) cardsList.innerHTML = '';
     if (previewContainer) previewContainer.style.display = 'none';
 
-    if (useAI && progressBox) {
+    if (progressBox) {
       progressBox.style.display = 'block';
       progressBar.style.width = '0%';
       progressPercent.textContent = '0%';
-      progressText.textContent = `🤖 Optimizando y analizando ${files.length} fotos con Gemini AI...`;
+      progressText.textContent = `🤖 Procesando ${files.length} fotos deportivas...`;
     }
 
     const startTime = Date.now();
@@ -734,8 +850,8 @@ if (bulkInput) {
       const file = files[i];
       const percent = Math.round(((i + 1) / files.length) * 100);
       
-      if (useAI && progressBox) {
-        progressText.textContent = `🤖 [${i + 1}/${files.length}] Gemini analizando: ${file.name}...`;
+      if (progressBox) {
+        progressText.textContent = `🤖 [${i + 1}/${files.length}] Analizando: ${file.name}...`;
         progressBar.style.width = `${percent}%`;
         progressPercent.textContent = `${percent}%`;
       }
@@ -743,25 +859,28 @@ if (bulkInput) {
       // Resize & compress
       const base64 = await resizeImage(file, 600, 600, 0.70);
       let aiResult = null;
+      let aiErrorMsg = null;
 
       if (useAI) {
         try {
           aiResult = await analyzeImageWithGeminiVision(base64);
         } catch(err) {
-          console.warn('AI analysis skipped for file', file.name, err);
+          aiErrorMsg = err.message;
+          console.warn('Gemini vision notice for file ' + file.name + ':', err);
         }
       }
 
-      // Fallback clean name if no AI
-      const defaultName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").toUpperCase();
-      const detectedTeamId = aiResult?.teamId || 'steelers';
-      const detectedCategory = aiResult?.category || 'jerseys';
-      const detectedGender = aiResult?.gender || 'caballero';
-      const detectedName = aiResult?.name || defaultName;
-      const detectedPrice = aiResult?.price || 899;
-      const detectedDesc = aiResult?.description || 'Artículo oficial deportivo con detalles y bordados auténticos.';
-      const detectedPlayer = aiResult?.player || '';
-      const detectedEdition = aiResult?.edition || '';
+      // Fallback to local filename parser if AI failed
+      const fallbackParsed = parseSportsInfoFromFilename(file.name);
+      
+      const detectedTeamId = aiResult?.teamId || fallbackParsed.teamId;
+      const detectedCategory = aiResult?.category || fallbackParsed.category;
+      const detectedGender = aiResult?.gender || fallbackParsed.gender;
+      const detectedName = aiResult?.name || fallbackParsed.name;
+      const detectedPrice = aiResult?.price || fallbackParsed.price;
+      const detectedDesc = aiResult?.description || fallbackParsed.description;
+      const detectedPlayer = aiResult?.player || fallbackParsed.player;
+      const detectedEdition = aiResult?.edition || fallbackParsed.edition;
 
       // Generate default size stock rows for this gender
       const dept = GENDER_DEPARTMENTS.find(d => d.id === detectedGender) || GENDER_DEPARTMENTS[0];
@@ -771,7 +890,7 @@ if (bulkInput) {
 
       const sizeStockMap = defaultSizes.map(sz => ({
         size: sz,
-        immediateQty: 1, // Default 1 in store
+        immediateQty: 1,
         warehouseQty: 0
       }));
 
@@ -787,11 +906,12 @@ if (bulkInput) {
         player: detectedPlayer,
         edition: detectedEdition,
         sizeStockMap: sizeStockMap,
-        aiDetected: !!aiResult
+        aiDetected: !!aiResult,
+        aiError: aiErrorMsg
       });
     }
 
-    if (useAI && progressBox) {
+    if (progressBox) {
       setTimeout(() => { progressBox.style.display = 'none'; }, 600);
     }
 
@@ -801,8 +921,16 @@ if (bulkInput) {
     if (previewContainer) previewContainer.style.display = 'block';
     if (statusEl) {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      statusEl.style.color = '#4ade80';
-      statusEl.textContent = `✅ ¡${bulkItems.length} artículos detectados y clasificados en ${elapsed}s! Ajusta las existencias que gustes antes de publicar.`;
+      const aiCount = bulkItems.filter(b => b.aiDetected).length;
+      
+      if (aiCount > 0) {
+        statusEl.style.color = '#4ade80';
+        statusEl.textContent = `✅ ¡${aiCount}/${bulkItems.length} prendas identificadas con Gemini AI en ${elapsed}s! Ajusta existencias antes de publicar.`;
+      } else {
+        const firstErr = bulkItems.find(b => b.aiError)?.aiError;
+        statusEl.style.color = '#facc15';
+        statusEl.innerHTML = `⚠️ <strong>Aviso de IA:</strong> ${firstErr ? `(Error: ${firstErr})` : 'Clave de API requerida'}. Se utilizó clasificación automática local. Configura tu API Key de Gemini arriba para activar la visión artificial completa.`;
+      }
     }
   });
 }
