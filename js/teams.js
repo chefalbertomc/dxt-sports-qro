@@ -6,34 +6,40 @@ const SPORTS_CATALOG = [
     leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
     leagues: [
       {
-        league: "NFL",
+        league: "NFL (32 Equipos)",
         leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
         teams: [
-          { id: "steelers", name: "Pittsburgh Steelers", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/pit.png" },
-          { id: "nfl-cowboys", name: "Dallas Cowboys", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png" },
-          { id: "nfl-49ers", name: "San Francisco 49ers", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/sf.png" },
-          { id: "nfl-chiefs", name: "Kansas City Chiefs", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png" },
-          { id: "nfl-raiders", name: "Las Vegas Raiders", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/lv.png" },
-          { id: "nfl-packers", name: "Green Bay Packers", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/gb.png" },
-          { id: "nfl-eagles", name: "Philadelphia Eagles", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/phi.png" },
-          { id: "nfl-patriots", name: "New England Patriots", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png" },
-          { id: "nfl-dolphins", name: "Miami Dolphins", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/mia.png" },
-          { id: "nfl-bills", name: "Buffalo Bills", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png" },
+          { id: "nfl-cardinals", name: "Arizona Cardinals", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/ari.png" },
+          { id: "nfl-falcons", name: "Atlanta Falcons", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/atl.png" },
           { id: "nfl-ravens", name: "Baltimore Ravens", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/bal.png" },
+          { id: "nfl-bills", name: "Buffalo Bills", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png" },
+          { id: "nfl-panthers", name: "Carolina Panthers", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/car.png" },
+          { id: "nfl-bears", name: "Chicago Bears", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/chi.png" },
           { id: "nfl-bengals", name: "Cincinnati Bengals", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/cin.png" },
           { id: "nfl-browns", name: "Cleveland Browns", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/cle.png" },
+          { id: "nfl-cowboys", name: "Dallas Cowboys", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png" },
           { id: "nfl-broncos", name: "Denver Broncos", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/den.png" },
-          { id: "nfl-chargers", name: "Los Angeles Chargers", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/lac.png" },
-          { id: "nfl-rams", name: "Los Angeles Rams", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/lar.png" },
-          { id: "nfl-seahawks", name: "Seattle Seahawks", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/sea.png" },
+          { id: "nfl-lions", name: "Detroit Lions", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/det.png" },
+          { id: "nfl-packers", name: "Green Bay Packers", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/gb.png" },
           { id: "nfl-texans", name: "Houston Texans", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/hou.png" },
           { id: "nfl-colts", name: "Indianapolis Colts", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/ind.png" },
-          { id: "nfl-lions", name: "Detroit Lions", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/det.png" },
+          { id: "nfl-jaguars", name: "Jacksonville Jaguars", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/jax.png" },
+          { id: "nfl-chiefs", name: "Kansas City Chiefs", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png" },
+          { id: "nfl-raiders", name: "Las Vegas Raiders", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/lv.png" },
+          { id: "nfl-chargers", name: "Los Angeles Chargers", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/lac.png" },
+          { id: "nfl-rams", name: "Los Angeles Rams", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/lar.png" },
+          { id: "nfl-dolphins", name: "Miami Dolphins", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/mia.png" },
           { id: "nfl-vikings", name: "Minnesota Vikings", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/min.png" },
+          { id: "nfl-patriots", name: "New England Patriots", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png" },
           { id: "nfl-saints", name: "New Orleans Saints", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/no.png" },
           { id: "nfl-giants", name: "New York Giants", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png" },
           { id: "nfl-jets", name: "New York Jets", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/nyj.png" },
+          { id: "nfl-eagles", name: "Philadelphia Eagles", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/phi.png" },
+          { id: "steelers", name: "Pittsburgh Steelers", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/pit.png" },
+          { id: "nfl-49ers", name: "San Francisco 49ers", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/sf.png" },
+          { id: "nfl-seahawks", name: "Seattle Seahawks", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/sea.png" },
           { id: "nfl-buccaneers", name: "Tampa Bay Buccaneers", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/tb.png" },
+          { id: "nfl-titans", name: "Tennessee Titans", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/ten.png" },
           { id: "nfl-commanders", name: "Washington Commanders", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/wsh.png" }
         ]
       }
@@ -46,21 +52,39 @@ const SPORTS_CATALOG = [
     leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
     leagues: [
       {
-        league: "NBA",
+        league: "NBA (30 Equipos)",
         leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
         teams: [
-          { id: "nba-lakers", name: "Los Angeles Lakers", logo: "https://a.espncdn.com/i/teamlogos/nba/500/lal.png" },
-          { id: "nba-bulls", name: "Chicago Bulls", logo: "https://a.espncdn.com/i/teamlogos/nba/500/chi.png" },
-          { id: "nba-warriors", name: "Golden State Warriors", logo: "https://a.espncdn.com/i/teamlogos/nba/500/gsw.png" },
+          { id: "nba-hawks", name: "Atlanta Hawks", logo: "https://a.espncdn.com/i/teamlogos/nba/500/atl.png" },
           { id: "nba-celtics", name: "Boston Celtics", logo: "https://a.espncdn.com/i/teamlogos/nba/500/bos.png" },
-          { id: "nba-knicks", name: "New York Knicks", logo: "https://a.espncdn.com/i/teamlogos/nba/500/nyk.png" },
-          { id: "nba-heat", name: "Miami Heat", logo: "https://a.espncdn.com/i/teamlogos/nba/500/mia.png" },
           { id: "nba-nets", name: "Brooklyn Nets", logo: "https://a.espncdn.com/i/teamlogos/nba/500/bkn.png" },
-          { id: "nba-76ers", name: "Philadelphia 76ers", logo: "https://a.espncdn.com/i/teamlogos/nba/500/phi.png" },
-          { id: "nba-bucks", name: "Milwaukee Bucks", logo: "https://a.espncdn.com/i/teamlogos/nba/500/mil.png" },
+          { id: "nba-hornets", name: "Charlotte Hornets", logo: "https://a.espncdn.com/i/teamlogos/nba/500/cha.png" },
+          { id: "nba-bulls", name: "Chicago Bulls", logo: "https://a.espncdn.com/i/teamlogos/nba/500/chi.png" },
+          { id: "nba-cavaliers", name: "Cleveland Cavaliers", logo: "https://a.espncdn.com/i/teamlogos/nba/500/cle.png" },
           { id: "nba-mavericks", name: "Dallas Mavericks", logo: "https://a.espncdn.com/i/teamlogos/nba/500/dal.png" },
+          { id: "nba-nuggets", name: "Denver Nuggets", logo: "https://a.espncdn.com/i/teamlogos/nba/500/den.png" },
+          { id: "nba-pistons", name: "Detroit Pistons", logo: "https://a.espncdn.com/i/teamlogos/nba/500/det.png" },
+          { id: "nba-warriors", name: "Golden State Warriors", logo: "https://a.espncdn.com/i/teamlogos/nba/500/gsw.png" },
+          { id: "nba-rockets", name: "Houston Rockets", logo: "https://a.espncdn.com/i/teamlogos/nba/500/hou.png" },
+          { id: "nba-pacers", name: "Indiana Pacers", logo: "https://a.espncdn.com/i/teamlogos/nba/500/ind.png" },
+          { id: "nba-clippers", name: "LA Clippers", logo: "https://a.espncdn.com/i/teamlogos/nba/500/lac.png" },
+          { id: "nba-lakers", name: "Los Angeles Lakers", logo: "https://a.espncdn.com/i/teamlogos/nba/500/lal.png" },
+          { id: "nba-grizzlies", name: "Memphis Grizzlies", logo: "https://a.espncdn.com/i/teamlogos/nba/500/mem.png" },
+          { id: "nba-heat", name: "Miami Heat", logo: "https://a.espncdn.com/i/teamlogos/nba/500/mia.png" },
+          { id: "nba-bucks", name: "Milwaukee Bucks", logo: "https://a.espncdn.com/i/teamlogos/nba/500/mil.png" },
+          { id: "nba-timberwolves", name: "Minnesota Timberwolves", logo: "https://a.espncdn.com/i/teamlogos/nba/500/min.png" },
+          { id: "nba-pelicans", name: "New Orleans Pelicans", logo: "https://a.espncdn.com/i/teamlogos/nba/500/nop.png" },
+          { id: "nba-knicks", name: "New York Knicks", logo: "https://a.espncdn.com/i/teamlogos/nba/500/nyk.png" },
+          { id: "nba-thunder", name: "Oklahoma City Thunder", logo: "https://a.espncdn.com/i/teamlogos/nba/500/okc.png" },
+          { id: "nba-magic", name: "Orlando Magic", logo: "https://a.espncdn.com/i/teamlogos/nba/500/orl.png" },
+          { id: "nba-76ers", name: "Philadelphia 76ers", logo: "https://a.espncdn.com/i/teamlogos/nba/500/phi.png" },
           { id: "nba-suns", name: "Phoenix Suns", logo: "https://a.espncdn.com/i/teamlogos/nba/500/phx.png" },
-          { id: "nba-spurs", name: "San Antonio Spurs", logo: "https://a.espncdn.com/i/teamlogos/nba/500/sas.png" }
+          { id: "nba-blazers", name: "Portland Trail Blazers", logo: "https://a.espncdn.com/i/teamlogos/nba/500/por.png" },
+          { id: "nba-kings", name: "Sacramento Kings", logo: "https://a.espncdn.com/i/teamlogos/nba/500/sac.png" },
+          { id: "nba-spurs", name: "San Antonio Spurs", logo: "https://a.espncdn.com/i/teamlogos/nba/500/sas.png" },
+          { id: "nba-raptors", name: "Toronto Raptors", logo: "https://a.espncdn.com/i/teamlogos/nba/500/tor.png" },
+          { id: "nba-jazz", name: "Utah Jazz", logo: "https://a.espncdn.com/i/teamlogos/nba/500/uta.png" },
+          { id: "nba-wizards", name: "Washington Wizards", logo: "https://a.espncdn.com/i/teamlogos/nba/500/was.png" }
         ]
       }
     ]
@@ -72,17 +96,54 @@ const SPORTS_CATALOG = [
     leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
     leagues: [
       {
-        league: "MLB",
+        league: "MLB (Grandes Ligas)",
         leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
         teams: [
-          { id: "mlb-yankees", name: "New York Yankees", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png" },
-          { id: "mlb-dodgers", name: "Los Angeles Dodgers", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/lad.png" },
-          { id: "mlb-redsox", name: "Boston Red Sox", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/bos.png" },
-          { id: "mlb-padres", name: "San Diego Padres", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/sd.png" },
-          { id: "mlb-cubs", name: "Chicago Cubs", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/chc.png" },
-          { id: "mlb-astros", name: "Houston Astros", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/hou.png" },
+          { id: "mlb-diamondbacks", name: "Arizona Diamondbacks", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/ari.png" },
           { id: "mlb-braves", name: "Atlanta Braves", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/atl.png" },
-          { id: "mlb-mets", name: "New York Mets", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/nym.png" }
+          { id: "mlb-orioles", name: "Baltimore Orioles", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/bal.png" },
+          { id: "mlb-redsox", name: "Boston Red Sox", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/bos.png" },
+          { id: "mlb-cubs", name: "Chicago Cubs", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/chc.png" },
+          { id: "mlb-whitesox", name: "Chicago White Sox", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/chw.png" },
+          { id: "mlb-reds", name: "Cincinnati Reds", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/cin.png" },
+          { id: "mlb-guardians", name: "Cleveland Guardians", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/cle.png" },
+          { id: "mlb-rockies", name: "Colorado Rockies", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/col.png" },
+          { id: "mlb-tigers", name: "Detroit Tigers", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/det.png" },
+          { id: "mlb-astros", name: "Houston Astros", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/hou.png" },
+          { id: "mlb-royals", name: "Kansas City Royals", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/kc.png" },
+          { id: "mlb-angels", name: "Los Angeles Angels", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/laa.png" },
+          { id: "mlb-dodgers", name: "Los Angeles Dodgers", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/lad.png" },
+          { id: "mlb-marlins", name: "Miami Marlins", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/mia.png" },
+          { id: "mlb-brewers", name: "Milwaukee Brewers", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/mil.png" },
+          { id: "mlb-twins", name: "Minnesota Twins", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/min.png" },
+          { id: "mlb-mets", name: "New York Mets", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/nym.png" },
+          { id: "mlb-yankees", name: "New York Yankees", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png" },
+          { id: "mlb-athletics", name: "Oakland Athletics", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/oak.png" },
+          { id: "mlb-phillies", name: "Philadelphia Phillies", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/phi.png" },
+          { id: "mlb-pirates", name: "Pittsburgh Pirates", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/pit.png" },
+          { id: "mlb-padres", name: "San Diego Padres", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/sd.png" },
+          { id: "mlb-giants", name: "San Francisco Giants", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/sf.png" },
+          { id: "mlb-mariners", name: "Seattle Mariners", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/sea.png" },
+          { id: "mlb-cardinals", name: "St. Louis Cardinals", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/stl.png" },
+          { id: "mlb-rays", name: "Tampa Bay Rays", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/tb.png" },
+          { id: "mlb-rangers", name: "Texas Rangers", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/tex.png" },
+          { id: "mlb-bluejays", name: "Toronto Blue Jays", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/tor.png" },
+          { id: "mlb-nationals", name: "Washington Nationals", logo: "https://a.espncdn.com/i/teamlogos/mlb/500/wsh.png" }
+        ]
+      },
+      {
+        league: "LMB / Béisbol México",
+        leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
+        teams: [
+          { id: "lmb-conspiradores", name: "Conspiradores de Querétaro", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Conspiradores_de_Quer%C3%A9taro_logo.svg/512px-Conspiradores_de_Quer%C3%A9taro_logo.svg.png" },
+          { id: "lmb-diablos", name: "Diablos Rojos del México", logo: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/baseball/lmb/500/diablos.png" },
+          { id: "lmb-tigres", name: "Tigres de Quintana Roo", logo: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/baseball/lmb/500/tigres.png" },
+          { id: "lmb-sultanes", name: "Sultanes de Monterrey", logo: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/baseball/lmb/500/sultanes.png" },
+          { id: "lmb-toros", name: "Toros de Tijuana", logo: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/baseball/lmb/500/toros.png" },
+          { id: "lmb-leones", name: "Leones de Yucatán", logo: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/baseball/lmb/500/leones.png" },
+          { id: "lmb-aguila", name: "El Águila de Veracruz", logo: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/baseball/lmb/500/aguila.png" },
+          { id: "lmb-charros", name: "Charros de Jalisco", logo: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/baseball/lmb/500/charros.png" },
+          { id: "lmb-pericos", name: "Pericos de Puebla", logo: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/baseball/lmb/500/pericos.png" }
         ]
       }
     ]
@@ -94,7 +155,7 @@ const SPORTS_CATALOG = [
     leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/mex.1.png",
     leagues: [
       {
-        league: "Liga MX",
+        league: "Liga MX (18 Equipos)",
         leagueLogo: "https://assets.footylogos.com/logos/liga-mx/liga-mx-logo-footylogos.svg",
         teams: [
           { id: "soc-america", name: "Club América", logo: "https://assets.footylogos.com/previews/club-america/club-america-logo-footylogos-320.webp" },
@@ -123,12 +184,16 @@ const SPORTS_CATALOG = [
         teams: [
           { id: "soc-realmadrid", name: "Real Madrid", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/86.png" },
           { id: "soc-barcelona", name: "FC Barcelona", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/83.png" },
+          { id: "soc-atletico", name: "Atlético de Madrid", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/1068.png" },
           { id: "soc-manutd", name: "Manchester United", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/360.png" },
           { id: "soc-mancity", name: "Manchester City", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/382.png" },
           { id: "soc-liverpool", name: "Liverpool FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/364.png" },
           { id: "soc-chelsea", name: "Chelsea FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/363.png" },
           { id: "soc-arsenal", name: "Arsenal FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/359.png" },
+          { id: "soc-tottenham", name: "Tottenham Hotspur", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/367.png" },
           { id: "soc-bayern", name: "Bayern Munich", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/132.png" },
+          { id: "soc-dortmund", name: "Borussia Dortmund", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/124.png" },
+          { id: "soc-leverkusen", name: "Bayer Leverkusen", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/131.png" },
           { id: "soc-psg", name: "Paris Saint-Germain", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/160.png" },
           { id: "soc-juventus", name: "Juventus", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/111.png" },
           { id: "soc-inter", name: "Inter de Milán", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/110.png" },
@@ -151,7 +216,8 @@ const SPORTS_CATALOG = [
           { id: "f1-ferrari", name: "Scuderia Ferrari", logo: "https://upload.wikimedia.org/wikipedia/en/d/dc/Scuderia_Ferrari_Logo.svg" },
           { id: "f1-mercedes", name: "Mercedes-AMG Petronas", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fb/Mercedes_AMG_Petronas_F1_Logo.svg" },
           { id: "f1-mclaren", name: "McLaren", logo: "https://upload.wikimedia.org/wikipedia/commons/3/30/McLaren_racing_logo.svg" },
-          { id: "f1-checoperez", name: "Checo Pérez", logo: "https://upload.wikimedia.org/wikipedia/commons/a/aa/Red_Bull_Racing_logo.svg" }
+          { id: "f1-astonmartin", name: "Aston Martin F1", logo: "https://upload.wikimedia.org/wikipedia/commons/9/91/Aston_Martin_Aramco_Cognizant_F1_Team_logo.svg" },
+          { id: "f1-checoperez", name: "Checo Pérez #11", logo: "https://upload.wikimedia.org/wikipedia/commons/a/aa/Red_Bull_Racing_logo.svg" }
         ]
       }
     ]
