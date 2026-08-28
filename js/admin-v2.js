@@ -285,11 +285,15 @@ window.onSearchableTeamInput = function(val) {
 
   if (matchedTeam) {
     if (prodTeamHidden) prodTeamHidden.value = matchedTeam.id;
-    if (document.getElementById('prodSport')) {
+    // ONLY set sport if current sport is empty
+    const currentSport = document.getElementById('prodSport')?.value;
+    if (!currentSport && document.getElementById('prodSport')) {
       document.getElementById('prodSport').value = matchedSport.sportKey;
       onAdminSportChange();
     }
-    if (document.getElementById('prodLeague')) {
+    // ONLY set league if current league is empty
+    const currentLeague = document.getElementById('prodLeague')?.value;
+    if (!currentLeague && document.getElementById('prodLeague')) {
       document.getElementById('prodLeague').value = matchedLeague.league;
       onAdminLeagueChange();
     }
@@ -298,6 +302,71 @@ window.onSearchableTeamInput = function(val) {
     const customId = query.replace(/[^a-z0-9]/g, '-');
     if (prodTeamHidden) prodTeamHidden.value = customId;
   }
+
+  // Synchronize product title in real-time
+  syncProductNameOnTaxonomyChange();
+};
+
+// Real-Time Product Title Synchronization
+window.syncProductNameOnTaxonomyChange = function() {
+  const nameInput = document.getElementById('prodName');
+  if (!nameInput) return;
+
+  let currentTitle = nameInput.value.trim();
+  const teamInputVal = document.getElementById('prodTeamInput')?.value.trim();
+  const seasonSelect = document.getElementById('prodSeason');
+  const selectedSeason = seasonSelect ? seasonSelect.value : '';
+  const seasonLabel = seasonSelect ? (seasonSelect.options[seasonSelect.selectedIndex]?.text || selectedSeason) : selectedSeason;
+
+  // If Title is empty or placeholder (e.g. "⚠️ Prenda Pendiente por Catalogar" or "Jersey Deportivo"), build clean title
+  if (!currentTitle || currentTitle.includes('Pendiente') || currentTitle === 'Jersey Deportivo') {
+    const catSelect = document.getElementById('prodCategory');
+    let catText = 'Jersey';
+    if (catSelect && catSelect.value === 'gorras') catText = 'Gorra';
+    else if (catSelect && catSelect.value === 'chamarras') catText = 'Chamarra';
+    else if (catSelect && catSelect.value === 'polos') catText = 'Playera Polo';
+    else if (catSelect && catSelect.value === 'chalecos') catText = 'Chaleco';
+    else if (catSelect && catSelect.value === 'tshirts') catText = 'Playera';
+
+    const parts = [catText];
+    if (teamInputVal) parts.push(teamInputVal);
+    if (seasonLabel && seasonLabel !== 'atemporal') parts.push(seasonLabel);
+    nameInput.value = parts.join(' ');
+    return;
+  }
+
+  // If Title has a season / year, replace it dynamically with the new season
+  if (seasonLabel && seasonLabel !== 'atemporal') {
+    const yearPattern = /\b(20\d{2}[-\/–]20\d{2}|20\d{2})\b/g;
+    if (yearPattern.test(currentTitle)) {
+      nameInput.value = currentTitle.replace(yearPattern, seasonLabel);
+    } else {
+      nameInput.value = `${currentTitle} ${seasonLabel}`;
+    }
+  }
+};
+
+window.regenerateProductTitle = function() {
+  const nameInput = document.getElementById('prodName');
+  if (!nameInput) return;
+
+  const teamInputVal = document.getElementById('prodTeamInput')?.value.trim() || 'Deportivo';
+  const catSelect = document.getElementById('prodCategory');
+  let catText = 'Jersey';
+  if (catSelect && catSelect.value === 'gorras') catText = 'Gorra';
+  else if (catSelect && catSelect.value === 'chamarras') catText = 'Chamarra';
+  else if (catSelect && catSelect.value === 'polos') catText = 'Playera Polo';
+  else if (catSelect && catSelect.value === 'chalecos') catText = 'Chaleco';
+  else if (catSelect && catSelect.value === 'tshirts') catText = 'Playera';
+
+  const seasonSelect = document.getElementById('prodSeason');
+  const selectedSeason = seasonSelect ? seasonSelect.value : '';
+  const seasonLabel = (selectedSeason && selectedSeason !== 'atemporal') ? selectedSeason : '';
+
+  const parts = [catText, teamInputVal];
+  if (seasonLabel) parts.push(seasonLabel);
+
+  nameInput.value = parts.join(' ');
 };
 
 function populateAdminSports() {

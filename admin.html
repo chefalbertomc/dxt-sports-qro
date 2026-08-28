@@ -79,14 +79,14 @@
           <span style="color:#ff1e38;">DXT</span>
           <span style="color:#00b0ff;">SPORTS</span>
           <span style="background:#ff1e38; color:#fff; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:2px;">ADMIN</span>
-          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v314.0</span>
+          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v315.0</span>
         </div>
-        <div class="logo-text-sub">PANEL DE CONTROL · CARGA INSTANTÁNEA Y BUSCADOR DE EQUIPOS</div>
+        <div class="logo-text-sub">PANEL DE CONTROL · SINCRONIZACIÓN EN VIVO DE TÍTULOS Y LIGAS</div>
       </div>
     </a>
     <div class="nav-actions">
       <span style="background:rgba(34, 197, 94, 0.15); border:1px solid #22c55e; color:#22c55e; font-size:10px; font-weight:800; padding:4px 8px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
-        🟢 v314.0 (Carga Instantánea 2s + Buscador Equipos + Stock 0)
+        🟢 v315.0 (Respeto de Ligas + Sync de Títulos)
       </span>
       <a href="index.html" target="_blank" rel="noopener" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">👁️ Ver Tienda ↗</a>
       <button id="btnLogout" class="btn btn-outline" style="display: none; font-size: 11px; padding: 6px 12px; border-color: #ef4444; color: #ef4444;">Salir</button>
@@ -285,7 +285,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
                   <span style="font-size: 10px; font-weight: 800; color: #a855f7;">Temporada / Año *</span>
                 </div>
-                <select id="prodSeason" class="form-control" style="padding: 6px; font-size: 12px;">
+                <select id="prodSeason" class="form-control" onchange="syncProductNameOnTaxonomyChange()" style="padding: 6px; font-size: 12px;">
                   <!-- Populated dynamically from SEASONS_CATALOG -->
                 </select>
               </div>
@@ -301,8 +301,11 @@
               
               <!-- NOMBRE DEL PRODUCTO -->
               <div style="margin-bottom: 0;">
-                <label style="font-size: 11px; font-weight: 700; margin-bottom: 3px; display: block;">Nombre del Producto *</label>
-                <input type="text" id="prodName" class="form-control" required placeholder="Ej. Jersey Steelers Home 2026" style="padding: 6px 10px; font-size: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+                  <label style="font-size: 11px; font-weight: 700; margin-bottom: 0;">Nombre del Producto *</label>
+                  <button type="button" onclick="regenerateProductTitle()" style="background: none; border: none; color: #38bdf8; font-size: 10px; cursor: pointer; padding: 0; font-weight: bold;">🪄 Regenerar Título</button>
+                </div>
+                <input type="text" id="prodName" class="form-control" required placeholder="Ej. Jersey Real Madrid 2026-2027" style="padding: 6px 10px; font-size: 12px;">
               </div>
 
               <!-- GÉNERO Y CATEGORÍA -->
@@ -540,8 +543,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   
-  <script src="js/firebase-config.js?v=314.0"></script>
-  <script src="js/teams.js?v=314.0"></script>
-  <script src="js/admin-v2.js?v=314.0"></script>
+  <script src="js/firebase-config.js?v=315.0"></script>
+  <script src="js/teams.js?v=315.0"></script>
+  <script src="js/admin-v2.js?v=315.0"></script>
 </body>
 </html>
