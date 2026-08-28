@@ -959,7 +959,7 @@ Analiza detenidamente la fotografía de la prenda deportiva y extrae la informac
 
 Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
 
-  const models = ['gemini-flash-lite-latest', 'gemini-3.5-flash'];
+  const models = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite-preview', 'gemini-flash-lite-latest', 'gemini-3.5-flash'];
   let lastError = null;
 
   for (const model of models) {
@@ -978,7 +978,7 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
           generationConfig: {
             response_mime_type: "application/json",
             temperature: 0.1,
-            maxOutputTokens: 1000
+            maxOutputTokens: 800
           }
         })
       });
@@ -992,7 +992,7 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
       const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!textOutput) throw new Error("No hubo respuesta de Gemini AI.");
 
-      return JSON.parse(textOutput);
+      return safeParseGeminiJSON(textOutput);
     } catch (err) {
       console.warn(`Attempt with ${model} failed, trying next:`, err);
       lastError = err;
@@ -1002,8 +1002,31 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
   throw lastError || new Error("No fue posible conectar con Gemini AI.");
 }
 
-// Quick image compressor helper for AI payload (Lightweight 280px JPEG in 10ms)
-async function compressImageForAI(dataUrl, maxDim = 280, quality = 0.5) {
+function safeParseGeminiJSON(rawText) {
+  if (!rawText) throw new Error("Respuesta vacía de IA");
+  let cleaned = rawText.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```$/, '').trim();
+  }
+  const firstBrace = cleaned.indexOf('{');
+  const lastBrace = cleaned.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
+    cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+  }
+  try {
+    return JSON.parse(cleaned);
+  } catch (e1) {
+    try {
+      const fixed = cleaned.replace(/,\s*([\}\]])/g, '$1');
+      return JSON.parse(fixed);
+    } catch (e2) {
+      throw new Error(`Error en formato de respuesta: ${e1.message}`);
+    }
+  }
+}
+
+// Quick image compressor helper for AI payload (Ultra-lightweight 200px JPEG under 5KB in 5ms)
+async function compressImageForAI(dataUrl, maxDim = 200, quality = 0.4) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
