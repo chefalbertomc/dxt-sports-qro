@@ -2906,84 +2906,174 @@ window.updateOrderStatus = async function(orderId, newStatus) {
 // ============================================
 // INVENTORY AUTO-RESTORE & DEDUCTION ENGINE
 // ============================================
+function normalizeSizeKey(s) {
+  if (!s) return 'M';
+  const clean = String(s).trim().toUpperCase();
+  if (clean.startsWith('S') || clean === 'CH' || clean.includes('CHICA') || clean.includes('SMALL')) return 'S';
+  if (clean.startsWith('M') || clean === 'MED' || clean.includes('MEDIANA') || clean.includes('MEDIUM')) return 'M';
+  if (clean === 'L' || clean === 'G' || clean.includes('GRANDE') || clean.includes('LARGE')) return 'L';
+  if (clean === 'XL' || clean === 'EG' || clean.includes('EXTRA') || clean.includes('XL')) return 'XL';
+  if (clean === 'XXL' || clean === '2XL') return 'XXL';
+  return clean;
+}
+
 async function restoreInventoryToFirestore(items) {
   if (!window.db || !items || items.length === 0) return;
+  
   for (const item of items) {
     try {
-      if (!item.id) continue;
-      const prodRef = db.collection('products').doc(item.id);
-      const prodDoc = await prodRef.get();
-      if (!prodDoc.exists) continue;
+      let prodRef = null;
+      let prodDoc = null;
+      let prodId = item.id;
 
-      const prodData = prodDoc.data();
-      let sizeStockMap = prodData.sizeStockMap || prodData.sizeStockRows || [];
-      let qtyToRestore = Number(item.qty || 1);
+      // 1. Try finding by item.id
+      if (prodId) {
+        prodRef = db.collection('products').doc(prodId);
+        const snap = await prodRef.get();
+        if (snap.exists) prodDoc = snap;
+      }
+
+      // 2. Fallback: Search in local catalog by name or team
+      if (!prodDoc) {
+        const catalog = window.allProductsList || window.currentProducts || [];
+        const found = catalog.find(p => p.id === prodId || (item.name && p.name && p.name.trim().toLowerCase() === item.name.trim().toLowerCase()));
+        if (found) {
+          prodId = found.id;
+          prodRef = db.collection('products').doc(prodId);
+          const snap = await prodRef.get();
+          if (snap.exists) prodDoc = snap;
+        }
+      }
+
+      // 3. Fallback: Search in Firestore directly by name
+      if (!prodDoc && item.name) {
+        const nameSnap = await db.collection('products').where('name', '==', item.name.trim()).limit(1).get();
+        if (!nameSnap.empty) {
+          prodDoc = nameSnap.docs[0];
+          prodRef = prodDoc.ref;
+          prodId = prodDoc.id;
+        }
+      }
+
+      if (!prodDoc) {
+        console.warn("⚠️ No se encontró el producto en catálogo para devolver existencias:", item);
+        continue;
+      }
+
+      const prodData = prodDoc.data() || {};
+      let sizeStockMap = Array.isArray(prodData.sizeStockMap) ? JSON.parse(JSON.stringify(prodData.sizeStockMap)) : (Array.isArray(prodData.sizeStockRows) ? JSON.parse(JSON.stringify(prodData.sizeStockRows)) : []);
+      const qtyToRestore = Number(item.qty || 1);
+      const targetSize = normalizeSizeKey(item.size);
 
       if (sizeStockMap.length > 0) {
-        let sizeFound = false;
+        let sizeMatched = false;
         sizeStockMap = sizeStockMap.map(entry => {
-          if (entry.size === item.size) {
-            sizeFound = true;
-            let wh = Number(entry.warehouseQty || 0) + qtyToRestore;
-            return { ...entry, warehouseQty: wh };
+          const entryNorm = normalizeSizeKey(entry.size);
+          if (entryNorm === targetSize || entry.size === item.size) {
+            sizeMatched = true;
+            const curWh = Number(entry.warehouseQty || 0);
+            return {
+              ...entry,
+              warehouseQty: curWh + qtyToRestore
+            };
           }
           return entry;
         });
 
-        if (!sizeFound && item.size) {
+        if (!sizeMatched) {
           sizeStockMap.push({
-            size: item.size,
+            size: item.size || 'M',
             immediateQty: 0,
             warehouseQty: qtyToRestore
           });
         }
-
-        await prodRef.update({
-          sizeStockMap: sizeStockMap,
-          sizeStockRows: sizeStockMap,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      } else if (prodData.stock !== undefined) {
-        const newStock = Number(prodData.stock || 0) + qtyToRestore;
-        await prodRef.update({
-          stock: newStock,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+      } else {
+        sizeStockMap = [
+          { size: item.size || 'M', immediateQty: 0, warehouseQty: qtyToRestore }
+        ];
       }
 
-      // Update in-memory product cache
+      const totalNewStock = sizeStockMap.reduce((acc, row) => acc + (Number(row.immediateQty || 0) + Number(row.warehouseQty || 0)), 0);
+      const sizesArray = sizeStockMap.map(r => r.size);
+
+      await prodRef.update({
+        sizeStockMap: sizeStockMap,
+        sizeStockRows: sizeStockMap,
+        sizes: sizesArray,
+        stock: totalNewStock,
+        isPendingInventory: false,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Update in-memory catalog
       const catalog = window.allProductsList || window.currentProducts || [];
-      const localIdx = catalog.findIndex(p => p.id === item.id);
+      const localIdx = catalog.findIndex(p => p.id === prodId);
       if (localIdx > -1) {
-        if (sizeStockMap.length > 0) {
-          catalog[localIdx].sizeStockMap = sizeStockMap;
-          catalog[localIdx].sizeStockRows = sizeStockMap;
-        } else if (prodData.stock !== undefined) {
-          catalog[localIdx].stock = (Number(catalog[localIdx].stock) || 0) + qtyToRestore;
-        }
+        catalog[localIdx].sizeStockMap = sizeStockMap;
+        catalog[localIdx].sizeStockRows = sizeStockMap;
+        catalog[localIdx].sizes = sizesArray;
+        catalog[localIdx].stock = totalNewStock;
+        catalog[localIdx].isPendingInventory = false;
       }
+
+      console.log(`✅ Stock devuelto: +${qtyToRestore} a ${item.name || prodId} (Talla ${item.size}). Total en inventario: ${totalNewStock}`);
     } catch(err) {
-      console.warn("Error al restaurar inventario para producto:", item, err);
+      console.error("Error al restaurar inventario para:", item, err);
     }
+  }
+
+  // Refresh admin product view immediately if active
+  if (typeof renderAdminProductsList === 'function' && window.currentProducts) {
+    renderAdminProductsList(window.currentProducts);
   }
 }
 
 async function deductInventoryFromFirestore(items) {
   if (!window.db || !items || items.length === 0) return;
+  
   for (const item of items) {
     try {
-      if (!item.id) continue;
-      const prodRef = db.collection('products').doc(item.id);
-      const prodDoc = await prodRef.get();
-      if (!prodDoc.exists) continue;
+      let prodRef = null;
+      let prodDoc = null;
+      let prodId = item.id;
 
-      const prodData = prodDoc.data();
-      let sizeStockMap = prodData.sizeStockMap || prodData.sizeStockRows || [];
+      if (prodId) {
+        prodRef = db.collection('products').doc(prodId);
+        const snap = await prodRef.get();
+        if (snap.exists) prodDoc = snap;
+      }
+
+      if (!prodDoc) {
+        const catalog = window.allProductsList || window.currentProducts || [];
+        const found = catalog.find(p => p.id === prodId || (item.name && p.name && p.name.trim().toLowerCase() === item.name.trim().toLowerCase()));
+        if (found) {
+          prodId = found.id;
+          prodRef = db.collection('products').doc(prodId);
+          const snap = await prodRef.get();
+          if (snap.exists) prodDoc = snap;
+        }
+      }
+
+      if (!prodDoc && item.name) {
+        const nameSnap = await db.collection('products').where('name', '==', item.name.trim()).limit(1).get();
+        if (!nameSnap.empty) {
+          prodDoc = nameSnap.docs[0];
+          prodRef = prodDoc.ref;
+          prodId = prodDoc.id;
+        }
+      }
+
+      if (!prodDoc) continue;
+
+      const prodData = prodDoc.data() || {};
+      let sizeStockMap = Array.isArray(prodData.sizeStockMap) ? JSON.parse(JSON.stringify(prodData.sizeStockMap)) : (Array.isArray(prodData.sizeStockRows) ? JSON.parse(JSON.stringify(prodData.sizeStockRows)) : []);
       let qtyToDeduct = Number(item.qty || 1);
+      const targetSize = normalizeSizeKey(item.size);
 
       if (sizeStockMap.length > 0) {
         sizeStockMap = sizeStockMap.map(entry => {
-          if (entry.size === item.size) {
+          const entryNorm = normalizeSizeKey(entry.size);
+          if (entryNorm === targetSize || entry.size === item.size) {
             let imm = Number(entry.immediateQty || 0);
             let wh = Number(entry.warehouseQty || 0);
             if (imm >= qtyToDeduct) {
@@ -3000,21 +3090,30 @@ async function deductInventoryFromFirestore(items) {
           return entry;
         });
 
+        const totalNewStock = sizeStockMap.reduce((acc, row) => acc + (Number(row.immediateQty || 0) + Number(row.warehouseQty || 0)), 0);
+
         await prodRef.update({
           sizeStockMap: sizeStockMap,
           sizeStockRows: sizeStockMap,
+          stock: totalNewStock,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-      } else if (prodData.stock !== undefined) {
-        const newStock = Math.max(0, Number(prodData.stock) - qtyToDeduct);
-        await prodRef.update({
-          stock: newStock,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+
+        const catalog = window.allProductsList || window.currentProducts || [];
+        const localIdx = catalog.findIndex(p => p.id === prodId);
+        if (localIdx > -1) {
+          catalog[localIdx].sizeStockMap = sizeStockMap;
+          catalog[localIdx].sizeStockRows = sizeStockMap;
+          catalog[localIdx].stock = totalNewStock;
+        }
       }
     } catch(err) {
-      console.warn("Error al descontar inventario para producto:", item, err);
+      console.error("Error al descontar inventario:", item, err);
     }
+  }
+
+  if (typeof renderAdminProductsList === 'function' && window.currentProducts) {
+    renderAdminProductsList(window.currentProducts);
   }
 }
 
@@ -3046,16 +3145,15 @@ window.deleteOrder = async function(orderId) {
   if (!window.db) return;
 
   const order = allOrdersList.find(o => o.id === orderId);
-  if (!order) return;
 
   try {
     // If order was not cancelled, return stock before deleting
-    if (order.status !== 'cancelled' && order.items && order.items.length > 0) {
+    if (order && order.status !== 'cancelled' && order.items && order.items.length > 0) {
       await restoreInventoryToFirestore(order.items);
     }
 
     await db.collection('orders').doc(orderId).delete();
-    alert("✅ Registro eliminado y existencias sincronizadas.");
+    alert("✅ Registro eliminado y existencias devueltas al inventario.");
   } catch (e) {
     alert("Error al eliminar pedido: " + e.message);
   }

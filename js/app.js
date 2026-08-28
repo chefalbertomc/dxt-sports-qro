@@ -1308,26 +1308,56 @@ window.addToCartFromModal = function(productId) {
 };
 
 // Automatic Firestore Inventory Deduction Engine
+function normalizeShopSizeKey(s) {
+  if (!s) return 'M';
+  const clean = String(s).trim().toUpperCase();
+  if (clean.startsWith('S') || clean === 'CH' || clean.includes('CHICA') || clean.includes('SMALL')) return 'S';
+  if (clean.startsWith('M') || clean === 'MED' || clean.includes('MEDIANA') || clean.includes('MEDIUM')) return 'M';
+  if (clean === 'L' || clean === 'G' || clean.includes('GRANDE') || clean.includes('LARGE')) return 'L';
+  if (clean === 'XL' || clean === 'EG' || clean.includes('EXTRA') || clean.includes('XL')) return 'XL';
+  if (clean === 'XXL' || clean === '2XL') return 'XXL';
+  return clean;
+}
+
 async function deductInventoryFromFirestore(items) {
   if (!window.db || !items || items.length === 0) return;
   
   for (const item of items) {
     try {
-      const prodRef = db.collection('products').doc(item.id);
-      const prodDoc = await prodRef.get();
-      if (!prodDoc.exists) continue;
+      let prodRef = null;
+      let prodDoc = null;
+      let prodId = item.id;
+
+      if (prodId) {
+        prodRef = db.collection('products').doc(prodId);
+        const snap = await prodRef.get();
+        if (snap.exists) prodDoc = snap;
+      }
+
+      if (!prodDoc) {
+        const found = (window.allProducts || []).find(p => p.id === prodId || (item.name && p.name && p.name.trim().toLowerCase() === item.name.trim().toLowerCase()));
+        if (found) {
+          prodId = found.id;
+          prodRef = db.collection('products').doc(prodId);
+          const snap = await prodRef.get();
+          if (snap.exists) prodDoc = snap;
+        }
+      }
+
+      if (!prodDoc) continue;
       
-      const prodData = prodDoc.data();
-      let sizeStockMap = prodData.sizeStockMap || prodData.sizeStockRows || [];
-      let qtyToDeduct = item.qty || 1;
+      const prodData = prodDoc.data() || {};
+      let sizeStockMap = Array.isArray(prodData.sizeStockMap) ? JSON.parse(JSON.stringify(prodData.sizeStockMap)) : (Array.isArray(prodData.sizeStockRows) ? JSON.parse(JSON.stringify(prodData.sizeStockRows)) : []);
+      let qtyToDeduct = Number(item.qty || 1);
+      const targetSize = normalizeShopSizeKey(item.size);
       
       if (sizeStockMap.length > 0) {
         sizeStockMap = sizeStockMap.map(entry => {
-          if (entry.size === item.size) {
+          const entryNorm = normalizeShopSizeKey(entry.size);
+          if (entryNorm === targetSize || entry.size === item.size) {
             let imm = Number(entry.immediateQty || 0);
             let wh = Number(entry.warehouseQty || 0);
             
-            // Deduct from immediate stock first, then warehouse
             if (imm >= qtyToDeduct) {
               imm -= qtyToDeduct;
               qtyToDeduct = 0;
@@ -1342,34 +1372,38 @@ async function deductInventoryFromFirestore(items) {
           return entry;
         });
         
+        const totalStock = sizeStockMap.reduce((acc, r) => acc + (Number(r.immediateQty || 0) + Number(r.warehouseQty || 0)), 0);
+
         await prodRef.update({
           sizeStockMap: sizeStockMap,
           sizeStockRows: sizeStockMap,
+          stock: totalStock,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+
+        const localIdx = (window.allProducts || []).findIndex(p => p.id === prodId);
+        if (localIdx > -1) {
+          window.allProducts[localIdx].sizeStockMap = sizeStockMap;
+          window.allProducts[localIdx].sizeStockRows = sizeStockMap;
+          window.allProducts[localIdx].stock = totalStock;
+        }
       } else if (prodData.stock !== undefined) {
         const newStock = Math.max(0, Number(prodData.stock) - qtyToDeduct);
         await prodRef.update({
           stock: newStock,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-      }
-      
-      // Update in-memory product cache so UI updates immediately
-      const localIdx = allProducts.findIndex(p => p.id === item.id);
-      if (localIdx > -1) {
-        if (sizeStockMap.length > 0) {
-          allProducts[localIdx].sizeStockMap = sizeStockMap;
-        } else if (prodData.stock !== undefined) {
-          allProducts[localIdx].stock = Math.max(0, Number(prodData.stock) - (item.qty || 1));
+
+        const localIdx = (window.allProducts || []).findIndex(p => p.id === prodId);
+        if (localIdx > -1) {
+          window.allProducts[localIdx].stock = newStock;
         }
       }
     } catch(err) {
-      console.warn('Inventory decrement error for product:', item.id, err);
+      console.warn('Inventory decrement error for product:', item, err);
     }
   }
   
-  // Refresh catalog grid
   if (typeof renderProducts === 'function') renderProducts();
 }
 
