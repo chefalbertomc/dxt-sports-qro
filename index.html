@@ -9,6 +9,15 @@
   <title>DXT Sports QRO — Tienda Oficial de Deportes & Merchandise</title>
   <link rel="stylesheet" href="css/styles.css?v=1.0">
   <link rel="icon" href="assets/dxt_logo.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff1e38">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DXT Sports">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="assets/icon-152.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="assets/icon-144.png">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -354,8 +363,19 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <script src="js/firebase-config.js?v=329.0"></script>
-  <script src="js/teams.js?v=329.0"></script>
-  <script src="js/app.js?v=329.0"></script>
+  <script src="js/firebase-config.js?v=330.0"></script>
+  <script src="js/teams.js?v=330.0"></script>
+  <script src="js/app.js?v=330.0"></script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/dxt-sports-qro/sw.js')
+          .then(reg => console.log('✅ SW registrado:', reg.scope))
+          .catch(err => console.warn('SW error (no-critical):', err));
+      });
+    }
+  </script>
 </body>
 </html>

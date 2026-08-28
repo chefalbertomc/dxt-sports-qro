@@ -9,13 +9,21 @@
   <title>Admin - DXT Sports QRO</title>
   <link rel="stylesheet" href="css/styles.css?v=1.0">
   <link rel="icon" href="assets/dxt_logo.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff1e38">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DXT Admin">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
   
   <script>
+    // Register Service Worker for PWA install support
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) {
-          registration.unregister();
-        }
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/dxt-sports-qro/sw.js')
+          .then(reg => console.log('✅ SW Admin registrado:', reg.scope))
+          .catch(err => console.warn('SW error (no-critical):', err));
       });
     }
 
