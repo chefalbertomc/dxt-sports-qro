@@ -1801,7 +1801,14 @@ ${isDeposit ? `🔒 *ANTICIPO TRANSFERIDO HOY (50%):* ${formatPrice(payNowAmount
       transferProof: transferProofBase64 || null,
       status: 'pending',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    // Trigger notification to Admin devices
+    if (typeof window.notifyAdminNewOrder === 'function') {
+      window.notifyAdminNewOrder({
+        customerName: name,
+        itemCount: cart.reduce((sum, item) => sum + (Number(item.qty) || 1), 0),
+        totalAmount: totalAmount
+      });
+    }
   } catch(e) {
     console.log('Order saved offline/guest:', e);
   }
@@ -1828,6 +1835,9 @@ ${isDeposit ? `🔒 *ANTICIPO TRANSFERIDO HOY (50%):* ${formatPrice(payNowAmount
 document.addEventListener('DOMContentLoaded', () => {
   initWizardNavigation();
   populateTeamFilterSelect();
+  if (typeof initFCM === 'function') {
+    initFCM(false);
+  }
   updateCartUI();
   loadProducts();
 });

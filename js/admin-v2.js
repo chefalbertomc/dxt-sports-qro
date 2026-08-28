@@ -67,6 +67,8 @@ auth.onAuthStateChanged(async (user) => {
     
     initAdminForm();
     loadAdminProducts();
+    if (typeof initFCM === 'function') initFCM(true);
+    if (typeof startAdminNotificationWatcher === 'function') startAdminNotificationWatcher();
   } else {
     loginSection.style.display = 'block';
     adminSection.style.display = 'none';
@@ -150,6 +152,8 @@ window.quickAdminAccess = function() {
 
   if (typeof initAdminForm === 'function') initAdminForm();
   if (typeof loadAdminProducts === 'function') loadAdminProducts();
+  if (typeof initFCM === 'function') initFCM(true);
+  if (typeof startAdminNotificationWatcher === 'function') startAdminNotificationWatcher();
 };
 
 // Logout
@@ -2907,6 +2911,16 @@ window.updateOrderStatus = async function(orderId, newStatus) {
       updatePayload.paymentStatus = 'paid';
     }
     await db.collection('orders').doc(orderId).update(updatePayload);
+
+    // Trigger Notification for Status Change
+    if (typeof window.notifyAdminStatusChange === 'function') {
+      const ord = (window.allOrdersList || []).find(o => o.id === orderId) || {};
+      window.notifyAdminStatusChange({
+        customerName: ord.customerName || 'Cliente',
+        orderId: orderId,
+        newStatus: newStatus
+      });
+    }
   } catch (e) {
     alert("Error al actualizar estado del pedido: " + e.message);
   }
@@ -3771,6 +3785,9 @@ async function loadReportesData() {
   } catch (e) {
     console.warn('Load admins error:', e);
   }
+
+  // Update push notification badge
+  updateNotifBadgeStatus();
 }
 
 window.saveStoreConfig = async function() {
@@ -3851,4 +3868,80 @@ async function ensureAdminEmailInFirestore() {
 
 // Run seed once on load
 ensureAdminEmailInFirestore();
+
+// ============================================
+// 🔔 ADMIN PUSH NOTIFICATIONS HELPERS
+// ============================================
+function updateNotifBadgeStatus() {
+  const badge = document.getElementById('notifStatusBadge');
+  if (!badge) return;
+  if (!('Notification' in window)) {
+    badge.textContent = '❌ No compatible';
+    badge.style.background = '#333';
+    badge.style.color = '#888';
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    badge.textContent = '✅ Activadas';
+    badge.style.background = 'rgba(34, 197, 94, 0.2)';
+    badge.style.color = '#22c55e';
+  } else if (Notification.permission === 'denied') {
+    badge.textContent = '🚫 Bloqueadas en el navegador';
+    badge.style.background = 'rgba(239, 68, 68, 0.2)';
+    badge.style.color = '#ef4444';
+  } else {
+    badge.textContent = '⚠️ Sin activar';
+    badge.style.background = 'rgba(234, 179, 8, 0.2)';
+    badge.style.color = '#eab308';
+  }
+}
+
+window.enableAdminNotifications = async function() {
+  if (!('Notification' in window)) {
+    alert('Tu navegador no soporta notificaciones push. En iPhone usa Safari y agrega a pantalla de inicio.');
+    return;
+  }
+  try {
+    const permission = await Notification.requestPermission();
+    updateNotifBadgeStatus();
+    if (permission === 'granted') {
+      if (typeof initFCM === 'function') await initFCM(true);
+      alert('✅ ¡Notificaciones activadas con éxito en este dispositivo!\nRecibirás alertas inmediatas de nuevos pedidos y pagos.');
+    } else {
+      alert('⚠️ No se concedió el permiso de notificaciones. Actívalo en los ajustes de tu navegador.');
+    }
+  } catch (e) {
+    alert('Error al solicitar permiso: ' + e.message);
+  }
+};
+
+window.testAdminNotification = function() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') {
+    alert('Primero activa las notificaciones con el botón verde "🔔 Activar Alertas".');
+    return;
+  }
+  new Notification('📦 Prueba de Alerta DXT Sports', {
+    body: '¡Todo listo! Recibirás alertas sonoras de nuevos pedidos y abonos aquí.',
+    icon: 'assets/icon-192.png',
+    badge: 'assets/icon-96.png'
+  });
+};
+
+window.sendBroadcastPromo = async function() {
+  const title = document.getElementById('promoTitleInput')?.value.trim();
+  const body = document.getElementById('promoBodyInput')?.value.trim();
+
+  if (!title || !body) {
+    alert('Por favor ingresa tanto el título como el mensaje de la promoción.');
+    return;
+  }
+
+  if (typeof sendPromoNotification === 'function') {
+    await sendPromoNotification(title, body);
+    document.getElementById('promoTitleInput').value = '';
+    document.getElementById('promoBodyInput').value = '';
+  } else {
+    alert('Servicio de notificaciones no disponible.');
+  }
+};
 
