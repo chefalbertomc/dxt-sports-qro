@@ -1155,7 +1155,9 @@ function createCompactProductCard(product, id) {
       <div class="compact-prod-title">${product.name}</div>
       <div class="compact-prod-price-row">
         <span class="compact-prod-price" style="${isOutOfStock ? 'color:#888; text-decoration:line-through;' : ''}">${formattedPrice}</span>
-        <span style="font-size: 9px; color: ${isOutOfStock ? '#ef4444' : 'var(--accent-color)'}; font-weight: 900;">${isOutOfStock ? 'AGOTADO' : 'VER ➔'}</span>
+        <button type="button" onclick="shareProductWhatsApp(event, '${id}')" class="compact-prod-share-btn" title="Compartir por WhatsApp">
+          <span>📲</span> Compartir
+        </button>
       </div>
     </div>
   `;
@@ -1265,7 +1267,7 @@ window.openProductDetailModal = function(productId) {
       </div>
     </div>
 
-    <!-- ACCIONES COMPRA -->
+    <!-- ACCIONES COMPRA Y COMPARTIR -->
     <div style="display: flex; flex-direction: column; gap: 10px;">
       ${isCurrentSizeOutOfStock 
         ? `
@@ -1282,6 +1284,10 @@ window.openProductDetailModal = function(productId) {
             📲 Comprar Directo por WhatsApp →
           </button>
         `}
+
+      <button type="button" onclick="shareCurrentProductWhatsApp('${productId}')" class="btn" style="width: 100%; padding: 12px; font-size: 13px; font-weight: 800; background: rgba(37, 211, 102, 0.12); border: 1.5px solid #25D366; color: #25D366; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; cursor: pointer;">
+        <span>📲</span> Compartir este Jersey por WhatsApp con Enlace Directo
+      </button>
     </div>
   `;
 
@@ -1427,6 +1433,43 @@ window.buyNowWhatsApp = async function(productId) {
   closeProductDetailModal();
 };
 
+// ============================================
+// WHATSAPP PRODUCT SHARING WITH DEEP LINK
+// ============================================
+window.shareProductWhatsApp = function(event, productId) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const prod = (allProducts || []).find(p => p.id === productId);
+  if (!prod) return;
+
+  const formattedPrice = typeof formatPrice !== 'undefined' ? formatPrice(prod.price) : `$${prod.price} MXN`;
+  const shareUrl = `${window.location.origin}${window.location.pathname}?prod=${encodeURIComponent(productId)}`;
+
+  const message = `🏆 *${prod.name}*\n` +
+                  `💵 Precio: *${formattedPrice}*\n\n` +
+                  `🔥 Puedes ver fotos oficiales, elegir tu talla y hacer tu pedido directo aquí:\n` +
+                  `👉 ${shareUrl}\n\n` +
+                  `_DXT Sports Querétaro — Tienda Oficial_`;
+
+  if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
+    navigator.share({
+      title: prod.name,
+      text: message,
+      url: shareUrl
+    }).catch(() => {
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    });
+  } else {
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+  }
+};
+
+window.shareCurrentProductWhatsApp = function(productId) {
+  shareProductWhatsApp(null, productId);
+};
+
 // Fetch products from Firebase Firestore
 async function loadProducts() {
   initDOMReferences();
@@ -1440,6 +1483,18 @@ async function loadProducts() {
     sanitizeCartQuantities();
     updateStoreHeader();
     renderProducts();
+
+    // Check for deep-linked product (e.g. ?prod=XYZ)
+    const urlParams = new URLSearchParams(window.location.search);
+    const deepLinkedProdId = urlParams.get('prod');
+    if (deepLinkedProdId) {
+      const found = allProducts.find(p => p.id === deepLinkedProdId);
+      if (found) {
+        setTimeout(() => {
+          openProductDetailModal(deepLinkedProdId);
+        }, 200);
+      }
+    }
 
   } catch (error) {
     console.error('Error fetching products:', error);

@@ -18,12 +18,29 @@
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   
   <script>
-    // Register Service Worker for PWA install support
+    // Register Service Worker for PWA install support & Auto-update
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/dxt-sports-qro/sw.js')
-          .then(reg => console.log('✅ SW Admin registrado:', reg.scope))
+        navigator.serviceWorker.register('./sw.js?v=330.2')
+          .then(reg => {
+            console.log('✅ SW Admin v330.2 registrado:', reg.scope);
+            reg.update();
+            document.addEventListener('visibilitychange', () => {
+              if (document.visibilityState === 'visible') {
+                reg.update();
+              }
+            });
+          })
           .catch(err => console.warn('SW error (no-critical):', err));
+      });
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          console.log('🔄 Nueva versión detectada en Admin, recargando...');
+          window.location.reload();
+        }
       });
     }
 
@@ -1063,9 +1080,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js"></script>
   
-  <script src="js/firebase-config.js?v=330.1"></script>
-  <script src="js/notifications.js?v=330.1"></script>
-  <script src="js/teams.js?v=330.1"></script>
-  <script src="js/admin-v2.js?v=330.1"></script>
+  <script src="js/firebase-config.js?v=330.2"></script>
+  <script src="js/notifications.js?v=330.2"></script>
+  <script src="js/teams.js?v=330.2"></script>
+  <script src="js/admin-v2.js?v=330.2"></script>
 </body>
 </html>

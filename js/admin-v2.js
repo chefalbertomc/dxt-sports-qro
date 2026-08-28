@@ -921,7 +921,7 @@ function parseSportsInfoFromFilename(filename) {
 }
 
 // ============================================
-// GEMINI FLASH AI INTEGRATION (ULTRA-FAST ~1.5s)
+// GEMINI FLASH AI INTEGRATION (ULTRA-FAST ~1.0s)
 // ============================================
 async function analyzeImageWithGeminiVision(base64Image) {
   const apiKey = getStoredGeminiApiKey();
@@ -963,15 +963,19 @@ Analiza detenidamente la fotografía de la prenda deportiva y extrae la informac
 
 Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
 
-  const models = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite-preview', 'gemini-flash-lite-latest', 'gemini-3.5-flash'];
+  const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'];
   let lastError = null;
 
   for (const model of models) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           contents: [{
             parts: [
@@ -987,6 +991,8 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
         })
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         const errJson = await response.json().catch(() => ({}));
         throw new Error(errJson?.error?.message || `HTTP ${response.status}`);
@@ -998,7 +1004,7 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
 
       return safeParseGeminiJSON(textOutput);
     } catch (err) {
-      console.warn(`Attempt with ${model} failed, trying next:`, err);
+      console.warn(`[Gemini AI] Intento con ${model} falló, probando siguiente modelo:`, err.message);
       lastError = err;
     }
   }
