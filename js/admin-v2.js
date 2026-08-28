@@ -307,6 +307,8 @@ window.onSearchableTeamInput = function(val) {
   syncProductNameOnTaxonomyChange();
 };
 
+let lastAIDetectedResult = null;
+
 // Real-Time Product Title Synchronization
 window.syncProductNameOnTaxonomyChange = function() {
   const nameInput = document.getElementById('prodName');
@@ -330,6 +332,9 @@ window.syncProductNameOnTaxonomyChange = function() {
 
     const parts = [catText];
     if (teamInputVal) parts.push(teamInputVal);
+    if (lastAIDetectedResult && lastAIDetectedResult.player && lastAIDetectedResult.player !== 'Edición Oficial') {
+      parts.push(lastAIDetectedResult.player);
+    }
     if (seasonLabel && seasonLabel !== 'atemporal') parts.push(seasonLabel);
     nameInput.value = parts.join(' ');
     return;
@@ -364,6 +369,9 @@ window.regenerateProductTitle = function() {
   const seasonLabel = (selectedSeason && selectedSeason !== 'atemporal') ? selectedSeason : '';
 
   const parts = [catText, teamInputVal];
+  if (lastAIDetectedResult && lastAIDetectedResult.player && lastAIDetectedResult.player !== 'Edición Oficial') {
+    parts.push(lastAIDetectedResult.player);
+  }
   if (seasonLabel) parts.push(seasonLabel);
 
   nameInput.value = parts.join(' ');
@@ -1109,6 +1117,7 @@ window.autoFillCurrentFormWithGemini = async function() {
     const aiResult = await analyzeImageWithGeminiVision(compressedForAI);
 
     if (!aiResult) throw new Error("No se obtuvieron datos de la imagen");
+    lastAIDetectedResult = aiResult;
 
     const tax = resolveTaxonomyFromAI(aiResult);
 
