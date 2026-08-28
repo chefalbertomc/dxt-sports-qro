@@ -1386,10 +1386,6 @@ window.buyNowWhatsApp = async function(productId) {
               
   window.open(`https://wa.me/${STORE_BANK_DETAILS.phoneWhatsApp}?text=${msg}`, '_blank');
   closeProductDetailModal();
-};💵 Precio: $${prod.price} MXN%0A%0A` +
-              `¿Tienen disponibilidad inmediata para envío en Querétaro / México?`;
-              
-  window.open(`https://wa.me/524423376955?text=${msg}`, '_blank');
 };
 
 // Fetch products from Firebase Firestore
