@@ -1435,7 +1435,9 @@ async function loadProducts() {
     if (loader) loader.style.display = 'none';
 
     allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    window.allProducts = allProducts;
     
+    sanitizeCartQuantities();
     updateStoreHeader();
     renderProducts();
 
@@ -1457,6 +1459,29 @@ async function loadProducts() {
 // ============================================
 // SHOPPING CART & CHECKOUT LOGIC
 // ============================================
+function sanitizeCartQuantities() {
+  let modified = false;
+  cart.forEach(item => {
+    const maxStock = getAvailableStockForProductSize(item.id, item.size);
+    if (maxStock <= 0) {
+      item.qty = 0;
+      modified = true;
+    } else if (item.qty > maxStock) {
+      item.qty = maxStock;
+      modified = true;
+    }
+  });
+
+  if (cart.some(i => i.qty <= 0)) {
+    cart = cart.filter(i => i.qty > 0);
+    modified = true;
+  }
+
+  if (modified) {
+    updateCartUI();
+  }
+}
+
 function updateCartUI() {
   const badge = document.getElementById('cartBadge');
   const itemsContainer = document.getElementById('cartItemsContainer') || document.getElementById('cartItems');
@@ -1488,18 +1513,20 @@ function updateCartUI() {
     const genderLabel = typeof getGenderLabel !== 'undefined' ? getGenderLabel(item.gender) : '';
     const img = item.imageUrl || item.image || 'assets/dxt_logo.png';
     const itemTotal = (Number(item.price) || 0) * (Number(item.qty) || 1);
+    const maxStock = getAvailableStockForProductSize(item.id, item.size);
+
     return `
       <div class="cart-item" style="display: flex; gap: 12px; background: #1a1a1a; padding: 10px; border-radius: 10px; border: 1px solid #333; margin-bottom: 10px;">
         <img src="${img}" class="cart-item-img" style="width: 56px; height: 56px; object-fit: contain; background: #000; border-radius: 6px; border: 1px solid #444;" onerror="this.src='assets/dxt_logo.png'">
         <div class="cart-item-info" style="flex: 1;">
           <div class="cart-item-title" style="font-size: 13px; font-weight: 800; color: #fff; line-height: 1.2;">${item.name}</div>
           <div class="cart-item-meta" style="font-size: 11px; color: #38bdf8; margin-top: 2px;">
-            Talla: <strong>${item.size}</strong> · ${formatPrice(item.price)}
+            Talla: <strong>${item.size}</strong> · ${formatPrice(item.price)} <span style="color: #888; font-size: 10px;">(Disponibles: ${maxStock})</span>
           </div>
           <div class="qty-controls" style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
             <button class="qty-btn" onclick="updateItemQty(${index}, -1)" style="width: 24px; height: 24px; background: #333; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">-</button>
             <span style="font-size: 13px; font-weight: bold; color: #fff; min-width: 18px; text-align: center;">${item.qty}</span>
-            <button class="qty-btn" onclick="updateItemQty(${index}, 1)" style="width: 24px; height: 24px; background: #333; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">+</button>
+            <button class="qty-btn" onclick="updateItemQty(${index}, 1)" style="width: 24px; height: 24px; background: #333; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;" ${item.qty >= maxStock ? 'disabled title="Máximo stock disponible"' : ''}>+</button>
             <span style="font-size: 13px; font-weight: 900; color: #22c55e; margin-left: 6px;">${formatPrice(itemTotal)}</span>
             <button onclick="removeFromCart(${index})" style="background: transparent; border: none; color: #ef4444; font-size: 11px; margin-left: auto; cursor: pointer;">🗑️ Quitar</button>
           </div>
@@ -1510,8 +1537,8 @@ function updateCartUI() {
 }
 
 function getAvailableStockForProductSize(prodId, size) {
-  const prod = (window.allProducts || []).find(p => p.id === prodId);
-  if (!prod) return 999;
+  const prod = (allProducts || []).find(p => p.id === prodId) || (window.allProducts || []).find(p => p.id === prodId);
+  if (!prod) return 0;
   
   const sizeStockMap = Array.isArray(prod.sizeStockMap) ? prod.sizeStockMap : (Array.isArray(prod.sizeStockRows) ? prod.sizeStockRows : []);
   if (sizeStockMap.length > 0) {
@@ -1525,10 +1552,11 @@ function getAvailableStockForProductSize(prodId, size) {
   if (prod.stock !== undefined) {
     return Number(prod.stock) || 0;
   }
-  return 999;
+  return 0;
 }
 
 window.addToCart = function(product, size) {
+  if (!product) return;
   const maxStock = getAvailableStockForProductSize(product.id, size);
   if (maxStock <= 0) {
     alert(`⚠️ Lo sentimos, no hay existencias disponibles para la talla ${size} de este jersey.`);
@@ -1536,7 +1564,7 @@ window.addToCart = function(product, size) {
   }
 
   const existingIndex = cart.findIndex(item => item.id === product.id && item.size === size);
-  const currentInCart = existingIndex > -1 ? cart[existingIndex].qty : 0;
+  const currentInCart = existingIndex > -1 ? (Number(cart[existingIndex].qty) || 0) : 0;
 
   if (currentInCart + 1 > maxStock) {
     alert(`⚠️ Límite de existencias: Solo hay ${maxStock} pieza(s) disponible(s) en inventario para la talla ${size}.`);
