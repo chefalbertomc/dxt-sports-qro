@@ -1509,8 +1509,40 @@ function updateCartUI() {
   }).join('');
 }
 
+function getAvailableStockForProductSize(prodId, size) {
+  const prod = (window.allProducts || []).find(p => p.id === prodId);
+  if (!prod) return 999;
+  
+  const sizeStockMap = Array.isArray(prod.sizeStockMap) ? prod.sizeStockMap : (Array.isArray(prod.sizeStockRows) ? prod.sizeStockRows : []);
+  if (sizeStockMap.length > 0) {
+    const targetSize = normalizeShopSizeKey(size);
+    const row = sizeStockMap.find(r => normalizeShopSizeKey(r.size) === targetSize || r.size === size);
+    if (row) {
+      return (Number(row.immediateQty) || 0) + (Number(row.warehouseQty) || 0);
+    }
+    return 0;
+  }
+  if (prod.stock !== undefined) {
+    return Number(prod.stock) || 0;
+  }
+  return 999;
+}
+
 window.addToCart = function(product, size) {
+  const maxStock = getAvailableStockForProductSize(product.id, size);
+  if (maxStock <= 0) {
+    alert(`⚠️ Lo sentimos, no hay existencias disponibles para la talla ${size} de este jersey.`);
+    return;
+  }
+
   const existingIndex = cart.findIndex(item => item.id === product.id && item.size === size);
+  const currentInCart = existingIndex > -1 ? cart[existingIndex].qty : 0;
+
+  if (currentInCart + 1 > maxStock) {
+    alert(`⚠️ Límite de existencias: Solo hay ${maxStock} pieza(s) disponible(s) en inventario para la talla ${size}.`);
+    return;
+  }
+
   if (existingIndex > -1) {
     cart[existingIndex].qty += 1;
   } else {
@@ -1530,11 +1562,20 @@ window.addToCart = function(product, size) {
 };
 
 window.updateItemQty = function(index, delta) {
-  if (cart[index]) {
-    cart[index].qty += delta;
-    if (cart[index].qty <= 0) cart.splice(index, 1);
-    updateCartUI();
+  if (!cart[index]) return;
+  const item = cart[index];
+  const maxStock = getAvailableStockForProductSize(item.id, item.size);
+
+  if (delta > 0 && item.qty + delta > maxStock) {
+    alert(`⚠️ Límite de existencias: Solo hay ${maxStock} pieza(s) disponible(s) para la talla ${item.size}.`);
+    return;
   }
+
+  item.qty += delta;
+  if (item.qty <= 0) {
+    cart.splice(index, 1);
+  }
+  updateCartUI();
 };
 
 window.removeFromCart = function(index) {
@@ -1631,6 +1672,15 @@ window.submitCheckoutOrder = async function(event) {
   if (!name || !phone || !address) {
     alert("Por favor completa todos los campos marcados con *");
     return;
+  }
+
+  // Strictly validate stock before placing order
+  for (const item of cart) {
+    const maxStock = getAvailableStockForProductSize(item.id, item.size);
+    if (item.qty > maxStock) {
+      alert(`⚠️ Lo sentimos, el jersey "${item.name}" (Talla ${item.size}) solo tiene ${maxStock} pieza(s) disponible(s). Por favor ajusta la cantidad en tu carrito.`);
+      return;
+    }
   }
   
   const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);

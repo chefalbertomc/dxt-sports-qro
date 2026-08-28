@@ -3450,6 +3450,22 @@ window.saveManualOrder = async function(e) {
 
   const catalog = window.allProductsList || window.currentProducts || [];
   const product = catalog.find(p => p.id === prodId);
+
+  // Validate available stock
+  const rows = product?.sizeStockRows || product?.sizeStockMap || [];
+  let availableStock = 999;
+  if (rows.length > 0) {
+    const row = rows.find(r => normalizeSizeKey(r.size) === normalizeSizeKey(size) || r.size === size);
+    availableStock = row ? (Number(row.immediateQty || 0) + Number(row.warehouseQty || 0)) : 0;
+  } else if (product?.stock !== undefined) {
+    availableStock = Number(product.stock) || 0;
+  }
+
+  if (qty > availableStock) {
+    alert(`⚠️ La cantidad ingresada (${qty} pzas) supera las existencias reales disponibles (${availableStock} pzas) para la talla ${size}.`);
+    return;
+  }
+
   const totalAmount = qty * price;
 
   const orderPayload = {
@@ -3458,6 +3474,7 @@ window.saveManualOrder = async function(e) {
     deliveryMethod: delivery,
     seller: seller,
     paymentStatus: paymentStatus,
+    paidAmount: paymentStatus === 'paid' ? totalAmount : 0,
     address: address,
     items: [{
       id: prodId,
