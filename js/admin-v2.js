@@ -23,7 +23,9 @@ let adminFilterGenderId = null;
 // ============================================
 const ADMIN_EMAIL_WHITELIST = [
   'chefalbertomc@gmail.com',
-  'dxtsportsqro@gmail.com'
+  'dxtsportsqro@gmail.com',
+  'elenma08@gmail.com',
+  'ventasdxtsports@gmail.com'
 ];
 
 async function isAuthorizedAdminEmail(email) {
@@ -115,39 +117,67 @@ window.signInWithGoogleAdmin = async function() {
   }
 };
 
+// ============================================
+// CREDENCIALES LOCALES — ACCESO SIN FIREBASE
+// ============================================
+const LOCAL_ADMIN_CREDENTIALS = {
+  'chefalbertomc@gmail.com':   'Dxt2024Admin!',
+  'dxtsportsqro@gmail.com':    'Dxt2024Admin!',
+  'elenma08@gmail.com':        'Dxt2024Admin!',
+  'ventasdxtsports@gmail.com': 'Dxt2024Admin!'
+};
+
 // Login with Email / Password
 document.getElementById('btnLogin')?.addEventListener('click', async () => {
-  const email = document.getElementById('adminEmail').value.trim();
+  const email = document.getElementById('adminEmail').value.trim().toLowerCase();
   const pw = document.getElementById('adminPassword').value;
-  
+  const btnLogin = document.getElementById('btnLogin');
+
   if (!email || !pw) {
-    loginError.textContent = 'Completa ambos campos';
+    loginError.textContent = 'Completa correo y contraseña';
     loginError.style.display = 'block';
     return;
   }
-  
+
+  // 1️⃣ Verificar credenciales locales primero (funciona sin internet / Firebase OAuth)
+  if (LOCAL_ADMIN_CREDENTIALS[email] && LOCAL_ADMIN_CREDENTIALS[email] === pw) {
+    if (loginError) loginError.style.display = 'none';
+    quickAdminAccess(email);
+    return;
+  }
+
+  // 2️⃣ Intentar con Firebase Auth (si el dominio está autorizado)
   try {
-    document.getElementById('btnLogin').textContent = 'Entrando...';
+    if (btnLogin) btnLogin.textContent = 'Entrando...';
     await auth.signInWithEmailAndPassword(email, pw);
   } catch (error) {
-    console.log('Firebase auth fallback to quick access:', error);
-    quickAdminAccess();
+    console.warn('Firebase auth error:', error.code);
+    // Si el error es dominio no autorizado o red, mostrar mensaje claro
+    if (error.code === 'auth/unauthorized-domain' || error.code === 'auth/network-request-failed') {
+      loginError.innerHTML = `🚫 <strong>Credenciales incorrectas.</strong> Verifica tu correo y contraseña.`;
+      loginError.style.display = 'block';
+    } else {
+      loginError.innerHTML = `🚫 ${error.message || 'Error al iniciar sesión'}`;
+      loginError.style.display = 'block';
+    }
+    if (btnLogin) btnLogin.textContent = 'ENTRAR';
   }
 });
 
 // Quick 1-Click Master Admin Access
-window.quickAdminAccess = function() {
+window.quickAdminAccess = function(email) {
   const loginSec = document.getElementById('loginSection');
   const adminSec = document.getElementById('adminSection');
   const manageSec = document.getElementById('manageSection');
-  const btnLogout = document.getElementById('btnLogout');
+  const btnLogoutEl = document.getElementById('btnLogout');
 
   if (loginSec) loginSec.style.display = 'none';
   if (adminSec) adminSec.style.display = 'block';
   if (manageSec) manageSec.style.display = 'block';
-  if (btnLogout) {
-    btnLogout.textContent = 'Salir (Modo Local)';
-    btnLogout.style.display = 'inline-block';
+  if (btnLogoutEl) {
+    const label = email ? email.split('@')[0] : 'Admin';
+    btnLogoutEl.textContent = `👤 ${label} (Salir)`;
+    btnLogoutEl.style.display = 'inline-block';
   }
 
   if (typeof initAdminForm === 'function') initAdminForm();
@@ -963,7 +993,7 @@ Analiza detenidamente la fotografía de la prenda deportiva y extrae la informac
 
 Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
 
-  const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'];
+  const models = ['gemini-3.6-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-preview-05-20'];
   let lastError = null;
 
   for (const model of models) {
