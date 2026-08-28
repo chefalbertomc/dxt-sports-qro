@@ -33,7 +33,7 @@
           <span style="color:#ff1e38;">DXT</span>
           <span style="color:#00b0ff;">SPORTS</span>
           <span style="background:linear-gradient(135deg, #ff1e38, #d50000); color:#fff; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:2px;">QRO</span>
-          <span style="background:#00b0ff; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v321.0</span>
+          <span style="background:#00b0ff; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v322.0</span>
         </div>
         <div class="logo-text-sub">OFICIAL · MERCHANDISE</div>
       </div>
@@ -187,24 +187,110 @@
     <div id="productDetailModal" class="product-modal-content" onclick="event.stopPropagation()"></div>
   </div>
 
-  <!-- Shopping Cart Drawer -->
-  <div id="cartOverlay" class="cart-overlay" onclick="toggleCartDrawer()"></div>
-  <aside id="cartDrawer" class="cart-drawer">
-    <div class="cart-header">
-      <h3 style="font-size: 20px; font-weight: 800; color: #fff;">🛍️ Tu Carrito de Compras</h3>
-      <button class="close-btn" onclick="toggleCartDrawer()">✕</button>
-    </div>
-    <div id="cartItems" class="cart-items"></div>
-    <div class="cart-footer">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 18px; font-weight: bold;">
-        <span>Total a Pagar:</span>
-        <span id="cartTotal" style="color: var(--accent-color); font-size: 22px;">$0.00 MXN</span>
+  <!-- SHOPPING CART DRAWER -->
+  <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)">
+    <aside id="cartDrawer" class="cart-drawer" onclick="event.stopPropagation()">
+      <div class="cart-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 6px;">
+          🛍️ Tu Carrito de Compras
+        </h3>
+        <button class="close-btn" onclick="toggleCartDrawer(false)" style="background: rgba(255,255,255,0.1); border: none; color: #fff; border-radius: 50%; width: 30px; height: 30px; font-size: 14px; cursor: pointer;">✕</button>
       </div>
-      <button onclick="checkoutWhatsApp()" class="btn btn-whatsapp" style="width: 100%; padding: 14px; font-size: 16px;">
-        📲 Concretar Compra por WhatsApp →
-      </button>
+      
+      <!-- CART ITEMS LIST CONTAINER -->
+      <div id="cartItemsContainer" class="cart-items-list" style="flex: 1; overflow-y: auto; margin-bottom: 16px;"></div>
+      <div id="cartItems" style="display: none;"></div>
+      
+      <div class="cart-footer" style="border-top: 1px solid #333; padding-top: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <span style="font-size: 14px; font-weight: 700; color: #aaa;">Total a Pagar:</span>
+          <span id="cartTotalPrice" style="color: #22c55e; font-size: 22px; font-weight: 900;">$0.00 MXN</span>
+        </div>
+        <button onclick="openCheckoutModal()" class="btn btn-whatsapp" style="width: 100%; padding: 14px; font-size: 15px; font-weight: 900; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          📲 Concretar Compra por WhatsApp →
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- CHECKOUT SPEI & DELIVERY MODAL -->
+  <div id="checkoutModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 520px; padding: 20px; max-height: 88vh; overflow-y: auto;">
+      <div class="modal-header" style="border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="color: var(--accent-color); font-size: 17px; margin: 0; font-weight: 900;">
+          💳 Finalizar Compra - DXT Sports QRO
+        </h3>
+        <button class="close-btn" onclick="closeCheckoutModal()" style="background: rgba(255,255,255,0.1); border: none; color: #fff; border-radius: 50%; width: 28px; height: 28px; font-size: 14px; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- SPEI BANK DETAILS BOX -->
+      <div style="background: rgba(0, 176, 255, 0.08); border: 1px solid #00b0ff; border-radius: 10px; padding: 12px; margin-bottom: 14px;">
+        <div style="font-size: 11px; font-weight: 800; color: #00b0ff; margin-bottom: 4px; text-transform: uppercase;">
+          🏦 Datos para Transferencia SPEI:
+        </div>
+        <div style="font-size: 12px; color: #fff; line-height: 1.5;">
+          <div><b>Banco:</b> <span id="chkBankName">BBVA México</span></div>
+          <div><b>Beneficiario:</b> <span id="chkBeneficiary">DXT SPORTS QUERÉTARO</span></div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+            <div><b>CLABE:</b> <span id="chkClabe" style="color: #38bdf8; font-weight: 900; font-family: monospace; font-size: 13px;">012680015897463219</span></div>
+            <button type="button" onclick="copyClabeToClipboard()" class="btn btn-outline" style="font-size: 10px; padding: 2px 6px;">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHECKOUT FORM -->
+      <form id="checkoutForm" onsubmit="submitCheckoutOrder(event)">
+        <div style="font-size: 11px; font-weight: 800; color: var(--accent-color); margin-bottom: 8px; text-transform: uppercase;">
+          1. Datos de Entrega y Contacto
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+          <div>
+            <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 2px;">Nombre Completo *</label>
+            <input type="text" id="custName" class="form-control" required placeholder="Ej. Carlos Mendoza" style="padding: 8px; font-size: 12px;">
+          </div>
+          <div>
+            <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 2px;">WhatsApp (10 Dígitos) *</label>
+            <input type="tel" id="custPhone" class="form-control" required placeholder="Ej. 4421234567" style="padding: 8px; font-size: 12px;">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 2px;">Método de Entrega *</label>
+          <select id="custDeliveryMethod" class="form-control" style="padding: 8px; font-size: 12px;">
+            <option value="sucursal">📍 Entrega Personal / Mostrador Querétaro (Gratis)</option>
+            <option value="domicilio">🏠 Envío a Domicilio en Querétaro o Todo México</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 2px;">Dirección / Punto de Entrega o Referencia *</label>
+          <input type="text" id="custAddress" class="form-control" required placeholder="Ej. Calle 5 de Mayo #123, Col. Centro / Punto de encuentro" style="padding: 8px; font-size: 12px;">
+        </div>
+
+        <!-- UPLOAD PROOF OF PAYMENT -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px dashed #444; border-radius: 8px; padding: 10px; margin-bottom: 14px;">
+          <label style="font-size: 11px; font-weight: 700; color: #fff; display: block; margin-bottom: 4px;">
+            📸 Adjuntar Comprobante de Pago SPEI (Opcional)
+          </label>
+          <input type="file" id="transferProofFile" accept="image/*" class="form-control" style="padding: 4px; font-size: 11px;">
+          <div id="transferProofPreview" style="display: none; margin-top: 8px; text-align: center;">
+            <img id="proofPreviewImg" src="" style="max-height: 100px; border-radius: 6px; border: 1px solid #333;">
+          </div>
+        </div>
+
+        <!-- TOTAL RESUME -->
+        <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <span style="font-size: 12px; font-weight: 800; color: #fff;">TOTAL DE TU PEDIDO:</span>
+          <span id="checkoutTotalAmount" style="font-size: 20px; font-weight: 900; color: #22c55e;">$0.00 MXN</span>
+        </div>
+
+        <button type="submit" class="btn btn-whatsapp" style="width: 100%; font-size: 15px; font-weight: 900; padding: 12px; border-radius: 10px;">
+          📲 Enviar Pedido por WhatsApp →
+        </button>
+      </form>
     </div>
-  </aside>
+  </div>
 
   <!-- Footer -->
   <footer style="margin-top: 40px; padding: 30px 0; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-muted); font-size: 12px;">
@@ -223,8 +309,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <script src="js/firebase-config.js?v=321.0"></script>
-  <script src="js/teams.js?v=321.0"></script>
-  <script src="js/app.js?v=321.0"></script>
+  <script src="js/firebase-config.js?v=322.0"></script>
+  <script src="js/teams.js?v=322.0"></script>
+  <script src="js/app.js?v=322.0"></script>
 </body>
 </html>

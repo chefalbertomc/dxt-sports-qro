@@ -1318,7 +1318,7 @@ async function deductInventoryFromFirestore(items) {
       if (!prodDoc.exists) continue;
       
       const prodData = prodDoc.data();
-      let sizeStockMap = prodData.sizeStockMap || [];
+      let sizeStockMap = prodData.sizeStockMap || prodData.sizeStockRows || [];
       let qtyToDeduct = item.qty || 1;
       
       if (sizeStockMap.length > 0) {
@@ -1344,6 +1344,7 @@ async function deductInventoryFromFirestore(items) {
         
         await prodRef.update({
           sizeStockMap: sizeStockMap,
+          sizeStockRows: sizeStockMap,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       } else if (prodData.stock !== undefined) {
@@ -1424,14 +1425,16 @@ async function loadProducts() {
 // ============================================
 function updateCartUI() {
   const badge = document.getElementById('cartBadge');
-  const itemsContainer = document.getElementById('cartItemsContainer');
-  const totalPriceEl = document.getElementById('cartTotalPrice');
+  const itemsContainer = document.getElementById('cartItemsContainer') || document.getElementById('cartItems');
+  const totalPriceEl = document.getElementById('cartTotalPrice') || document.getElementById('cartTotal');
+  const checkoutTotal = document.getElementById('checkoutTotalAmount');
   
-  const totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
-  const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const totalCount = cart.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
+  const totalPrice = cart.reduce((sum, item) => sum + ((Number(item.price) || 0) * (Number(item.qty) || 1)), 0);
   
   if (badge) badge.textContent = totalCount;
   if (totalPriceEl) totalPriceEl.textContent = formatPrice(totalPrice);
+  if (checkoutTotal) checkoutTotal.textContent = formatPrice(totalPrice);
   
   localStorage.setItem('dxt_sports_cart', JSON.stringify(cart));
 
@@ -1439,27 +1442,32 @@ function updateCartUI() {
 
   if (cart.length === 0) {
     itemsContainer.innerHTML = `
-      <div class="empty-state" style="padding: 40px 10px;">
-        <div class="empty-state-icon">🛒</div>
-        <div style="font-weight: bold; color: #fff;">Tu carrito está vacío</div>
-        <div style="font-size: 12px; margin-top: 4px;">¡Agrega artículos deportivos oficiales!</div>
+      <div class="empty-state" style="padding: 40px 10px; text-align: center;">
+        <div class="empty-state-icon" style="font-size: 40px; margin-bottom: 8px;">🛒</div>
+        <div style="font-weight: bold; color: #fff; font-size: 15px;">Tu carrito está vacío</div>
+        <div style="font-size: 12px; color: #888; margin-top: 4px;">¡Haz clic en cualquier jersey para agregar!</div>
       </div>`;
     return;
   }
 
   itemsContainer.innerHTML = cart.map((item, index) => {
     const genderLabel = typeof getGenderLabel !== 'undefined' ? getGenderLabel(item.gender) : '';
+    const img = item.imageUrl || item.image || 'assets/dxt_logo.png';
+    const itemTotal = (Number(item.price) || 0) * (Number(item.qty) || 1);
     return `
-      <div class="cart-item">
-        <img src="${item.imageUrl}" class="cart-item-img" onerror="this.src='https://via.placeholder.com/100'">
-        <div class="cart-item-info">
-          <div class="cart-item-title">${item.name}</div>
-          <div class="cart-item-meta">${genderLabel} — Talla: <strong>${item.size}</strong> — ${formatPrice(item.price)}</div>
-          <div class="qty-controls">
-            <button class="qty-btn" onclick="updateItemQty(${index}, -1)">-</button>
+      <div class="cart-item" style="display: flex; gap: 12px; background: #1a1a1a; padding: 10px; border-radius: 10px; border: 1px solid #333; margin-bottom: 10px;">
+        <img src="${img}" class="cart-item-img" style="width: 56px; height: 56px; object-fit: contain; background: #000; border-radius: 6px; border: 1px solid #444;" onerror="this.src='assets/dxt_logo.png'">
+        <div class="cart-item-info" style="flex: 1;">
+          <div class="cart-item-title" style="font-size: 13px; font-weight: 800; color: #fff; line-height: 1.2;">${item.name}</div>
+          <div class="cart-item-meta" style="font-size: 11px; color: #38bdf8; margin-top: 2px;">
+            Talla: <strong>${item.size}</strong> · ${formatPrice(item.price)}
+          </div>
+          <div class="qty-controls" style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+            <button class="qty-btn" onclick="updateItemQty(${index}, -1)" style="width: 24px; height: 24px; background: #333; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">-</button>
             <span style="font-size: 13px; font-weight: bold; color: #fff; min-width: 18px; text-align: center;">${item.qty}</span>
-            <button class="qty-btn" onclick="updateItemQty(${index}, 1)">+</button>
-            <button onclick="removeFromCart(${index})" style="background: transparent; border: none; color: #ef4444; font-size: 12px; margin-left: auto; cursor: pointer;">🗑️ Quitar</button>
+            <button class="qty-btn" onclick="updateItemQty(${index}, 1)" style="width: 24px; height: 24px; background: #333; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">+</button>
+            <span style="font-size: 13px; font-weight: 900; color: #22c55e; margin-left: 6px;">${formatPrice(itemTotal)}</span>
+            <button onclick="removeFromCart(${index})" style="background: transparent; border: none; color: #ef4444; font-size: 11px; margin-left: auto; cursor: pointer;">🗑️ Quitar</button>
           </div>
         </div>
       </div>
@@ -1475,8 +1483,8 @@ window.addToCart = function(product, size) {
     cart.push({
       id: product.id,
       name: product.name,
-      price: product.price,
-      imageUrl: product.imageUrl,
+      price: Number(product.price) || 1499,
+      imageUrl: product.imageUrl || 'assets/dxt_logo.png',
       gender: product.gender || 'caballero',
       size: size,
       qty: 1
@@ -1503,13 +1511,15 @@ window.removeFromCart = function(index) {
 };
 
 window.toggleCartDrawer = function(forceOpen) {
-  const drawer = document.getElementById('cartDrawerOverlay');
-  if (!drawer) return;
+  const drawerOverlay = document.getElementById('cartDrawerOverlay') || document.getElementById('cartOverlay');
+  if (!drawerOverlay) return;
   
   if (forceOpen === true) {
-    drawer.classList.add('active');
+    drawerOverlay.classList.add('active');
+  } else if (forceOpen === false) {
+    drawerOverlay.classList.remove('active');
   } else {
-    drawer.classList.toggle('active');
+    drawerOverlay.classList.toggle('active');
   }
 };
 
@@ -1521,7 +1531,22 @@ window.openCheckoutModal = function() {
   }
   
   const modal = document.getElementById('checkoutModal');
+  const totalAmount = cart.reduce((sum, item) => sum + ((Number(item.price) || 0) * (Number(item.qty) || 1)), 0);
+  const checkoutTotal = document.getElementById('checkoutTotalAmount');
+  if (checkoutTotal) checkoutTotal.textContent = formatPrice(totalAmount);
+
+  const chkBank = document.getElementById('chkBankName');
+  const chkBenef = document.getElementById('chkBeneficiary');
+  const chkClabe = document.getElementById('chkClabe');
+  if (chkBank) chkBank.textContent = STORE_BANK_DETAILS.bank || 'BBVA México';
+  if (chkBenef) chkBenef.textContent = STORE_BANK_DETAILS.beneficiary || 'DXT SPORTS QUERÉTARO';
+  if (chkClabe) chkClabe.textContent = STORE_BANK_DETAILS.clabe || '012680015897463219';
+
   if (modal) modal.classList.add('active');
+};
+
+window.checkoutWhatsApp = function() {
+  openCheckoutModal();
 };
 
 window.closeCheckoutModal = function() {
@@ -1530,7 +1555,7 @@ window.closeCheckoutModal = function() {
 };
 
 window.copyClabeToClipboard = function() {
-  const clabe = STORE_BANK_DETAILS.clabe;
+  const clabe = STORE_BANK_DETAILS.clabe || '012680015897463219';
   navigator.clipboard.writeText(clabe).then(() => {
     alert("✅ CLABE bancaria copiada al portapapeles: " + clabe);
   }).catch(() => {
