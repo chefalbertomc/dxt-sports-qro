@@ -1801,6 +1801,8 @@ ${isDeposit ? `🔒 *ANTICIPO TRANSFERIDO HOY (50%):* ${formatPrice(payNowAmount
       transferProof: transferProofBase64 || null,
       status: 'pending',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
     // Trigger notification to Admin devices
     if (typeof window.notifyAdminNewOrder === 'function') {
       window.notifyAdminNewOrder({
