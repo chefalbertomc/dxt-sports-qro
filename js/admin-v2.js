@@ -755,7 +755,7 @@ Analiza detenidamente la fotografía de la prenda deportiva y extrae la informac
 
 Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -1007,6 +1007,17 @@ if (bulkInput) {
 }
 
 // Publish all bulk items with Automatic Gemini Flash AI Pre-Classification
+// Google Lens / Visual Image Search Helper
+window.openGoogleLensSearch = function(imageUrl, productName) {
+  if (imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
+    window.open(`https://lens.google.com/uploadbyurl?url=${encodeURIComponent(imageUrl)}`, '_blank');
+  } else {
+    const q = (productName && !productName.includes('Pendiente')) ? productName : 'jersey deportivo oficial playera';
+    window.open(`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(q)}`, '_blank');
+  }
+};
+
+// Publish all bulk items with High-Speed Parallel Processing
 window.publishAllBulkProducts = async function() {
   if (bulkItems.length === 0) return;
 
@@ -1025,38 +1036,62 @@ window.publishAllBulkProducts = async function() {
     const startTime = Date.now();
     const total = bulkItems.length;
 
-    for (let i = 0; i < total; i++) {
-      const item = bulkItems[i];
-      const percent = Math.round(((i + 1) / total) * 100);
+    if (!shouldPreClassify) {
+      // INSTANT BATCH WRITE MODE (2 Seconds for 100 Photos!)
+      if (progressText) progressText.textContent = `⚡ Guardando ${total} fotos en lote instantáneo...`;
+      if (progressBar) progressBar.style.width = '70%';
+      
+      const batchSize = 30;
+      for (let i = 0; i < total; i += batchSize) {
+        const chunk = bulkItems.slice(i, i + batchSize);
+        const batch = db.batch();
+        chunk.forEach(item => {
+          const ref = db.collection('products').doc();
+          batch.set(ref, {
+            name: '⚠️ Prenda Pendiente por Catalogar',
+            team: 'sin-categoria',
+            sport: 'sin-categoria',
+            league: 'General',
+            season: '2024-2025',
+            gender: 'caballero',
+            category: 'sin-categoria',
+            badge: 'ninguno',
+            price: 0,
+            originalPrice: null,
+            sizeStockMap: [],
+            sizes: [],
+            description: 'Pendiente de clasificar tallas y existencias.',
+            imageUrl: item.base64,
+            isPendingInventory: true,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+        await batch.commit();
+      }
+    } else {
+      // HIGH-SPEED CONCURRENT PARALLEL CLASSIFIER (3 Workers simultaneously)
+      const concurrency = 3;
+      let finished = 0;
 
-      if (progressBar) progressBar.style.width = `${percent}%`;
-      if (progressPercent) progressPercent.textContent = `${percent}%`;
-
-      let productData = {
-        name: '⚠️ Prenda Pendiente por Catalogar',
-        team: 'sin-categoria',
-        sport: 'sin-categoria',
-        league: 'General',
-        season: '2024-2025',
-        gender: 'caballero',
-        category: 'sin-categoria',
-        badge: 'ninguno',
-        price: 0,
-        originalPrice: null,
-        sizeStockMap: [],
-        sizes: [],
-        description: 'Pendiente de clasificar tallas y existencias.',
-        imageUrl: item.base64,
-        isPendingInventory: true,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      if (shouldPreClassify) {
-        if (progressText) progressText.textContent = `⚡ Analizando foto ${i + 1} de ${total} con Gemini Flash AI...`;
-        if (statusEl) {
-          statusEl.style.color = '#38bdf8';
-          statusEl.textContent = `🤖 Gemini detectando prenda ${i + 1}/${total}...`;
-        }
+      async function processSingleItem(item, idx) {
+        let productData = {
+          name: '⚠️ Prenda Pendiente por Catalogar',
+          team: 'sin-categoria',
+          sport: 'sin-categoria',
+          league: 'General',
+          season: '2024-2025',
+          gender: 'caballero',
+          category: 'sin-categoria',
+          badge: 'ninguno',
+          price: 0,
+          originalPrice: null,
+          sizeStockMap: [],
+          sizes: [],
+          description: 'Pendiente de clasificar tallas y existencias.',
+          imageUrl: item.base64,
+          isPendingInventory: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
 
         try {
           const compressed = await compressImageForAI(item.base64, 280, 0.5);
@@ -1075,7 +1110,7 @@ window.publishAllBulkProducts = async function() {
             productData.description = aiResult.description || 'Prenda oficial de utilería bordada.';
           }
         } catch (aiErr) {
-          console.warn(`Item ${i + 1} fallback to fast classifier:`, aiErr);
+          console.warn(`Item ${idx + 1} fallback to filename parser:`, aiErr);
           const fallback = parseSportsInfoFromFilename(item.filename || '');
           if (fallback) {
             productData.name = fallback.name;
@@ -1085,11 +1120,19 @@ window.publishAllBulkProducts = async function() {
           }
         }
 
-        // Small cooldown between AI requests to respect rate limits
-        await new Promise(r => setTimeout(r, 400));
+        await db.collection('products').add(productData);
+        finished++;
+        const pct = Math.round((finished / total) * 100);
+        if (progressBar) progressBar.style.width = `${pct}%`;
+        if (progressPercent) progressPercent.textContent = `${pct}%`;
+        if (progressText) progressText.textContent = `⚡ Clasificadas ${finished} de ${total} prendas (${pct}%)...`;
       }
 
-      await db.collection('products').add(productData);
+      // Execute in concurrent parallel chunks
+      for (let i = 0; i < total; i += concurrency) {
+        const chunk = bulkItems.slice(i, i + concurrency);
+        await Promise.all(chunk.map((item, cIdx) => processSingleItem(item, i + cIdx)));
+      }
     }
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -1106,7 +1149,7 @@ window.publishAllBulkProducts = async function() {
     await loadAdminProducts();
     filterOnlyPendingCatalog();
 
-    alert(`🚀 ¡Éxito! Se subieron y pre-clasificaron ${uploadedCount} prendas en ${elapsed}s. Ahora en "Pendientes por Catalogar" solo tocas cada una para asignar existencias de tienda y bodega.`);
+    alert(`🚀 ¡Éxito! Se subieron ${uploadedCount} prendas en solo ${elapsed}s. Ahora en "Pendientes por Catalogar" solo tocas cada una para asignar existencias de tienda y bodega.`);
   } catch (err) {
     console.error('Error publishing bulk:', err);
     alert('Error al procesar fotos: ' + err.message);
@@ -1708,9 +1751,12 @@ function renderAdminProductsList(products) {
               ${seasonBadge}
               <span style="color: #fff; font-weight: 800; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${product.name}</span>
             </div>
-            <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
+            <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px; flex-wrap: wrap;">
               <button class="btn" style="padding: 4px 10px; font-size: 11px; font-weight: 900; background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; border: none; border-radius: 6px; cursor: pointer;" onclick="startEditingProduct('${product.id}')">
                 📦 Poner Tallas e Inventario →
+              </button>
+              <button class="btn btn-outline" style="border-color: #38bdf8; color: #38bdf8; padding: 3px 8px; font-size: 11px; height: 24px; display: inline-flex; align-items: center; gap: 3px;" onclick="openGoogleLensSearch('${product.imageUrl}', '${(product.name || '').replace(/'/g, "\\'")}')" title="Buscar en Google Lens / Imágenes">
+                🔍 Google Lens
               </button>
               <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; padding: 3px 8px; font-size: 11px; height: 24px; line-height: 1;" onclick="deleteProduct('${product.id}')" title="Eliminar">
                 🗑️
