@@ -194,34 +194,58 @@ body {
 .logo-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-decoration: none;
 }
 
 .logo-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 2px solid var(--accent-color);
-  box-shadow: 0 0 15px var(--accent-glow);
+  width: auto;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  background: #000;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.logo-icon img {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(255, 30, 56, 0.45));
+  transition: transform 0.2s ease;
+}
+
+.logo-container:hover .logo-icon img {
+  transform: scale(1.05);
 }
 
 .logo-text {
-  font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 900;
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
-  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
 }
 
-.logo-text span {
-  color: var(--accent-color);
+.logo-text-main {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 950;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.logo-text-sub {
+  font-family: var(--font-main);
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
 
 .nav-actions {
