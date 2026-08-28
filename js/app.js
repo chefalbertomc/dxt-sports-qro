@@ -1171,8 +1171,10 @@ window.openProductDetailModal = function(productId) {
   if (!overlay || !modal) return;
 
   const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(product.team) : { sport: 'Deportes', icon: '🏆', league: 'Oficial', team: product.team, teamLogo: 'assets/dxt_logo.png' };
-  const formattedPrice = typeof formatPrice !== 'undefined' ? formatPrice(product.price) : `$${product.price} MXN`;  const sizeStockMap = product.sizeStockMap || [];
-  const sizes = (sizeStockMap.length > 0) ? sizeStockMap.map(s => s.size) : (product.sizes || ["M", "L"]);
+  const formattedPrice = typeof formatPrice !== 'undefined' ? formatPrice(product.price) : `$${product.price} MXN`;
+  const formattedOrig = product.originalPrice ? (typeof formatPrice !== 'undefined' ? formatPrice(product.originalPrice) : `$${product.originalPrice} MXN`) : null;
+  const sizeStockMap = product.sizeStockMap || product.sizeStockRows || [];
+  const sizes = (sizeStockMap.length > 0) ? sizeStockMap.map(s => s.size) : (product.sizes || ["S", "M", "L", "XL", "XXL"]);
   
   // Find first in-stock size if current size isn't set or out of stock
   let firstInStockSize = sizes[0] || 'M';

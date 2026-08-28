@@ -1621,6 +1621,8 @@ function loadAdminProducts() {
       const tB = b.createdAt ? (b.createdAt.seconds || 0) : 0;
       return tB - tA;
     });
+    window.allProductsList = currentProducts;
+    window.currentProducts = currentProducts;
     if (countEl) countEl.textContent = currentProducts.length;
 
     const uncatCount = currentProducts.filter(isProductPending).length;
@@ -2679,44 +2681,142 @@ window.printPickingList = function() {
 // ============================================
 window.openManualOrderModal = function() {
   const modal = document.getElementById('manualOrderModal');
-  const prodSelect = document.getElementById('manualProductSelect');
-  if (!modal || !prodSelect) return;
+  if (!modal) return;
 
-  const catalogProducts = window.allProductsList || [];
-  prodSelect.innerHTML = '<option value="">Selecciona un producto del catálogo...</option>' + 
-    catalogProducts.map(p => `<option value="${p.id}">${p.name} ($${p.price || 0})</option>`).join('');
+  clearManualSelectedProduct();
+  const searchInput = document.getElementById('manualProductSearch');
+  if (searchInput) searchInput.value = '';
 
   modal.classList.add('active');
 };
 
 window.closeManualOrderModal = () => document.getElementById('manualOrderModal')?.classList.remove('active');
 
-window.onManualProductChange = function() {
-  const prodId = document.getElementById('manualProductSelect')?.value;
-  const sizeSelect = document.getElementById('manualSizeSelect');
-  const priceInput = document.getElementById('manualPrice');
-  if (!sizeSelect) return;
+window.onManualProductSearchInput = function(val) {
+  const query = (val || '').toLowerCase().trim();
+  const listEl = document.getElementById('manualSearchResultsList');
+  if (!listEl) return;
 
-  const product = (window.allProductsList || []).find(p => p.id === prodId);
-  if (!product) {
-    sizeSelect.innerHTML = '<option value="">Talla...</option>';
-    if (priceInput) priceInput.value = 0;
-    calcManualOrderTotal();
+  const catalog = window.allProductsList || window.currentProducts || [];
+
+  if (!query) {
+    listEl.style.display = 'none';
+    listEl.innerHTML = '';
     return;
   }
 
-  if (priceInput) priceInput.value = product.price || 1499;
+  const matches = catalog.filter(p => {
+    const name = (p.name || '').toLowerCase();
+    const team = (p.team || '').toLowerCase();
+    const league = (p.league || '').toLowerCase();
+    return name.includes(query) || team.includes(query) || league.includes(query);
+  }).slice(0, 15);
 
-  const sizeRows = product.sizeStockRows || [];
-  if (sizeRows.length > 0) {
-    sizeSelect.innerHTML = sizeRows.map(s => {
-      const stock = (Number(s.immediateQty) || 0) + (Number(s.warehouseQty) || 0);
-      return `<option value="${s.size}">Talla ${s.size} (Stock: ${stock})</option>`;
-    }).join('');
-  } else {
-    sizeSelect.innerHTML = '<option value="Unitalla">Unitalla</option>';
+  if (matches.length === 0) {
+    listEl.innerHTML = '<div style="padding: 10px; font-size: 11px; color: #888; text-align: center;">No se encontraron prendas con ese nombre</div>';
+    listEl.style.display = 'block';
+    return;
   }
 
+  listEl.innerHTML = matches.map(p => {
+    const img = p.imageUrl || 'assets/dxt_logo.png';
+    const rows = p.sizeStockRows || p.sizeStockMap || [];
+    let totalStock = 0;
+    if (rows.length > 0) {
+      totalStock = rows.reduce((acc, r) => acc + (Number(r.immediateQty) || 0) + (Number(r.warehouseQty) || 0), 0);
+    } else {
+      totalStock = Number(p.stock) || 0;
+    }
+
+    return `
+      <div onclick="selectManualOrderProduct('${p.id}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border-bottom: 1px solid #222; cursor: pointer; border-radius: 4px;" onmouseover="this.style.background='rgba(56,189,248,0.15)'" onmouseout="this.style.background='transparent'">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <img src="${img}" style="width: 36px; height: 36px; object-fit: contain; background: #000; border-radius: 4px; border: 1px solid #333;">
+          <div>
+            <div style="font-size: 12px; font-weight: 800; color: #fff;">${p.name}</div>
+            <div style="font-size: 10px; color: #888;">${p.team || ''} · ${p.season || ''}</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 12px; font-weight: 900; color: #22c55e;">$${Number(p.price || 0).toLocaleString('es-MX')}</div>
+          <div style="font-size: 10px; color: ${totalStock > 0 ? '#38bdf8' : '#ef4444'}; font-weight: 700;">
+            ${totalStock > 0 ? `Stock: ${totalStock} pzas` : 'Agotado'}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  listEl.style.display = 'block';
+};
+
+window.selectManualOrderProduct = function(productId) {
+  const catalog = window.allProductsList || window.currentProducts || [];
+  const product = catalog.find(p => p.id === productId);
+  if (!product) return;
+
+  const hiddenId = document.getElementById('manualSelectedProductId');
+  const card = document.getElementById('manualSelectedProductCard');
+  const cardImg = document.getElementById('manualCardImg');
+  const cardTitle = document.getElementById('manualCardTitle');
+  const cardMeta = document.getElementById('manualCardMeta');
+  const searchInput = document.getElementById('manualProductSearch');
+  const listEl = document.getElementById('manualSearchResultsList');
+  const sizeSelect = document.getElementById('manualSizeSelect');
+  const priceInput = document.getElementById('manualPrice');
+
+  if (hiddenId) hiddenId.value = productId;
+  if (searchInput) searchInput.value = product.name;
+  if (listEl) listEl.style.display = 'none';
+
+  if (cardImg) cardImg.src = product.imageUrl || 'assets/dxt_logo.png';
+  if (cardTitle) cardTitle.textContent = product.name;
+
+  const rows = product.sizeStockRows || product.sizeStockMap || [];
+  let totalStock = 0;
+  if (rows.length > 0) {
+    totalStock = rows.reduce((acc, r) => acc + (Number(r.immediateQty) || 0) + (Number(r.warehouseQty) || 0), 0);
+  } else {
+    totalStock = Number(product.stock) || 0;
+  }
+
+  if (cardMeta) {
+    cardMeta.textContent = `Precio Oficial: $${Number(product.price || 0).toLocaleString('es-MX')} · Existencias Totales: ${totalStock} pzas`;
+  }
+  if (card) card.style.display = 'block';
+
+  if (priceInput) priceInput.value = product.price || 1499;
+
+  if (sizeSelect) {
+    if (rows.length > 0) {
+      sizeSelect.innerHTML = rows.map(s => {
+        const imm = Number(s.immediateQty) || 0;
+        const wh = Number(s.warehouseQty) || 0;
+        const tot = imm + wh;
+        return `<option value="${s.size}">Talla ${s.size} — Bodega: ${wh}, Tienda: ${imm} (Total: ${tot})</option>`;
+      }).join('');
+    } else {
+      sizeSelect.innerHTML = '<option value="Unitalla">Unitalla (Stock: 1)</option>';
+    }
+  }
+
+  calcManualOrderTotal();
+};
+
+window.clearManualSelectedProduct = function() {
+  const hiddenId = document.getElementById('manualSelectedProductId');
+  const card = document.getElementById('manualSelectedProductCard');
+  const sizeSelect = document.getElementById('manualSizeSelect');
+  const priceInput = document.getElementById('manualPrice');
+  const searchInput = document.getElementById('manualProductSearch');
+  const listEl = document.getElementById('manualSearchResultsList');
+
+  if (hiddenId) hiddenId.value = '';
+  if (card) card.style.display = 'none';
+  if (searchInput) searchInput.value = '';
+  if (listEl) listEl.style.display = 'none';
+  if (sizeSelect) sizeSelect.innerHTML = '<option value="">Busca un producto arriba...</option>';
+  if (priceInput) priceInput.value = 0;
   calcManualOrderTotal();
 };
 
@@ -2734,17 +2834,18 @@ window.saveManualOrder = async function(e) {
   const phone = document.getElementById('manualCustomerPhone')?.value.trim();
   const delivery = document.getElementById('manualDeliveryMethod')?.value;
   const address = document.getElementById('manualAddress')?.value.trim();
-  const prodId = document.getElementById('manualProductSelect')?.value;
+  const prodId = document.getElementById('manualSelectedProductId')?.value;
   const size = document.getElementById('manualSizeSelect')?.value;
   const qty = Number(document.getElementById('manualQty')?.value || 1);
   const price = Number(document.getElementById('manualPrice')?.value || 0);
 
   if (!name || !phone || !prodId || !size) {
-    alert("Por favor completa todos los campos obligatorios.");
+    alert("Por favor busca y selecciona un jersey del catálogo y su talla.");
     return;
   }
 
-  const product = (window.allProductsList || []).find(p => p.id === prodId);
+  const catalog = window.allProductsList || window.currentProducts || [];
+  const product = catalog.find(p => p.id === prodId);
   const totalAmount = qty * price;
 
   const orderPayload = {
@@ -2770,7 +2871,8 @@ window.saveManualOrder = async function(e) {
     await db.collection('orders').add(orderPayload);
     closeManualOrderModal();
     document.getElementById('manualOrderForm').reset();
-    alert("✅ Pedido registrado con éxito. Aparecerá en tu lista de recolección de bodega.");
+    clearManualSelectedProduct();
+    alert("✅ Pedido registrado con éxito. Ya aparece en tu lista de recolección de bodega.");
   } catch (err) {
     alert("Error al guardar pedido: " + err.message);
   }

@@ -79,14 +79,14 @@
           <span style="color:#ff1e38;">DXT</span>
           <span style="color:#00b0ff;">SPORTS</span>
           <span style="background:#ff1e38; color:#fff; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:2px;">ADMIN</span>
-          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v320.0</span>
+          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v321.0</span>
         </div>
-        <div class="logo-text-sub">PANEL DE CONTROL · GESTIÓN DE PEDIDOS & SURTIDO DE BODEGA</div>
+        <div class="logo-text-sub">PANEL DE CONTROL · BUSCADOR DE PRENDAS & TIENDA CORREGIDA</div>
       </div>
     </a>
     <div class="nav-actions">
       <span style="background:rgba(34, 197, 94, 0.15); border:1px solid #22c55e; color:#22c55e; font-size:10px; font-weight:800; padding:4px 8px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
-        🟢 v320.0 (Pedidos & Surtido Bodega)
+        🟢 v321.0 (Buscador Pedidos + Tienda Corregida)
       </span>
       <a href="index.html" target="_blank" rel="noopener" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">👁️ Ver Tienda ↗</a>
       <button id="btnLogout" class="btn btn-outline" style="display: none; font-size: 11px; padding: 6px 12px; border-color: #ef4444; color: #ef4444;">Salir</button>
@@ -598,18 +598,38 @@
         </div>
 
         <div style="font-size: 11px; font-weight: 800; color: #38bdf8; margin-bottom: 8px;">2. SELECCIONAR ARTÍCULO DEL CATÁLOGO</div>
-        <div class="form-group" style="margin-bottom: 8px;">
-          <label style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 2px;">Producto / Jersey *</label>
-          <select id="manualProductSelect" class="form-control" required onchange="onManualProductChange()" style="padding: 6px 8px; font-size: 12px;">
-            <option value="">Selecciona un producto...</option>
-          </select>
+        
+        <!-- BUSCADOR INTELIGENTE EN VIVO -->
+        <div class="form-group" style="margin-bottom: 8px; position: relative;">
+          <label style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 2px;">Buscar Jersey o Prenda en Catálogo *</label>
+          <input type="text" id="manualProductSearch" class="form-control" placeholder="🔍 Escribe para buscar (ej. Real Madrid, Bears, Dodgers, América...)" oninput="onManualProductSearchInput(this.value)" autocomplete="off" style="padding: 8px 10px; font-size: 12px; border-color: #38bdf8;">
+          
+          <!-- LIVE SEARCH RESULTS DROPDOWN -->
+          <div id="manualSearchResultsList" style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #11141c; border: 1px solid #38bdf8; border-radius: 8px; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,0.8); margin-top: 4px; padding: 4px;">
+          </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+        <input type="hidden" id="manualSelectedProductId" required>
+
+        <!-- SELECTED PRODUCT PREVIEW BANNER -->
+        <div id="manualSelectedProductCard" style="display: none; background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <img id="manualCardImg" src="assets/dxt_logo.png" style="width: 48px; height: 48px; object-fit: contain; background: #000; border-radius: 6px; border: 1px solid #444;">
+              <div>
+                <div id="manualCardTitle" style="font-size: 13px; font-weight: 800; color: #fff;">Jersey Seleccionado</div>
+                <div id="manualCardMeta" style="font-size: 11px; color: #aaa;">Precio: $1,499 · Total Stock: 4 pzas</div>
+              </div>
+            </div>
+            <button type="button" onclick="clearManualSelectedProduct()" style="background: none; border: 1px solid #ef4444; color: #ef4444; border-radius: 4px; font-size: 11px; padding: 4px 8px; cursor: pointer;">✕ Cambiar</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.3fr 0.7fr 1fr; gap: 8px; margin-bottom: 12px;">
           <div>
-            <label style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 2px;">Talla Disponible *</label>
+            <label style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 2px;">Talla y Existencias *</label>
             <select id="manualSizeSelect" class="form-control" required style="padding: 6px 8px; font-size: 12px;">
-              <option value="">Talla...</option>
+              <option value="">Busca un producto arriba...</option>
             </select>
           </div>
           <div>
@@ -737,8 +757,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   
-  <script src="js/firebase-config.js?v=320.0"></script>
-  <script src="js/teams.js?v=320.0"></script>
-  <script src="js/admin-v2.js?v=320.0"></script>
+  <script src="js/firebase-config.js?v=321.0"></script>
+  <script src="js/teams.js?v=321.0"></script>
+  <script src="js/admin-v2.js?v=321.0"></script>
 </body>
 </html>
