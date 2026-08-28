@@ -187,7 +187,6 @@ window.switchAdminTab = function(tabName, skipPushHistory = false) {
     if (manageBtn) manageBtn.className = 'btn btn-outline';
     if (singleBtn) singleBtn.className = 'btn active';
     if (bulkBtn) bulkBtn.className = 'btn btn-outline';
-    if (typeof renderQuickTeamPills === 'function') renderQuickTeamPills();
   } else {
     if (manageCard) manageCard.style.display = 'none';
     if (singleCard) singleCard.style.display = 'none';
@@ -216,7 +215,6 @@ function initAdminForm() {
   populateCategoriesSelect();
   populateBadgesSelect();
   onGenderSelectChange();
-  if (typeof renderQuickTeamPills === 'function') renderQuickTeamPills();
 }
 
 function populateAdminSports() {
@@ -710,108 +708,65 @@ function parseSportsInfoFromFilename(filename) {
   };
 }
 
-// Analyze single image via Gemini Vision Multimodal API
-async function analyzeImageWithGeminiVision(base64DataUrl) {
+// ============================================
+// GEMINI FLASH AI INTEGRATION (ULTRA-FAST ~1.5s)
+// ============================================
+async function analyzeImageWithGeminiVision(base64Image) {
   const apiKey = getStoredGeminiApiKey();
-  if (!apiKey) {
-    throw new Error("MISSING_API_KEY");
+  if (!apiKey) throw new Error("No hay API Key de Gemini configurada.");
+
+  let pureBase64 = base64Image;
+  if (pureBase64.includes(',')) {
+    pureBase64 = pureBase64.split(',')[1];
   }
 
-  // Extract pure base64 without prefix
-  const pureBase64 = base64DataUrl.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
-
-  // Flatten teams for prompt
-  const catalog = window.SPORTS_CATALOG || SPORTS_CATALOG;
-  const teamListPrompt = [];
-  catalog.forEach(s => {
-    s.leagues.forEach(l => {
-      l.teams.forEach(t => {
-        teamListPrompt.push(`${t.id} (${t.name} - ${l.league})`);
-      });
-    });
-  });
-
-  const promptText = `Eres un catalogador deportivo profesional de máxima precisión.
-Analiza la foto deportiva adjunta e identifica:
-1. Equipo exacto: busca el logo/escudo/letras y emparéjalo con uno de estos IDs:
-${teamListPrompt.join(', ')}
-
-2. Tipo de producto: 'jerseys' | 'gorras' | 'chamarras' | 'calzado' | 'balones' | 'accesorios'
-3. Género: 'caballero' | 'dama' | 'nino' | 'unisex'
-4. Jugador y número: si tiene dorsal/nombre (ej. "Lamar Jackson #8", "Tom Brady #12", "Josh Allen #17", "Jaxon Smith-Njigba #11", "Peyton Manning #18", "T.J. Watt #90"). Si no tiene pon "Edición General".
-5. Edición / Versión: "Local", "Visita", "Color Rush", "Salute to Service", "Rivalry", "Throwback", "Alternativo".
-6. Título Comercial en Español: ej. "Jersey NFL Baltimore Ravens #8 Lamar Jackson Morado Local".
-7. Precio sugerido en MXN (número entero, ej. 899 o 1899).
-8. Descripción breve en español (1-2 oraciones).
-
-Responde ÚNICAMENTE un JSON válido con este formato:
+  const promptText = `Identifica la prenda deportiva en la foto. Responde ÚNICAMENTE un JSON con:
 {
-  "teamId": "nfl-ravens",
-  "category": "jerseys",
-  "gender": "caballero",
-  "player": "Lamar Jackson #8",
-  "edition": "Local",
-  "name": "Jersey NFL Baltimore Ravens #8 Lamar Jackson Morado",
-  "price": 899,
-  "description": "Jersey oficial de utilería con números bordados y tela de alto rendimiento."
+  "team": "Nombre del equipo (ej. Baltimore Ravens, Seattle Seahawks, Real Madrid, América, Dodgers)",
+  "league": "NFL, NBA, MLB, Liga MX, Futbol Europeo o Formula 1",
+  "sport": "futbol-americano, futbol-soccer, basquetbol, beisbol o formula-1",
+  "category": "jerseys, gorras, chamarras, calzado o balones",
+  "gender": "caballero, dama, nino o unisex",
+  "player": "Nombre y dorsal del jugador si tiene, o Edición Oficial",
+  "name": "Título comercial formal en español (ej. Jersey NFL Baltimore Ravens #8 Lamar Jackson Morado)",
+  "price": 1499,
+  "description": "Descripción breve del producto (1 oración)"
 }`;
 
-  const endpoints = [
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=${apiKey}`
-  ];
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
 
-  let lastError = null;
-
-  for (const url of endpoints) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout per endpoint
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: promptText },
-              { inline_data: { mime_type: "image/jpeg", data: pureBase64 } }
-            ]
-          }],
-          generationConfig: {
-            response_mime_type: "application/json",
-            temperature: 0.1
-          }
-        })
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errJson = await response.json().catch(() => ({}));
-        lastError = errJson?.error?.message || `HTTP ${response.status}`;
-        continue;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: promptText },
+          { inline_data: { mime_type: "image/jpeg", data: pureBase64 } }
+        ]
+      }],
+      generationConfig: {
+        response_mime_type: "application/json",
+        temperature: 0.1,
+        maxOutputTokens: 250
       }
+    })
+  });
 
-      const data = await response.json();
-      const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (textOutput) {
-        return JSON.parse(textOutput);
-      }
-    } catch (err) {
-      lastError = err.message;
-    }
+  if (!response.ok) {
+    const errJson = await response.json().catch(() => ({}));
+    throw new Error(errJson?.error?.message || `HTTP ${response.status}`);
   }
 
-  throw new Error(lastError || "No response from Gemini API");
+  const data = await response.json();
+  const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!textOutput) throw new Error("No hubo respuesta de Gemini AI.");
+
+  return JSON.parse(textOutput);
 }
 
-// Quick image compressor helper for AI payload
-async function compressImageForAI(dataUrl, maxDim = 320, quality = 0.6) {
+// Quick image compressor helper for AI payload (Lightweight 280px JPEG in 10ms)
+async function compressImageForAI(dataUrl, maxDim = 280, quality = 0.5) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -838,105 +793,7 @@ async function compressImageForAI(dataUrl, maxDim = 320, quality = 0.6) {
   });
 }
 
-// ============================================
-// 1-CLICK POPULAR TEAMS SELECTOR (INSTANT 0s)
-// ============================================
-const POPULAR_TEAMS_LIST = [
-  { id: 'steelers', name: 'Steelers', icon: '🟡', sport: 'futbol-americano', league: 'NFL' },
-  { id: 'nfl-cowboys', name: 'Cowboys', icon: '⭐', sport: 'futbol-americano', league: 'NFL' },
-  { id: 'nfl-49ers', name: '49ers', icon: '🔴', sport: 'futbol-americano', league: 'NFL' },
-  { id: 'nfl-ravens', name: 'Ravens', icon: '💜', sport: 'futbol-americano', league: 'NFL' },
-  { id: 'nfl-chiefs', name: 'Chiefs', icon: '🔥', sport: 'futbol-americano', league: 'NFL' },
-  { id: 'nfl-patriots', name: 'Patriots', icon: '⚪', sport: 'futbol-americano', league: 'NFL' },
-  { id: 'nfl-bills', name: 'Bills', icon: '🔵', sport: 'futbol-americano', league: 'NFL' },
-  { id: 'nfl-seahawks', name: 'Seahawks', icon: '🟢', sport: 'futbol-americano', league: 'NFL' },
-  { id: 'nfl-broncos', name: 'Broncos', icon: '🟠', sport: 'futbol-americano', league: 'NFL' },
-  { id: 'nfl-eagles', name: 'Eagles', icon: '🦅', sport: 'futbol-americano', league: 'NFL' },
-  { id: 'nfl-packers', name: 'Packers', icon: '🧀', sport: 'futbol-americano', league: 'NFL' },
-  { id: 'nfl-raiders', name: 'Raiders', icon: '☠️', sport: 'futbol-americano', league: 'NFL' },
-  { id: 'soc-realmadrid', name: 'Real Madrid', icon: '👑', sport: 'futbol-soccer', league: 'La Liga (España)' },
-  { id: 'soc-barcelona', name: 'Barcelona', icon: '🔵🔴', sport: 'futbol-soccer', league: 'La Liga (España)' },
-  { id: 'soc-america', name: 'América', icon: '🦅', sport: 'futbol-soccer', league: 'Liga MX (México)' },
-  { id: 'soc-chivas', name: 'Chivas', icon: '🐐', sport: 'futbol-soccer', league: 'Liga MX (México)' },
-  { id: 'nba-lakers', name: 'Lakers', icon: '💜💛', sport: 'basquetbol', league: 'NBA' },
-  { id: 'mlb-dodgers', name: 'Dodgers', icon: '⚾', sport: 'beisbol', league: 'MLB' },
-  { id: 'mlb-yankees', name: 'Yankees', icon: '🗽', sport: 'beisbol', league: 'MLB' },
-  { id: 'f1-checoperez', name: 'Red Bull / Checo', icon: '🏎️', sport: 'formula-1', league: 'Fórmula 1' }
-];
-
-window.renderQuickTeamPills = function() {
-  const container = document.getElementById('quickTeamPillsContainer');
-  if (!container) return;
-
-  container.innerHTML = POPULAR_TEAMS_LIST.map(t => `
-    <button type="button" onclick="applyQuickTeam('${t.id}')" style="background: #181b26; border: 1px solid #3b4256; color: #fff; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s;">
-      <span>${t.icon}</span> ${t.name}
-    </button>
-  `).join('');
-};
-
-window.applyQuickTeam = function(teamId) {
-  const teamObj = POPULAR_TEAMS_LIST.find(t => t.id === teamId);
-  if (!teamObj) return;
-
-  // 1. Set Sport
-  const sportSelect = document.getElementById('prodSport');
-  if (sportSelect) {
-    sportSelect.value = teamObj.sport;
-    onAdminSportChange();
-  }
-
-  // 2. Set League
-  const leagueSelect = document.getElementById('prodLeague');
-  if (leagueSelect) {
-    leagueSelect.value = teamObj.league;
-    onAdminLeagueChange();
-  }
-
-  // 3. Set Team
-  const teamSelect = document.getElementById('prodTeam');
-  if (teamSelect) {
-    teamSelect.value = teamObj.id;
-  }
-
-  // 4. Set Title if default
-  const nameInput = document.getElementById('prodName');
-  if (nameInput && (!nameInput.value || nameInput.value.includes('Pendiente') || nameInput.value.includes('Ej.'))) {
-    const tax = getFullTaxonomy(teamObj.id);
-    nameInput.value = `Jersey ${tax.league} ${tax.team} Oficial Local`;
-  }
-
-  // 5. Set Price if 0 or empty
-  const priceInput = document.getElementById('prodPrice');
-  if (priceInput && (!priceInput.value || priceInput.value === '0')) {
-    priceInput.value = 1499;
-  }
-
-  // 6. Set Description if default
-  const descInput = document.getElementById('prodDesc');
-  if (descInput && (!descInput.value || descInput.value.includes('Pendiente'))) {
-    descInput.value = `Jersey oficial de utilería bordada con tela de alto rendimiento transpirable de los ${teamObj.name}.`;
-  }
-
-  // 7. Ensure size rows are populated
-  if (!currentSizeStockRows || currentSizeStockRows.length === 0) {
-    currentSizeStockRows = [
-      { size: "S", immediateQty: 2, warehouseQty: 5 },
-      { size: "M", immediateQty: 2, warehouseQty: 5 },
-      { size: "L", immediateQty: 2, warehouseQty: 5 },
-      { size: "XL", immediateQty: 2, warehouseQty: 5 }
-    ];
-    renderSizeStockRows();
-  }
-
-  const uploadStatus = document.getElementById('uploadStatus');
-  if (uploadStatus) {
-    uploadStatus.style.color = '#4ade80';
-    uploadStatus.textContent = `⚡ ¡Equipo ${teamObj.name} seleccionado en 0s! Ajusta las tallas que gustes y guarda.`;
-  }
-};
-
-// Auto-fill Current Form with Gemini AI (Ultra-fast with 3s failover)
+// Auto-fill Current Form with Gemini AI (1 Click from Photo)
 window.autoFillCurrentFormWithGemini = async function() {
   const preview = document.getElementById('imagePreview');
   const btnAI = document.getElementById('btnAutoFillFormAI');
@@ -949,41 +806,57 @@ window.autoFillCurrentFormWithGemini = async function() {
   
   if (btnAI) {
     btnAI.disabled = true;
-    btnAI.innerHTML = `<span>⏳</span> Analizando prenda...`;
+    btnAI.innerHTML = `<span>⏳</span> Analizando con Gemini AI...`;
   }
   if (uploadStatus) {
     uploadStatus.style.color = '#38bdf8';
-    uploadStatus.textContent = '🤖 Analizando imagen deportiva...';
+    uploadStatus.textContent = '🤖 Gemini AI analizando prenda, equipo y jugador...';
   }
 
   try {
     const compressedForAI = await compressImageForAI(preview.src, 280, 0.5);
-    let aiResult = null;
-
-    try {
-      aiResult = await analyzeImageWithGeminiVision(compressedForAI);
-    } catch(aiErr) {
-      console.warn('Gemini cloud busy/slow, using instant heuristic parser:', aiErr);
-      const prodNameVal = document.getElementById('prodName')?.value || '';
-      aiResult = parseSportsInfoFromFilename(prodNameVal);
-    }
+    const aiResult = await analyzeImageWithGeminiVision(compressedForAI);
 
     if (!aiResult) throw new Error("No se obtuvieron datos de la imagen");
 
-    // Pre-fill Taxonomy
+    // Pre-fill Taxonomy by searching matched team in SPORTS_CATALOG
     const catalog = window.SPORTS_CATALOG || SPORTS_CATALOG;
     let foundSportKey = null;
     let foundLeagueName = null;
+    let foundTeamId = null;
 
+    const teamSearch = (aiResult.team || '').toLowerCase().trim();
+
+    // Match in catalog
     for (const s of catalog) {
       for (const l of s.leagues) {
-        if (l.teams.some(t => t.id === aiResult.teamId)) {
-          foundSportKey = s.sportKey;
-          foundLeagueName = l.league;
-          break;
+        for (const t of l.teams) {
+          const tName = (t.name || '').toLowerCase();
+          const tId = (t.id || '').toLowerCase();
+          if (teamSearch && (tName.includes(teamSearch) || teamSearch.includes(tName) || tId.includes(teamSearch))) {
+            foundSportKey = s.sportKey;
+            foundLeagueName = l.league;
+            foundTeamId = t.id;
+            break;
+          }
+        }
+        if (foundTeamId) break;
+      }
+      if (foundTeamId) break;
+    }
+
+    // If exact team wasn't found, try by sport/league hint
+    if (!foundSportKey && aiResult.sport) {
+      const sObj = catalog.find(s => s.sportKey.includes(aiResult.sport) || aiResult.sport.includes(s.sportKey));
+      if (sObj) {
+        foundSportKey = sObj.sportKey;
+        if (sObj.leagues.length > 0) {
+          foundLeagueName = sObj.leagues[0].league;
+          if (sObj.leagues[0].teams.length > 0) {
+            foundTeamId = sObj.leagues[0].teams[0].id;
+          }
         }
       }
-      if (foundSportKey) break;
     }
 
     if (foundSportKey) {
@@ -992,7 +865,9 @@ window.autoFillCurrentFormWithGemini = async function() {
       if (foundLeagueName) {
         document.getElementById('prodLeague').value = foundLeagueName;
         onAdminLeagueChange();
-        document.getElementById('prodTeam').value = aiResult.teamId;
+        if (foundTeamId) {
+          document.getElementById('prodTeam').value = foundTeamId;
+        }
       }
     }
 
@@ -1010,24 +885,32 @@ window.autoFillCurrentFormWithGemini = async function() {
       document.getElementById('prodName').value = aiResult.name;
     }
     if (aiResult.price && document.getElementById('prodPrice')) {
-      const currentPrice = Number(document.getElementById('prodPrice').value);
-      if (!currentPrice || currentPrice === 0) {
-        document.getElementById('prodPrice').value = aiResult.price;
-      }
+      document.getElementById('prodPrice').value = aiResult.price;
     }
     if (aiResult.description && document.getElementById('prodDesc')) {
       document.getElementById('prodDesc').value = aiResult.description;
     }
 
+    // Ensure size rows are populated if empty
+    if (!currentSizeStockRows || currentSizeStockRows.length === 0) {
+      currentSizeStockRows = [
+        { size: "S", immediateQty: 2, warehouseQty: 5 },
+        { size: "M", immediateQty: 2, warehouseQty: 5 },
+        { size: "L", immediateQty: 2, warehouseQty: 5 },
+        { size: "XL", immediateQty: 2, warehouseQty: 5 }
+      ];
+      renderSizeStockRows();
+    }
+
     if (uploadStatus) {
       uploadStatus.style.color = '#4ade80';
-      uploadStatus.textContent = `✅ Detectado: ${aiResult.name} (${aiResult.player || 'Oficial'}). Ajusta tallas y existencias en tienda/bodega.`;
+      uploadStatus.textContent = `✅ Gemini detectó: ${aiResult.name} (${aiResult.player || 'Oficial'}). Ajusta tus tallas y existencias en tienda/bodega.`;
     }
   } catch (err) {
     console.error('Error in autoFillCurrentFormWithGemini:', err);
     if (uploadStatus) {
       uploadStatus.style.color = '#f87171';
-      uploadStatus.textContent = `❌ Error al analizar: ${err.message}`;
+      uploadStatus.textContent = `❌ Error al analizar con Gemini: ${err.message}`;
     }
   } finally {
     if (btnAI) {
