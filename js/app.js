@@ -960,9 +960,10 @@ function createProductCard(product, id) {
 
       <h3 class="product-title">${product.name}</h3>
       
-      <div class="product-meta-row">
+      <div class="product-meta-row" style="display: flex; gap: 4px; flex-wrap: wrap; align-items: center;">
         <span class="tag-department">${genderLabel}</span>
         <span class="tag-category">${categoryLabel}</span>
+        ${product.season ? `<span class="tag-season" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px;">📅 ${product.season}</span>` : ''}
       </div>
 
       <p class="product-desc">${product.description || 'Artículo deportivo oficial de alta calidad.'}</p>
@@ -1199,11 +1200,12 @@ window.openProductDetailModal = function(productId) {
   modal.innerHTML = `
     <button onclick="closeProductDetailModal()" style="position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.1); border: 1px solid #444; color: #fff; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 20;">✕</button>
 
-    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
       <img src="${tax.teamLogo}" style="height: 28px; width: 28px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));" onerror="this.src='assets/dxt_logo.png'"/>
       <span style="font-size: 11px; font-weight: 900; color: var(--accent-color); text-transform: uppercase;">
         ${tax.icon} ${tax.sport} · ${tax.league} · ${tax.team}
       </span>
+      ${product.season ? `<span style="background: #7c3aed; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">📅 ${product.season}</span>` : ''}
     </div>
 
     <img src="${product.imageUrl}" style="width: 100%; height: 260px; object-fit: contain; background: #000; border-radius: 12px; border: 1px solid #333; margin-bottom: 14px;" onerror="this.src='assets/dxt_logo.png'"/>

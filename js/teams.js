@@ -336,6 +336,20 @@ function getGenderLabel(genderId) {
   return g ? g.label : "👨 Caballero";
 }
 
+const SEASONS_CATALOG = [
+  { id: "2025-2026", label: "2025-2026", isCurrent: true },
+  { id: "2024-2025", label: "2024-2025" },
+  { id: "2023-2024", label: "2023-2024" },
+  { id: "2022-2023", label: "2022-2023" },
+  { id: "retro", label: "Retro / Vintage" },
+  { id: "atemporal", label: "General / Atemporal" }
+];
+
+function getSeasonLabel(seasonId) {
+  const s = SEASONS_CATALOG.find(sea => sea.id === seasonId);
+  return s ? s.label : (seasonId || "2024-2025");
+}
+
 function getCategoryLabel(catId) {
   const c = PRODUCT_CATEGORIES.find(cat => cat.id === catId);
   return c ? c.label : "👕 Artículo Deportivo";
@@ -345,10 +359,12 @@ function getCategoryLabel(catId) {
 window.SPORTS_CATALOG = SPORTS_CATALOG;
 window.GENDER_DEPARTMENTS = GENDER_DEPARTMENTS;
 window.PRODUCT_CATEGORIES = PRODUCT_CATEGORIES;
+window.SEASONS_CATALOG = SEASONS_CATALOG;
 window.PROMO_BADGES = PROMO_BADGES;
 window.STORE_BANK_DETAILS = STORE_BANK_DETAILS;
 window.getFullTaxonomy = getFullTaxonomy;
 window.getTeamName = getTeamName;
 window.getLeagueByTeam = getLeagueByTeam;
 window.getGenderLabel = getGenderLabel;
+window.getSeasonLabel = getSeasonLabel;
 window.getCategoryLabel = getCategoryLabel;
