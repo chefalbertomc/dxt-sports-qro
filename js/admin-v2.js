@@ -18,13 +18,52 @@ let adminFilterTeamId = null;
 let adminFilterCategoryId = null;
 let adminFilterGenderId = null;
 
+// ============================================
+// ADMIN WHITELIST & GOOGLE AUTHENTICATION GATE
+// ============================================
+const ADMIN_EMAIL_WHITELIST = [
+  'chefalbertomc@gmail.com',
+  'dxtsportsqro@gmail.com'
+];
+
+async function isAuthorizedAdminEmail(email) {
+  if (!email) return false;
+  const cleanEmail = email.toLowerCase().trim();
+  if (ADMIN_EMAIL_WHITELIST.includes(cleanEmail)) return true;
+  
+  // Also check Firestore admins collection if available
+  if (window.db) {
+    try {
+      const doc = await db.collection('admins').doc(cleanEmail).get();
+      if (doc.exists && doc.data().active !== false) return true;
+    } catch(e) {
+      console.warn('Admin check error:', e);
+    }
+  }
+  return false;
+}
+
 // Handle Auth State
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async (user) => {
   if (user) {
+    const isAllowed = await isAuthorizedAdminEmail(user.email);
+    if (!isAllowed) {
+      if (loginError) {
+        loginError.innerHTML = `🚫 <strong>Acceso Denegado:</strong> La cuenta <code>${user.email}</code> no está en la lista de administradores autorizados.`;
+        loginError.style.display = 'block';
+      }
+      auth.signOut();
+      return;
+    }
+
+    if (loginError) loginError.style.display = 'none';
     loginSection.style.display = 'none';
     adminSection.style.display = 'block';
     document.getElementById('manageSection').style.display = 'block';
-    if (btnLogout) btnLogout.style.display = 'inline-block';
+    if (btnLogout) {
+      btnLogout.innerHTML = `👤 ${user.displayName || user.email.split('@')[0]} (Salir)`;
+      btnLogout.style.display = 'inline-block';
+    }
     
     initAdminForm();
     loadAdminProducts();
@@ -36,7 +75,45 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// Login
+// Google 1-Click Sign-In
+window.signInWithGoogleAdmin = async function() {
+  const btn = document.getElementById('btnGoogleLogin');
+  if (loginError) loginError.style.display = 'none';
+  
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner" style="width:16px; height:16px; border-width:2px; display:inline-block; vertical-align:middle; margin-right:8px;"></span> Conectando con Google...`;
+    }
+    
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    const result = await auth.signInWithPopup(provider);
+    const user = result.user;
+    
+    const isAllowed = await isAuthorizedAdminEmail(user.email);
+    if (!isAllowed) {
+      if (loginError) {
+        loginError.innerHTML = `🚫 <strong>Acceso Denegado:</strong> La cuenta <code>${user.email}</code> no está en la lista de administradores autorizados.`;
+        loginError.style.display = 'block';
+      }
+      await auth.signOut();
+    }
+  } catch(error) {
+    console.error('Google Auth Error:', error);
+    if (loginError) {
+      loginError.textContent = 'Error al conectar con Google: ' + (error.message || error);
+      loginError.style.display = 'block';
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width: 20px; height: 20px;"> Entrar con Google (1-Click)`;
+    }
+  }
+};
+
+// Login with Email / Password
 document.getElementById('btnLogin')?.addEventListener('click', async () => {
   const email = document.getElementById('adminEmail').value.trim();
   const pw = document.getElementById('adminPassword').value;
@@ -51,7 +128,7 @@ document.getElementById('btnLogin')?.addEventListener('click', async () => {
     document.getElementById('btnLogin').textContent = 'Entrando...';
     await auth.signInWithEmailAndPassword(email, pw);
   } catch (error) {
-    console.log('Firebase auth failed, fallback to master quick access:', error);
+    console.log('Firebase auth fallback to quick access:', error);
     quickAdminAccess();
   }
 });
@@ -66,7 +143,10 @@ window.quickAdminAccess = function() {
   if (loginSec) loginSec.style.display = 'none';
   if (adminSec) adminSec.style.display = 'block';
   if (manageSec) manageSec.style.display = 'block';
-  if (btnLogout) btnLogout.style.display = 'inline-block';
+  if (btnLogout) {
+    btnLogout.textContent = 'Salir (Modo Local)';
+    btnLogout.style.display = 'inline-block';
+  }
 
   if (typeof initAdminForm === 'function') initAdminForm();
   if (typeof loadAdminProducts === 'function') loadAdminProducts();

@@ -93,25 +93,39 @@
   <main class="container" style="margin-top: 14px; max-width: 1000px; padding: 0 10px;">
 
     <!-- Admin Login Section -->
-    <div id="loginSection" class="admin-card" style="display: block; max-width: 400px; margin: 20px auto; padding: 20px;">
-      <h2 style="font-size: 22px; color: var(--accent-color);">🔐 Acceso Administrador</h2>
-      <p class="text-secondary" style="margin-bottom: 16px; font-size: 13px;">Ingresa las credenciales o presiona el botón de acceso directo.</p>
-      
-      <div class="form-group" style="margin-bottom: 12px;">
-        <label style="font-size: 12px;">Correo Electrónico</label>
-        <input type="email" id="adminEmail" class="form-control" value="admin@tienda.com" placeholder="admin@tienda.com" style="padding: 8px;">
+    <div id="loginSection" class="admin-card" style="display: block; max-width: 440px; margin: 30px auto; padding: 24px; text-align: center; border: 1px solid var(--border-gold); box-shadow: 0 8px 30px rgba(0,0,0,0.8);">
+      <div style="margin-bottom: 16px;">
+        <img src="assets/dxt_logo.png?v=2" alt="DXT Logo" style="height: 60px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(255,30,56,0.5)); margin-bottom: 8px;">
+        <h2 style="font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 4px;">🔐 Acceso Administrador DXT</h2>
+        <p class="text-secondary" style="font-size: 12px; margin-bottom: 0;">Inicia sesión con tu cuenta de Google autorizada.</p>
       </div>
-      <div class="form-group" style="margin-bottom: 16px;">
-        <label style="font-size: 12px;">Contraseña</label>
-        <input type="password" id="adminPassword" class="form-control" value="admin123" placeholder="••••••••" style="padding: 8px;">
+
+      <div id="loginError" style="color: #ef4444; font-size: 12px; font-weight: 800; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 8px; padding: 8px 10px; margin-bottom: 14px; display: none;"></div>
+      
+      <button type="button" id="btnGoogleLogin" onclick="signInWithGoogleAdmin()" class="btn" style="width: 100%; padding: 13px; font-size: 14px; font-weight: 900; background: #ffffff; color: #111; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 12px; box-shadow: 0 4px 15px rgba(255,255,255,0.25); margin-bottom: 16px; cursor: pointer; border: none;">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width: 20px; height: 20px;">
+        Entrar con Google (1-Click)
+      </button>
+
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+        <div style="flex: 1; height: 1px; background: #333;"></div>
+        <span style="font-size: 11px; color: #777; text-transform: uppercase;">O credenciales</span>
+        <div style="flex: 1; height: 1px; background: #333;"></div>
       </div>
       
-      <div id="loginError" style="color: #ff6b6b; font-size: 13px; margin-bottom: 12px; display: none;"></div>
+      <div class="form-group" style="margin-bottom: 12px; text-align: left;">
+        <label style="font-size: 11px; font-weight: 800; color: var(--accent-color);">CORREO ELECTRÓNICO</label>
+        <input type="email" id="adminEmail" class="form-control" value="chefalbertomc@gmail.com" placeholder="tu-correo@gmail.com" style="padding: 10px; font-size: 13px;">
+      </div>
+      <div class="form-group" style="margin-bottom: 16px; text-align: left;">
+        <label style="font-size: 11px; font-weight: 800; color: var(--accent-color);">CONTRASEÑA</label>
+        <input type="password" id="adminPassword" class="form-control" value="admin123" placeholder="••••••••" style="padding: 10px; font-size: 13px;">
+      </div>
       
-      <button id="btnLogin" class="btn" style="width: 100%; padding: 10px; font-size: 14px; margin-bottom: 10px;">Entrar al Panel →</button>
+      <button id="btnLogin" class="btn" style="width: 100%; padding: 10px; font-size: 13px; margin-bottom: 10px;">Entrar con Contraseña →</button>
       
-      <button type="button" id="btnQuickAdmin" onclick="quickAdminAccess()" class="btn btn-outline" style="width: 100%; padding: 8px; font-size: 12px; border-color: var(--accent-color); color: var(--accent-color);">
-        ⚡ ENTRAR DIRECTAMENTE (MODO ADMINISTRADOR)
+      <button type="button" id="btnQuickAdmin" onclick="quickAdminAccess()" class="btn btn-outline" style="width: 100%; padding: 8px; font-size: 11px; border-color: #555; color: #aaa;">
+        ⚡ Modo Maestro Local (Sin Conexión)
       </button>
     </div>
 
