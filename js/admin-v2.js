@@ -1406,7 +1406,11 @@ document.getElementById('productForm')?.addEventListener('submit', async (e) => 
       badge,
       price,
       originalPrice,
-      sizeStockMap: currentSizeStockRows,
+      sizeStockMap: currentSizeStockRows.map(r => ({
+        size: r.size,
+        immediateQty: Math.max(0, parseInt(r.immediateQty, 10) || 0),
+        warehouseQty: Math.max(0, parseInt(r.warehouseQty, 10) || 0)
+      })),
       sizes: sizesArray,
       description: desc
     };

@@ -1136,17 +1136,25 @@ function createCompactProductCard(product, id) {
   const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(product.team) : { teamLogo: 'assets/dxt_logo.png' };
   const formattedPrice = typeof formatPrice !== 'undefined' ? formatPrice(product.price) : `$${product.price} MXN`;
 
+  const sizeStockMap = product.sizeStockMap || [];
+  const totalStock = sizeStockMap.length > 0 
+    ? sizeStockMap.reduce((acc, s) => acc + (Number(s.immediateQty || 0) + Number(s.warehouseQty || 0)), 0)
+    : (product.stock !== undefined ? Number(product.stock) : 99);
+  const isOutOfStock = totalStock <= 0;
+
   card.innerHTML = `
-    <div class="compact-prod-img-box">
+    <div class="compact-prod-img-box" style="position: relative;">
       <img src="${product.imageUrl}" class="compact-prod-img" onerror="this.src='assets/dxt_logo.png'"/>
       ${tax.teamLogo ? `<img src="${tax.teamLogo}" class="compact-prod-team-logo"/>` : ''}
-      ${product.badge && product.badge !== 'ninguno' ? `<span class="compact-prod-badge">OFICIAL</span>` : ''}
+      ${isOutOfStock 
+        ? `<span class="compact-prod-badge" style="background:#ef4444; color:#fff; border-color:#ef4444; font-weight:900;">🚫 AGOTADO</span>`
+        : (product.badge && product.badge !== 'ninguno' ? `<span class="compact-prod-badge">OFICIAL</span>` : '')}
     </div>
     <div class="compact-prod-info">
       <div class="compact-prod-title">${product.name}</div>
       <div class="compact-prod-price-row">
-        <span class="compact-prod-price">${formattedPrice}</span>
-        <span style="font-size: 9px; color: var(--accent-color); font-weight: 900;">VER ➔</span>
+        <span class="compact-prod-price" style="${isOutOfStock ? 'color:#888; text-decoration:line-through;' : ''}">${formattedPrice}</span>
+        <span style="font-size: 9px; color: ${isOutOfStock ? '#ef4444' : 'var(--accent-color)'}; font-weight: 900;">${isOutOfStock ? 'AGOTADO' : 'VER ➔'}</span>
       </div>
     </div>
   `;
@@ -1162,21 +1170,31 @@ window.openProductDetailModal = function(productId) {
   if (!overlay || !modal) return;
 
   const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(product.team) : { sport: 'Deportes', icon: '🏆', league: 'Oficial', team: product.team, teamLogo: 'assets/dxt_logo.png' };
-  const formattedPrice = typeof formatPrice !== 'undefined' ? formatPrice(product.price) : `$${product.price} MXN`;
-  const formattedOrig = product.originalPrice ? (typeof formatPrice !== 'undefined' ? formatPrice(product.originalPrice) : `$${product.originalPrice} MXN`) : null;
-
-  const sizeStockMap = product.sizeStockMap || [];
+  const formattedPrice = typeof formatPrice !== 'undefined' ? formatPrice(product.price) : `$${product.price} MXN`;  const sizeStockMap = product.sizeStockMap || [];
   const sizes = (sizeStockMap.length > 0) ? sizeStockMap.map(s => s.size) : (product.sizes || ["M", "L"]);
-  const defaultSize = sizes[0] || 'M';
+  
+  // Find first in-stock size if current size isn't set or out of stock
+  let firstInStockSize = sizes[0] || 'M';
+  if (sizeStockMap.length > 0) {
+    const inStockEntry = sizeStockMap.find(s => (Number(s.immediateQty || 0) + Number(s.warehouseQty || 0)) > 0);
+    if (inStockEntry) firstInStockSize = inStockEntry.size;
+  }
 
   if (!window.selectedSizesState[productId]) {
-    window.selectedSizesState[productId] = defaultSize;
+    window.selectedSizesState[productId] = firstInStockSize;
   }
   const currentSize = window.selectedSizesState[productId];
   const sizeData = sizeStockMap.find(s => s.size === currentSize);
 
-  let immQty = sizeData ? (sizeData.immediateQty || 0) : 'Disponible';
-  let whQty = sizeData ? (sizeData.warehouseQty || 0) : 'Disponible';
+  const immQty = sizeData ? Number(sizeData.immediateQty || 0) : (product.stock !== undefined ? Number(product.stock) : 5);
+  const whQty = sizeData ? Number(sizeData.warehouseQty || 0) : 0;
+  const currentSizeTotalStock = (sizeStockMap.length > 0) ? (immQty + whQty) : (product.stock !== undefined ? Number(product.stock) : 5);
+  const isCurrentSizeOutOfStock = currentSizeTotalStock <= 0;
+
+  const totalProductStock = sizeStockMap.length > 0 
+    ? sizeStockMap.reduce((acc, s) => acc + Number(s.immediateQty || 0) + Number(s.warehouseQty || 0), 0)
+    : (product.stock !== undefined ? Number(product.stock) : 5);
+  const isProductOutOfStock = totalProductStock <= 0;
 
   modal.innerHTML = `
     <button onclick="closeProductDetailModal()" style="position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.1); border: 1px solid #444; color: #fff; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 20;">✕</button>
@@ -1192,10 +1210,12 @@ window.openProductDetailModal = function(productId) {
 
     <h2 style="font-size: 20px; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 6px;">${product.name}</h2>
     
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
       <span style="font-size: 24px; font-weight: 900; color: var(--accent-color);">${formattedPrice}</span>
       ${formattedOrig ? `<span style="font-size: 14px; text-decoration: line-through; color: #777;">${formattedOrig}</span>` : ''}
-      <span style="background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.4); padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 900;">PRODUCTO OFICIAL VERIFICADO</span>
+      ${isProductOutOfStock 
+        ? `<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 900;">🚫 PRODUCTO AGOTADO</span>`
+        : `<span style="background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.4); padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 900;">PRODUCTO OFICIAL VERIFICADO</span>`}
     </div>
 
     <p style="font-size: 12px; color: #aaa; line-height: 1.4; margin-bottom: 16px; background: #0a0a0c; padding: 10px; border-radius: 8px; border: 1px solid #222;">
@@ -1208,34 +1228,56 @@ window.openProductDetailModal = function(productId) {
         1️⃣ SELECCIONA TU TALLA:
       </label>
       <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="modalSizesContainer">
-        ${sizes.map(sz => `
-          <button onclick="selectModalSize('${productId}', '${sz}')" class="size-chip ${sz === currentSize ? 'selected' : ''}" style="padding: 8px 14px; font-size: 12px; font-weight: 800;">
-            ${sz}
-          </button>
-        `).join('')}
+        ${sizes.map(sz => {
+          const entry = sizeStockMap.find(s => s.size === sz);
+          const szStock = entry ? (Number(entry.immediateQty || 0) + Number(entry.warehouseQty || 0)) : (product.stock !== undefined ? Number(product.stock) : 5);
+          const isSzSoldOut = szStock <= 0;
+          const isSelected = sz === currentSize;
+          
+          return `
+            <button onclick="${isSzSoldOut ? '' : `selectModalSize('${productId}', '${sz}')`}" 
+                    class="size-chip ${isSelected ? 'selected' : ''}" 
+                    style="padding: 8px 14px; font-size: 12px; font-weight: 800; ${isSzSoldOut ? 'opacity: 0.4; cursor: not-allowed; text-decoration: line-through; border-color: #555; background: #1a1a1a;' : ''}"
+                    ${isSzSoldOut ? 'disabled title="Talla Agotada"' : ''}>
+              ${sz} ${isSzSoldOut ? '✕' : ''}
+            </button>
+          `;
+        }).join('')}
       </div>
     </div>
 
     <!-- STOCK CAPSULE -->
-    <div id="modalStockStatusBox" style="background: #0d0d0f; border: 1px solid #282828; border-radius: 10px; padding: 10px; margin-bottom: 18px;">
-      <div style="font-size: 10px; font-weight: 800; color: var(--accent-color); text-transform: uppercase; margin-bottom: 6px;">
+    <div id="modalStockStatusBox" style="background: #0d0d0f; border: 1px solid ${isCurrentSizeOutOfStock ? '#ef4444' : '#282828'}; border-radius: 10px; padding: 10px; margin-bottom: 18px;">
+      <div style="font-size: 10px; font-weight: 800; color: ${isCurrentSizeOutOfStock ? '#ef4444' : 'var(--accent-color)'}; text-transform: uppercase; margin-bottom: 6px;">
         DISPONIBILIDAD TALLA ${currentSize}:
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <span class="stock-pill-inmediata">⚡ Tienda Física: ${immQty} pzs</span>
-        <span class="stock-pill-bodega">🏢 Bodega Central: ${whQty} pzs</span>
+        ${isCurrentSizeOutOfStock 
+          ? `<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 900;">🚫 Agotado en esta talla</span>`
+          : `
+            <span class="stock-pill-inmediata">⚡ Tienda Física: ${immQty} pzs</span>
+            <span class="stock-pill-bodega">🏢 Bodega Central: ${whQty} pzs</span>
+          `}
       </div>
     </div>
 
     <!-- ACCIONES COMPRA -->
     <div style="display: flex; flex-direction: column; gap: 10px;">
-      <button onclick="addToCartFromModal('${productId}')" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 15px; font-weight: 900;">
-        🛒 Agregar al Carrito
-      </button>
-      
-      <button onclick="buyNowWhatsApp('${productId}')" class="btn btn-whatsapp" style="width: 100%; padding: 14px; font-size: 15px; font-weight: 900;">
-        📲 Comprar Directo por WhatsApp →
-      </button>
+      ${isCurrentSizeOutOfStock 
+        ? `
+          <button class="btn btn-secondary" style="width: 100%; padding: 14px; font-size: 15px; font-weight: 900; opacity: 0.5; cursor: not-allowed;" disabled>
+            🚫 Talla ${currentSize} Agotada
+          </button>
+        `
+        : `
+          <button onclick="addToCartFromModal('${productId}')" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 15px; font-weight: 900;">
+            🛒 Agregar al Carrito
+          </button>
+          
+          <button onclick="buyNowWhatsApp('${productId}')" class="btn btn-whatsapp" style="width: 100%; padding: 14px; font-size: 15px; font-weight: 900;">
+            📲 Comprar Directo por WhatsApp →
+          </button>
+        `}
     </div>
   `;
 
@@ -1258,20 +1300,93 @@ window.addToCartFromModal = function(productId) {
   const size = window.selectedSizesState[productId] || 'M';
   addToCart(prod, size);
   closeProductDetailModal();
-  toggleCartDrawer();
+  toggleCartDrawer(true);
 };
 
-window.buyNowWhatsApp = function(productId) {
+// Automatic Firestore Inventory Deduction Engine
+async function deductInventoryFromFirestore(items) {
+  if (!window.db || !items || items.length === 0) return;
+  
+  for (const item of items) {
+    try {
+      const prodRef = db.collection('products').doc(item.id);
+      const prodDoc = await prodRef.get();
+      if (!prodDoc.exists) continue;
+      
+      const prodData = prodDoc.data();
+      let sizeStockMap = prodData.sizeStockMap || [];
+      let qtyToDeduct = item.qty || 1;
+      
+      if (sizeStockMap.length > 0) {
+        sizeStockMap = sizeStockMap.map(entry => {
+          if (entry.size === item.size) {
+            let imm = Number(entry.immediateQty || 0);
+            let wh = Number(entry.warehouseQty || 0);
+            
+            // Deduct from immediate stock first, then warehouse
+            if (imm >= qtyToDeduct) {
+              imm -= qtyToDeduct;
+              qtyToDeduct = 0;
+            } else {
+              qtyToDeduct -= imm;
+              imm = 0;
+              wh = Math.max(0, wh - qtyToDeduct);
+              qtyToDeduct = 0;
+            }
+            return { ...entry, immediateQty: imm, warehouseQty: wh };
+          }
+          return entry;
+        });
+        
+        await prodRef.update({
+          sizeStockMap: sizeStockMap,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else if (prodData.stock !== undefined) {
+        const newStock = Math.max(0, Number(prodData.stock) - qtyToDeduct);
+        await prodRef.update({
+          stock: newStock,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      
+      // Update in-memory product cache so UI updates immediately
+      const localIdx = allProducts.findIndex(p => p.id === item.id);
+      if (localIdx > -1) {
+        if (sizeStockMap.length > 0) {
+          allProducts[localIdx].sizeStockMap = sizeStockMap;
+        } else if (prodData.stock !== undefined) {
+          allProducts[localIdx].stock = Math.max(0, Number(prodData.stock) - (item.qty || 1));
+        }
+      }
+    } catch(err) {
+      console.warn('Inventory decrement error for product:', item.id, err);
+    }
+  }
+  
+  // Refresh catalog grid
+  if (typeof renderProducts === 'function') renderProducts();
+}
+
+window.buyNowWhatsApp = async function(productId) {
   const prod = allProducts.find(p => p.id === productId);
   if (!prod) return;
   const size = window.selectedSizesState[productId] || 'M';
   const tax = typeof getFullTaxonomy !== 'undefined' ? getFullTaxonomy(prod.team) : { team: prod.team };
   
+  // Deduct inventory in Firestore
+  deductInventoryFromFirestore([{ id: prod.id, name: prod.name, size: size, qty: 1 }]);
+
   const msg = `¡Hola DXT Sports QRO! 👋 Me interesa comprar directamente este artículo de la tienda:%0A%0A` +
               `🏆 *${prod.name}*%0A` +
               `🛡️ Equipo: ${tax.team}%0A` +
               `📏 Talla seleccionada: ${size}%0A` +
               `💵 Precio: $${prod.price} MXN%0A%0A` +
+              `¿Tienen disponibilidad inmediata para envío en Querétaro / México?`;
+              
+  window.open(`https://wa.me/${STORE_BANK_DETAILS.phoneWhatsApp}?text=${msg}`, '_blank');
+  closeProductDetailModal();
+};💵 Precio: $${prod.price} MXN%0A%0A` +
               `¿Tienen disponibilidad inmediata para envío en Querétaro / México?`;
               
   window.open(`https://wa.me/524423376955?text=${msg}`, '_blank');
@@ -1500,6 +1615,13 @@ ${itemsListText}
     });
   } catch(e) {
     console.log('Order saved offline/guest:', e);
+  }
+
+  // Deduct inventory in Firestore for all cart items
+  try {
+    await deductInventoryFromFirestore(cart);
+  } catch(e) {
+    console.warn('Inventory auto-deduction notice:', e);
   }
 
   // Clear Cart
