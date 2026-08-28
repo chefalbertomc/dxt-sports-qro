@@ -755,8 +755,10 @@ Responde ÚNICAMENTE un JSON válido con este formato:
 }`;
 
   const endpoints = [
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
     `https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=${apiKey}`
   ];
 
@@ -764,9 +766,13 @@ Responde ÚNICAMENTE un JSON válido con este formato:
 
   for (const url of endpoints) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout per endpoint
+
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           contents: [{
             parts: [
@@ -780,6 +786,8 @@ Responde ÚNICAMENTE un JSON válido con este formato:
           }
         })
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errJson = await response.json().catch(() => ({}));
@@ -800,6 +808,34 @@ Responde ÚNICAMENTE un JSON válido con este formato:
   throw new Error(lastError || "No response from Gemini API");
 }
 
+// Quick image compressor helper for AI payload
+async function compressImageForAI(dataUrl, maxDim = 320, quality = 0.6) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width;
+      let h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 // Auto-fill Current Form with Gemini AI (1 Click from Photo)
 window.autoFillCurrentFormWithGemini = async function() {
   const preview = document.getElementById('imagePreview');
@@ -813,15 +849,26 @@ window.autoFillCurrentFormWithGemini = async function() {
   
   if (btnAI) {
     btnAI.disabled = true;
-    btnAI.innerHTML = `<span>⏳</span> Analizando con Gemini 3.5 Flash...`;
+    btnAI.innerHTML = `<span>⏳</span> Analizando prenda con IA ultra rápida...`;
   }
   if (uploadStatus) {
     uploadStatus.style.color = '#38bdf8';
-    uploadStatus.textContent = '🤖 Gemini 3.5 Flash analizando prenda, equipo y jugador...';
+    uploadStatus.textContent = '🤖 Gemini AI analizando prenda, equipo y jugador...';
   }
 
   try {
-    const aiResult = await analyzeImageWithGeminiVision(preview.src);
+    // Ultra-lightweight 320px compression for 1-second AI speed
+    const compressedForAI = await compressImageForAI(preview.src, 320, 0.6);
+    let aiResult = null;
+
+    try {
+      aiResult = await analyzeImageWithGeminiVision(compressedForAI);
+    } catch(aiErr) {
+      console.warn('Gemini vision API notice, using fallback parser:', aiErr);
+      const prodNameVal = document.getElementById('prodName')?.value || '';
+      aiResult = parseSportsInfoFromFilename(prodNameVal);
+    }
+
     if (!aiResult) throw new Error("No se obtuvieron datos de la imagen");
 
     // Pre-fill Taxonomy
