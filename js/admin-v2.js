@@ -993,18 +993,29 @@ Analiza detenidamente la fotografía de la prenda deportiva y extrae la informac
 
 Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
 
-  const models = ['gemini-3.6-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-preview-05-20'];
+  // Modelos actuales disponibles (agosto 2026)
+  const models = ['gemini-3.7-flash', 'gemini-3.5-flash-lite', 'gemini-3.6-flash'];
   let lastError = null;
+
+  // Detectar formato de llave: AQ. = Auth key (Bearer), AIza = Standard key (query param)
+  const isAuthKey = apiKey.startsWith('AQ.');
 
   for (const model of models) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      // Si es Auth key, va en el header. Si es Standard key, va en la URL
+      const url = isAuthKey
+        ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+        : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (isAuthKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         signal: controller.signal,
         body: JSON.stringify({
           contents: [{
