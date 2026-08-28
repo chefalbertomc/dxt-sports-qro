@@ -1591,6 +1591,7 @@ window.submitCheckoutOrder = async function(event) {
   const name = document.getElementById('custName').value.trim();
   const phone = document.getElementById('custPhone').value.trim();
   const delivery = document.getElementById('custDeliveryMethod').value;
+  const seller = document.getElementById('custSeller')?.value || 'web';
   const address = document.getElementById('custAddress').value.trim();
   
   if (!name || !phone || !address) {
@@ -1600,6 +1601,7 @@ window.submitCheckoutOrder = async function(event) {
   
   const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const deliveryText = delivery === 'domicilio' ? '🚚 Envío a Domicilio' : '🏪 Entrega en Sucursal QRO';
+  const sellerLabel = seller === 'beto' ? '👤 Beto' : (seller === 'arturo' ? '👤 Arturo' : (seller === 'elena' ? '👤 Elena' : '🌐 Tienda Web'));
   
   // Format WhatsApp Order Message
   let itemsListText = cart.map(item => {
@@ -1612,6 +1614,7 @@ window.submitCheckoutOrder = async function(event) {
 ----------------------------------
 👤 *Cliente:* ${name}
 📱 *Teléfono:* ${phone}
+🤝 *Asesor/Vendedor:* ${sellerLabel}
 📍 *Entrega:* ${deliveryText}
 🏠 *Dirección/Notas:* ${address}
 ----------------------------------
@@ -1631,6 +1634,8 @@ ${itemsListText}
       customerName: name,
       customerPhone: phone,
       deliveryMethod: delivery,
+      seller: seller,
+      paymentStatus: 'pending',
       address: address,
       items: cart,
       totalAmount: totalAmount,

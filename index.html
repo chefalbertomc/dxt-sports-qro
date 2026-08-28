@@ -33,7 +33,7 @@
           <span style="color:#ff1e38;">DXT</span>
           <span style="color:#00b0ff;">SPORTS</span>
           <span style="background:linear-gradient(135deg, #ff1e38, #d50000); color:#fff; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:2px;">QRO</span>
-          <span style="background:#00b0ff; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v322.0</span>
+          <span style="background:#00b0ff; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v323.0</span>
         </div>
         <div class="logo-text-sub">OFICIAL · MERCHANDISE</div>
       </div>
@@ -255,12 +255,23 @@
           </div>
         </div>
 
-        <div style="margin-bottom: 10px;">
-          <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 2px;">Método de Entrega *</label>
-          <select id="custDeliveryMethod" class="form-control" style="padding: 8px; font-size: 12px;">
-            <option value="sucursal">📍 Entrega Personal / Mostrador Querétaro (Gratis)</option>
-            <option value="domicilio">🏠 Envío a Domicilio en Querétaro o Todo México</option>
-          </select>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+          <div>
+            <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 2px;">Método de Entrega *</label>
+            <select id="custDeliveryMethod" class="form-control" style="padding: 8px; font-size: 12px;">
+              <option value="sucursal">📍 Entrega Personal / Mostrador Querétaro (Gratis)</option>
+              <option value="domicilio">🏠 Envío a Domicilio en Querétaro o Todo México</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 2px;">Asesor / Vendedor</label>
+            <select id="custSeller" class="form-control" style="padding: 8px; font-size: 12px;">
+              <option value="web">🌐 Venta Web Directa</option>
+              <option value="beto">👤 Beto</option>
+              <option value="arturo">👤 Arturo</option>
+              <option value="elena">👤 Elena</option>
+            </select>
+          </div>
         </div>
 
         <div style="margin-bottom: 14px;">
@@ -309,8 +320,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <script src="js/firebase-config.js?v=322.0"></script>
-  <script src="js/teams.js?v=322.0"></script>
-  <script src="js/app.js?v=322.0"></script>
+  <script src="js/firebase-config.js?v=323.0"></script>
+  <script src="js/teams.js?v=323.0"></script>
+  <script src="js/app.js?v=323.0"></script>
 </body>
 </html>

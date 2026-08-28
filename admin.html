@@ -79,14 +79,14 @@
           <span style="color:#ff1e38;">DXT</span>
           <span style="color:#00b0ff;">SPORTS</span>
           <span style="background:#ff1e38; color:#fff; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:2px;">ADMIN</span>
-          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v322.0</span>
+          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v323.0</span>
         </div>
-        <div class="logo-text-sub">PANEL DE CONTROL · CARRITO EN VIVO & CHECKOUT REPARADO</div>
+        <div class="logo-text-sub">LOGÍSTICA INTEGRAL · CONTROL MULTIVENDEDOR (BETO, ARTURO, ELENA)</div>
       </div>
     </a>
     <div class="nav-actions">
       <span style="background:rgba(34, 197, 94, 0.15); border:1px solid #22c55e; color:#22c55e; font-size:10px; font-weight:800; padding:4px 8px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
-        🟢 v322.0 (Carrito & Checkout Reparado)
+        🟢 v323.0 (Logística & Vendedores Beto, Arturo, Elena)
       </span>
       <a href="index.html" target="_blank" rel="noopener" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">👁️ Ver Tienda ↗</a>
       <button id="btnLogout" class="btn btn-outline" style="display: none; font-size: 11px; padding: 6px 12px; border-color: #ef4444; color: #ef4444;">Salir</button>
@@ -461,69 +461,130 @@
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
           <div>
             <h2 style="font-size: 18px; color: var(--accent-color); margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
-              🛍️ Gestión de Pedidos & Surtido de Bodega
+              🛍️ Logística, Pedidos & Vendedores DXT
             </h2>
             <p class="text-secondary" style="font-size: 12px; margin-bottom: 0;">
-              Control de pedidos de clientes, recolección de prendas en bodega y entregas en Querétaro.
+              Control de pedidos, surtido de bodega, estatus de pago y jerseys por vendedor (Beto, Arturo, Elena).
             </p>
           </div>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button type="button" onclick="openPickingListModal()" class="btn" style="background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; font-weight: 900; font-size: 12px; padding: 8px 14px; border: none; border-radius: 8px; box-shadow: 0 4px 14px rgba(168,85,247,0.4); display: flex; align-items: center; gap: 6px; cursor: pointer;">
-              📋 📦 Hoja de Surtido de Bodega
+            <button type="button" onclick="switchOrdersSubView('orders')" id="subViewOrdersBtn" class="btn active" style="font-size: 12px; padding: 7px 12px;">
+              📦 Pedidos en Vivo
             </button>
-            <button type="button" onclick="openManualOrderModal()" class="btn btn-outline" style="font-size: 12px; padding: 8px 12px; border-color: #22c55e; color: #22c55e;">
-              ➕ Pedido Mostrador
+            <button type="button" onclick="switchOrdersSubView('sellers')" id="subViewSellersBtn" class="btn btn-outline" style="font-size: 12px; padding: 7px 12px; border-color: #38bdf8; color: #38bdf8;">
+              👥 Control Vendedores (Jerseys Pagados / Pendientes)
             </button>
-            <button type="button" onclick="loadAdminOrders()" class="btn btn-outline" style="font-size: 12px; padding: 8px 12px;">
-              🔄
+            <button type="button" onclick="openPickingListModal()" class="btn" style="background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; font-weight: 900; font-size: 12px; padding: 7px 12px; border: none; border-radius: 8px; box-shadow: 0 4px 14px rgba(168,85,247,0.4); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              📋 Surtido Bodega
+            </button>
+            <button type="button" onclick="openManualOrderModal()" class="btn btn-outline" style="font-size: 12px; padding: 7px 12px; border-color: #22c55e; color: #22c55e;">
+              ➕ Nueva Venta
             </button>
           </div>
         </div>
 
-        <!-- KPI METRICS SUMMARY -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 14px;">
-          <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid #eab308; border-radius: 8px; padding: 10px; text-align: center;">
-            <div style="font-size: 10px; font-weight: 800; color: #eab308; text-transform: uppercase;">🟡 Por Surtir Bodega</div>
-            <div id="kpiPendingOrders" style="font-size: 20px; font-weight: 900; color: #fff;">0</div>
+        <!-- SUBVIEW 1: PEDIDOS EN VIVO -->
+        <div id="ordersMainSubView" style="display: block;">
+          <!-- KPI METRICS SUMMARY -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 14px;">
+            <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid #eab308; border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="font-size: 10px; font-weight: 800; color: #eab308; text-transform: uppercase;">🟡 Por Surtir Bodega</div>
+              <div id="kpiPendingOrders" style="font-size: 20px; font-weight: 900; color: #fff;">0</div>
+            </div>
+            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="font-size: 10px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">📦 Listos p/ Entrega</div>
+              <div id="kpiReadyOrders" style="font-size: 20px; font-weight: 900; color: #fff;">0</div>
+            </div>
+            <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid #a855f7; border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="font-size: 10px; font-weight: 800; color: #a855f7; text-transform: uppercase;">🚚 En Reparto</div>
+              <div id="kpiTransitOrders" style="font-size: 20px; font-weight: 900; color: #fff;">0</div>
+            </div>
+            <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="font-size: 10px; font-weight: 800; color: #22c55e; text-transform: uppercase;">🟢 Entregados</div>
+              <div id="kpiDeliveredOrders" style="font-size: 20px; font-weight: 900; color: #fff;">0</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid #444; border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="font-size: 10px; font-weight: 800; color: #aaa; text-transform: uppercase;">💰 Total Vendido</div>
+              <div id="kpiTotalRevenue" style="font-size: 18px; font-weight: 900; color: #22c55e;">$0</div>
+            </div>
           </div>
-          <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; border-radius: 8px; padding: 10px; text-align: center;">
-            <div style="font-size: 10px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">📦 Listos p/ Entrega</div>
-            <div id="kpiReadyOrders" style="font-size: 20px; font-weight: 900; color: #fff;">0</div>
+
+          <!-- SEARCH AND STATUS TABS -->
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="display: flex; gap: 4px; flex-wrap: wrap;" id="orderFilterButtons">
+              <button type="button" class="btn btn-sm active" id="btnFilterOrdAll" onclick="filterOrdersByStatus('all')" style="padding: 4px 10px; font-size: 11px;">Todos (<span id="countOrdAll">0</span>)</button>
+              <button type="button" class="btn btn-sm btn-outline" id="btnFilterOrdPending" onclick="filterOrdersByStatus('pending')" style="padding: 4px 10px; font-size: 11px; border-color: #eab308; color: #eab308;">🟡 Por Surtir (<span id="countOrdPending">0</span>)</button>
+              <button type="button" class="btn btn-sm btn-outline" id="btnFilterOrdReady" onclick="filterOrdersByStatus('ready')" style="padding: 4px 10px; font-size: 11px; border-color: #38bdf8; color: #38bdf8;">📦 Listos (<span id="countOrdReady">0</span>)</button>
+              <button type="button" class="btn btn-sm btn-outline" id="btnFilterOrdTransit" onclick="filterOrdersByStatus('transit')" style="padding: 4px 10px; font-size: 11px; border-color: #a855f7; color: #a855f7;">🚚 En Ruta (<span id="countOrdTransit">0</span>)</button>
+              <button type="button" class="btn btn-sm btn-outline" id="btnFilterOrdDelivered" onclick="filterOrdersByStatus('delivered')" style="padding: 4px 10px; font-size: 11px; border-color: #22c55e; color: #22c55e;">🟢 Entregados (<span id="countOrdDelivered">0</span>)</button>
+              <button type="button" class="btn btn-sm btn-outline" id="btnFilterOrdCancelled" onclick="filterOrdersByStatus('cancelled')" style="padding: 4px 10px; font-size: 11px; border-color: #ef4444; color: #ef4444;">🔴 Cancelados</button>
+            </div>
+            <div style="flex: 1; min-width: 220px; max-width: 320px;">
+              <input type="text" id="ordersSearchInput" oninput="onOrdersSearchInput(this.value)" placeholder="🔍 Buscar cliente, teléfono o folio..." class="form-control" style="padding: 6px 10px; font-size: 12px;">
+            </div>
           </div>
-          <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid #a855f7; border-radius: 8px; padding: 10px; text-align: center;">
-            <div style="font-size: 10px; font-weight: 800; color: #a855f7; text-transform: uppercase;">🚚 En Reparto</div>
-            <div id="kpiTransitOrders" style="font-size: 20px; font-weight: 900; color: #fff;">0</div>
-          </div>
-          <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 8px; padding: 10px; text-align: center;">
-            <div style="font-size: 10px; font-weight: 800; color: #22c55e; text-transform: uppercase;">🟢 Entregados</div>
-            <div id="kpiDeliveredOrders" style="font-size: 20px; font-weight: 900; color: #fff;">0</div>
-          </div>
-          <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid #444; border-radius: 8px; padding: 10px; text-align: center;">
-            <div style="font-size: 10px; font-weight: 800; color: #aaa; text-transform: uppercase;">💰 Total Vendido</div>
-            <div id="kpiTotalRevenue" style="font-size: 18px; font-weight: 900; color: #22c55e;">$0</div>
+
+          <!-- ORDERS LIST CARDS CONTAINER -->
+          <div id="ordersListContainer" style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="text-align: center; padding: 30px; color: #777;">
+              ⏳ Cargando pedidos...
+            </div>
           </div>
         </div>
 
-        <!-- SEARCH AND STATUS TABS -->
-        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-          <div style="display: flex; gap: 4px; flex-wrap: wrap;" id="orderFilterButtons">
-            <button type="button" class="btn btn-sm active" id="btnFilterOrdAll" onclick="filterOrdersByStatus('all')" style="padding: 4px 10px; font-size: 11px;">Todos (<span id="countOrdAll">0</span>)</button>
-            <button type="button" class="btn btn-sm btn-outline" id="btnFilterOrdPending" onclick="filterOrdersByStatus('pending')" style="padding: 4px 10px; font-size: 11px; border-color: #eab308; color: #eab308;">🟡 Por Surtir (<span id="countOrdPending">0</span>)</button>
-            <button type="button" class="btn btn-sm btn-outline" id="btnFilterOrdReady" onclick="filterOrdersByStatus('ready')" style="padding: 4px 10px; font-size: 11px; border-color: #38bdf8; color: #38bdf8;">📦 Listos (<span id="countOrdReady">0</span>)</button>
-            <button type="button" class="btn btn-sm btn-outline" id="btnFilterOrdTransit" onclick="filterOrdersByStatus('transit')" style="padding: 4px 10px; font-size: 11px; border-color: #a855f7; color: #a855f7;">🚚 En Ruta (<span id="countOrdTransit">0</span>)</button>
-            <button type="button" class="btn btn-sm btn-outline" id="btnFilterOrdDelivered" onclick="filterOrdersByStatus('delivered')" style="padding: 4px 10px; font-size: 11px; border-color: #22c55e; color: #22c55e;">🟢 Entregados (<span id="countOrdDelivered">0</span>)</button>
-            <button type="button" class="btn btn-sm btn-outline" id="btnFilterOrdCancelled" onclick="filterOrdersByStatus('cancelled')" style="padding: 4px 10px; font-size: 11px; border-color: #ef4444; color: #ef4444;">🔴 Cancelados</button>
+        <!-- SUBVIEW 2: CONTROL POR VENDEDOR (BETO, ARTURO, ELENA) -->
+        <div id="sellersSubView" style="display: none;">
+          
+          <!-- SELLER SELECTOR TABS -->
+          <div style="display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;">
+            <button type="button" class="btn active" id="btnSellerBeto" onclick="selectSellerTab('beto')" style="padding: 8px 16px; font-size: 12px;">
+              👤 Beto
+            </button>
+            <button type="button" class="btn btn-outline" id="btnSellerArturo" onclick="selectSellerTab('arturo')" style="padding: 8px 16px; font-size: 12px;">
+              👤 Arturo
+            </button>
+            <button type="button" class="btn btn-outline" id="btnSellerElena" onclick="selectSellerTab('elena')" style="padding: 8px 16px; font-size: 12px;">
+              👤 Elena
+            </button>
+            <button type="button" class="btn btn-outline" id="btnSellerWeb" onclick="selectSellerTab('web')" style="padding: 8px 16px; font-size: 12px;">
+              🌐 Venta Web Online
+            </button>
           </div>
-          <div style="flex: 1; min-width: 220px; max-width: 320px;">
-            <input type="text" id="ordersSearchInput" oninput="onOrdersSearchInput(this.value)" placeholder="🔍 Buscar cliente, teléfono o folio..." class="form-control" style="padding: 6px 10px; font-size: 12px;">
-          </div>
-        </div>
 
-        <!-- ORDERS LIST CARDS CONTAINER -->
-        <div id="ordersListContainer" style="display: flex; flex-direction: column; gap: 10px;">
-          <div style="text-align: center; padding: 30px; color: #777;">
-            ⏳ Cargando pedidos...
+          <!-- SELECTED SELLER KPIS -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 14px;">
+            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="font-size: 10px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">👕 Total Jerseys Asignados</div>
+              <div id="sellerKpiTotalJerseys" style="font-size: 20px; font-weight: 900; color: #fff;">0</div>
+            </div>
+            <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="font-size: 10px; font-weight: 800; color: #22c55e; text-transform: uppercase;">🟢 Jerseys Pagados</div>
+              <div id="sellerKpiPaidJerseys" style="font-size: 20px; font-weight: 900; color: #22c55e;">0</div>
+              <div id="sellerKpiPaidAmount" style="font-size: 11px; color: #aaa;">$0 MXN</div>
+            </div>
+            <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid #eab308; border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="font-size: 10px; font-weight: 800; color: #eab308; text-transform: uppercase;">🟡 Pendientes de Pago</div>
+              <div id="sellerKpiPendingJerseys" style="font-size: 20px; font-weight: 900; color: #eab308;">0</div>
+              <div id="sellerKpiPendingAmount" style="font-size: 11px; color: #ef4444; font-weight: bold;">$0 MXN por cobrar</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid #444; border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="font-size: 10px; font-weight: 800; color: #aaa; text-transform: uppercase;">💰 Total Venta Asignada</div>
+              <div id="sellerKpiTotalAmount" style="font-size: 20px; font-weight: 900; color: #fff;">$0 MXN</div>
+            </div>
           </div>
+
+          <!-- SELLER JERSEYS DETAILED LIST -->
+          <div style="background: rgba(0,0,0,0.4); border: 1px solid #333; border-radius: 10px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3 style="font-size: 14px; font-weight: 900; color: var(--accent-color); margin: 0;">
+                📋 Desglose de Jerseys Asignados a <span id="sellerNameTitle" style="color: #38bdf8;">Beto</span>:
+              </h3>
+            </div>
+            <div id="sellerJerseysListContainer" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- Dynamic seller items table -->
+            </div>
+          </div>
+
         </div>
 
       </div>
@@ -571,15 +632,34 @@
       </div>
       <form id="manualOrderForm" onsubmit="saveManualOrder(event)">
         
-        <div style="font-size: 11px; font-weight: 800; color: #38bdf8; margin-bottom: 8px;">1. DATOS DEL CLIENTE</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+        <div style="font-size: 11px; font-weight: 800; color: #38bdf8; margin-bottom: 8px;">1. DATOS DEL CLIENTE Y VENDEDOR</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
           <div>
             <label style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 2px;">Nombre del Cliente *</label>
             <input type="text" id="manualCustomerName" class="form-control" required placeholder="Ej. Juan Pérez" style="padding: 6px 8px; font-size: 12px;">
           </div>
           <div>
-            <label style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 2px;">WhatsApp / Teléfono *</label>
+            <label style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 2px;">WhatsApp (10 Dígitos) *</label>
             <input type="tel" id="manualCustomerPhone" class="form-control" required placeholder="Ej. 4421234567" style="padding: 6px 8px; font-size: 12px;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+          <div>
+            <label style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 2px;">Vendedor Asignado *</label>
+            <select id="manualSeller" class="form-control" style="padding: 6px 8px; font-size: 12px; border-color: #a855f7;">
+              <option value="beto">👤 Beto</option>
+              <option value="arturo">👤 Arturo</option>
+              <option value="elena">👤 Elena</option>
+              <option value="web">🌐 Venta Web</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 2px;">Estatus de Pago Inicial *</label>
+            <select id="manualPaymentStatus" class="form-control" style="padding: 6px 8px; font-size: 12px; border-color: #22c55e;">
+              <option value="paid">🟢 Pagado / Liquidado al Contado</option>
+              <option value="pending">🟡 Pendiente de Pago (Contra Entrega / Crédito)</option>
+            </select>
           </div>
         </div>
 
@@ -650,6 +730,32 @@
         <button type="submit" class="btn btn-whatsapp" style="width: 100%; font-size: 14px; font-weight: 900; padding: 10px;">
           💾 Guardar y Registrar Pedido →
         </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRAR / ACTUALIZAR PAGO DE PEDIDO -->
+  <div class="modal-overlay" id="editPaymentModal">
+    <div class="modal-box" style="max-width: 420px; padding: 20px;">
+      <div class="modal-header" style="border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="color: #22c55e; font-size: 16px; margin: 0; font-weight: 900;">💵 Registrar / Actualizar Pago</h3>
+        <button class="close-btn" onclick="closeEditPaymentModal()">✕</button>
+      </div>
+      <form id="editPaymentForm" onsubmit="savePaymentStatusChange(event)">
+        <input type="hidden" id="payModalOrderId">
+        <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 12px;">
+          <div><b>Folio:</b> <span id="payModalOrderFolio" style="color: var(--accent-color);">#DXT-1234</span></div>
+          <div><b>Cliente:</b> <span id="payModalCustomer">Juan Pérez</span></div>
+          <div><b>Total Pedido:</b> <span id="payModalTotalAmount" style="color: #22c55e; font-weight: bold;">$1,499</span></div>
+        </div>
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 4px;">Estatus del Pago *</label>
+          <select id="payModalStatusSelect" class="form-control" style="padding: 8px; font-size: 12px;">
+            <option value="paid">🟢 Pagado Completo / Liquidado</option>
+            <option value="pending">🟡 Pendiente de Pago (Sin Cobrar)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-whatsapp" style="width: 100%; padding: 10px; font-size: 13px; font-weight: 900;">💾 Guardar Estatus de Pago</button>
       </form>
     </div>
   </div>
@@ -757,8 +863,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   
-  <script src="js/firebase-config.js?v=322.0"></script>
-  <script src="js/teams.js?v=322.0"></script>
-  <script src="js/admin-v2.js?v=322.0"></script>
+  <script src="js/firebase-config.js?v=323.0"></script>
+  <script src="js/teams.js?v=323.0"></script>
+  <script src="js/admin-v2.js?v=323.0"></script>
 </body>
 </html>
