@@ -1,14 +1,14 @@
 // ============================================
-// CATCH SPORTS — Firebase Config
-// Proyecto: steelers-nation-queretaro
+// DXT SPORTS QRO — Firebase Config
+// Proyecto: dxt-sports-qro
 // ============================================
 const firebaseConfig = {
-  apiKey: "AIzaSyDZAD_rAdj8OvuoswoU3Tqdj8sGgNaaOwg",
-  authDomain: "steelers-nation-queretaro.firebaseapp.com",
-  projectId: "steelers-nation-queretaro",
-  storageBucket: "steelers-nation-queretaro.firebasestorage.app",
-  messagingSenderId: "120474707665",
-  appId: "1:120474707665:web:e8ef34f21110732293c7f0"
+  apiKey: "AIzaSyAuBz1xZKFjuQVdga4RoiVsZWOWR80oSws",
+  authDomain: "dxt-sports-qro.firebaseapp.com",
+  projectId: "dxt-sports-qro",
+  storageBucket: "dxt-sports-qro.firebasestorage.app",
+  messagingSenderId: "285839494358",
+  appId: "1:285839494358:web:290ab53eafc3de542dcd77"
 };
 
 firebase.initializeApp(firebaseConfig);
