@@ -2794,25 +2794,159 @@ window.updateOrderStatus = async function(orderId, newStatus) {
   }
 };
 
+// ============================================
+// INVENTORY AUTO-RESTORE & DEDUCTION ENGINE
+// ============================================
+async function restoreInventoryToFirestore(items) {
+  if (!window.db || !items || items.length === 0) return;
+  for (const item of items) {
+    try {
+      if (!item.id) continue;
+      const prodRef = db.collection('products').doc(item.id);
+      const prodDoc = await prodRef.get();
+      if (!prodDoc.exists) continue;
+
+      const prodData = prodDoc.data();
+      let sizeStockMap = prodData.sizeStockMap || prodData.sizeStockRows || [];
+      let qtyToRestore = Number(item.qty || 1);
+
+      if (sizeStockMap.length > 0) {
+        let sizeFound = false;
+        sizeStockMap = sizeStockMap.map(entry => {
+          if (entry.size === item.size) {
+            sizeFound = true;
+            let wh = Number(entry.warehouseQty || 0) + qtyToRestore;
+            return { ...entry, warehouseQty: wh };
+          }
+          return entry;
+        });
+
+        if (!sizeFound && item.size) {
+          sizeStockMap.push({
+            size: item.size,
+            immediateQty: 0,
+            warehouseQty: qtyToRestore
+          });
+        }
+
+        await prodRef.update({
+          sizeStockMap: sizeStockMap,
+          sizeStockRows: sizeStockMap,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else if (prodData.stock !== undefined) {
+        const newStock = Number(prodData.stock || 0) + qtyToRestore;
+        await prodRef.update({
+          stock: newStock,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      // Update in-memory product cache
+      const catalog = window.allProductsList || window.currentProducts || [];
+      const localIdx = catalog.findIndex(p => p.id === item.id);
+      if (localIdx > -1) {
+        if (sizeStockMap.length > 0) {
+          catalog[localIdx].sizeStockMap = sizeStockMap;
+          catalog[localIdx].sizeStockRows = sizeStockMap;
+        } else if (prodData.stock !== undefined) {
+          catalog[localIdx].stock = (Number(catalog[localIdx].stock) || 0) + qtyToRestore;
+        }
+      }
+    } catch(err) {
+      console.warn("Error al restaurar inventario para producto:", item, err);
+    }
+  }
+}
+
+async function deductInventoryFromFirestore(items) {
+  if (!window.db || !items || items.length === 0) return;
+  for (const item of items) {
+    try {
+      if (!item.id) continue;
+      const prodRef = db.collection('products').doc(item.id);
+      const prodDoc = await prodRef.get();
+      if (!prodDoc.exists) continue;
+
+      const prodData = prodDoc.data();
+      let sizeStockMap = prodData.sizeStockMap || prodData.sizeStockRows || [];
+      let qtyToDeduct = Number(item.qty || 1);
+
+      if (sizeStockMap.length > 0) {
+        sizeStockMap = sizeStockMap.map(entry => {
+          if (entry.size === item.size) {
+            let imm = Number(entry.immediateQty || 0);
+            let wh = Number(entry.warehouseQty || 0);
+            if (imm >= qtyToDeduct) {
+              imm -= qtyToDeduct;
+              qtyToDeduct = 0;
+            } else {
+              qtyToDeduct -= imm;
+              imm = 0;
+              wh = Math.max(0, wh - qtyToDeduct);
+              qtyToDeduct = 0;
+            }
+            return { ...entry, immediateQty: imm, warehouseQty: wh };
+          }
+          return entry;
+        });
+
+        await prodRef.update({
+          sizeStockMap: sizeStockMap,
+          sizeStockRows: sizeStockMap,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else if (prodData.stock !== undefined) {
+        const newStock = Math.max(0, Number(prodData.stock) - qtyToDeduct);
+        await prodRef.update({
+          stock: newStock,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    } catch(err) {
+      console.warn("Error al descontar inventario para producto:", item, err);
+    }
+  }
+}
+
 window.cancelOrder = async function(orderId) {
-  if (!confirm("¿Deseas cancelar este pedido?")) return;
+  if (!confirm("¿Deseas cancelar este pedido? Las prendas volverán automáticamente al inventario de bodega.")) return;
   if (!window.db) return;
+
+  const order = allOrdersList.find(o => o.id === orderId);
+  if (!order) return;
+
   try {
+    // Only restore inventory if order was not already cancelled
+    if (order.status !== 'cancelled' && order.items && order.items.length > 0) {
+      await restoreInventoryToFirestore(order.items);
+    }
+
     await db.collection('orders').doc(orderId).update({
       status: 'cancelled',
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    alert("✅ Pedido cancelado.");
+    alert("✅ Pedido cancelado y stock devuelto al inventario de bodega correctamente.");
   } catch (e) {
     alert("Error al cancelar pedido: " + e.message);
   }
 };
 
 window.deleteOrder = async function(orderId) {
-  if (!confirm("¿Seguro que deseas eliminar este registro de pedido de la base de datos?")) return;
+  if (!confirm("¿Seguro que deseas eliminar este registro de pedido? Si el pedido no estaba cancelado, las prendas volverán al inventario.")) return;
   if (!window.db) return;
+
+  const order = allOrdersList.find(o => o.id === orderId);
+  if (!order) return;
+
   try {
+    // If order was not cancelled, return stock before deleting
+    if (order.status !== 'cancelled' && order.items && order.items.length > 0) {
+      await restoreInventoryToFirestore(order.items);
+    }
+
     await db.collection('orders').doc(orderId).delete();
+    alert("✅ Registro eliminado y existencias sincronizadas.");
   } catch (e) {
     alert("Error al eliminar pedido: " + e.message);
   }
@@ -3134,6 +3268,7 @@ window.saveManualOrder = async function(e) {
 
   try {
     await db.collection('orders').add(orderPayload);
+    await deductInventoryFromFirestore(orderPayload.items);
     closeManualOrderModal();
     document.getElementById('manualOrderForm').reset();
     clearManualSelectedProduct();
