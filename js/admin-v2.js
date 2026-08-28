@@ -2457,11 +2457,20 @@ function renderSingleOrderCard(order) {
     statusBadge = `<span style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; font-size: 11px; font-weight: 900; padding: 4px 10px; border-radius: 20px;">🔴 Cancelado</span>`;
   }
 
-  // Payment Status Badge
-  const isPaid = order.paymentStatus === 'paid' || st === 'delivered';
-  const paymentBadge = isPaid 
-    ? `<span style="background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #22c55e; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">🟢 Pagado / Liquidado</span>`
-    : `<span style="background: rgba(234, 179, 8, 0.2); border: 1px solid #eab308; color: #eab308; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">🟡 Pendiente de Pago</span>`;
+  // Payment Status & Abonos Breakdown
+  const orderTotal = Number(order.totalAmount || 0);
+  const orderPaid = Number(order.paidAmount || (order.paymentStatus === 'paid' || st === 'delivered' ? orderTotal : 0));
+  const orderRemaining = Math.max(0, orderTotal - orderPaid);
+  const isPaid = orderRemaining === 0;
+
+  let paymentBadge = '';
+  if (isPaid) {
+    paymentBadge = `<span style="background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #22c55e; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">🟢 Pagado / Liquidado</span>`;
+  } else if (orderPaid > 0) {
+    paymentBadge = `<span style="background: rgba(234, 179, 8, 0.2); border: 1px solid #eab308; color: #eab308; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">🟡 Abono: $${orderPaid.toLocaleString('es-MX')} · Restan: $${orderRemaining.toLocaleString('es-MX')}</span>`;
+  } else {
+    paymentBadge = `<span style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">🔴 Sin Pagar ($${orderRemaining.toLocaleString('es-MX')})</span>`;
+  }
 
   // Seller Label
   const sellerKey = order.seller || 'beto';
@@ -2614,15 +2623,15 @@ function renderSellerStats() {
   let pendingSellerAmount = 0;
 
   sellerOrders.forEach(o => {
-    const isOrderPaid = o.paymentStatus === 'paid' || o.status === 'delivered';
     const orderTotal = Number(o.totalAmount || 0);
-    totalSellerAmount += orderTotal;
+    const orderPaid = Number(o.paidAmount || (o.paymentStatus === 'paid' || o.status === 'delivered' ? orderTotal : 0));
+    const orderRemaining = Math.max(0, orderTotal - orderPaid);
 
-    if (isOrderPaid) {
-      paidSellerAmount += orderTotal;
-    } else {
-      pendingSellerAmount += orderTotal;
-    }
+    totalSellerAmount += orderTotal;
+    paidSellerAmount += orderPaid;
+    pendingSellerAmount += orderRemaining;
+
+    const isOrderFullyPaid = orderRemaining === 0;
 
     (o.items || []).forEach((item, idx) => {
       const qty = Number(item.qty || 1);
@@ -2630,7 +2639,7 @@ function renderSellerStats() {
       const itemSubtotal = qty * price;
       totalJerseysCount += qty;
 
-      if (isOrderPaid) {
+      if (isOrderFullyPaid) {
         paidJerseysCount += qty;
       } else {
         pendingJerseysCount += qty;
@@ -2645,11 +2654,14 @@ function renderSellerStats() {
         qty: qty,
         price: price,
         subtotal: itemSubtotal,
+        orderTotal: orderTotal,
+        orderPaid: orderPaid,
+        orderRemaining: orderRemaining,
         image: item.image || item.imageUrl || 'assets/dxt_logo.png',
         customerName: o.customerName || 'Cliente',
         customerPhone: o.customerPhone || '',
         orderStatus: o.status || 'pending',
-        isPaid: isOrderPaid
+        isPaid: isOrderFullyPaid
       });
     });
   });
@@ -2682,7 +2694,7 @@ function renderSellerStats() {
 
   container.innerHTML = sellerJerseys.map(j => {
     const cleanPhone = j.customerPhone.replace(/[^0-9]/g, '');
-    const reminderMsg = encodeURIComponent(`¡Hola ${j.customerName}! Te saludo de DXT Sports QRO respecto a tu jersey ${j.name} (Talla ${j.size}). Te recuerdo que tenemos pendiente de pago el monto de $${j.subtotal.toLocaleString('es-MX')} MXN. ¿A qué hora te acomoda la entrega / liquidación? 🏈🔥`);
+    const reminderMsg = encodeURIComponent(`¡Hola ${j.customerName}! Te saludo de DXT Sports QRO respecto a tu jersey ${j.name} (Talla ${j.size}). Te recuerdo que tienes un saldo restante de $${j.orderRemaining.toLocaleString('es-MX')} MXN (Abonado: $${j.orderPaid.toLocaleString('es-MX')} / Total: $${j.orderTotal.toLocaleString('es-MX')}). ¿A qué hora te acomoda la entrega / liquidación? 🏈🔥`);
     const waReminderUrl = cleanPhone ? `https://wa.me/52${cleanPhone.length === 10 ? cleanPhone : cleanPhone.replace(/^52/, '')}?text=${reminderMsg}` : '#';
 
     return `
@@ -2692,7 +2704,7 @@ function renderSellerStats() {
           <div>
             <div style="font-size: 12px; font-weight: 800; color: #fff;">${j.name}</div>
             <div style="font-size: 11px; color: #aaa;">
-              Talla: <b style="color: #38bdf8;">${j.size}</b> · Cantidad: <b>${j.qty} pza(s)</b> · Subtotal: <b style="color: #22c55e;">$${j.subtotal.toLocaleString('es-MX')}</b>
+              Talla: <b style="color: #38bdf8;">${j.size}</b> · Cantidad: <b>${j.qty} pza(s)</b> · Total: <b style="color: #fff;">$${j.subtotal.toLocaleString('es-MX')}</b>
             </div>
             <div style="font-size: 10px; color: #777; margin-top: 2px;">
               👤 Cliente: <b style="color: #ddd;">${j.customerName}</b> (${j.customerPhone || 'Sin tel'}) · Pedido: #${j.shortId}
@@ -2703,43 +2715,35 @@ function renderSellerStats() {
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
           ${j.isPaid ? `
             <span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #22c55e; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 12px;">
-              🟢 Pagado Completo
+              🟢 Pagado Completo ($${j.orderTotal.toLocaleString('es-MX')})
             </span>
           ` : `
             <span style="background: rgba(234, 179, 8, 0.15); border: 1px solid #eab308; color: #eab308; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 12px;">
-              🟡 Pendiente: $${j.subtotal.toLocaleString('es-MX')}
+              🟡 Restan: $${j.orderRemaining.toLocaleString('es-MX')} ${j.orderPaid > 0 ? `(Abono: $${j.orderPaid.toLocaleString('es-MX')})` : ''}
             </span>
-            <button type="button" onclick="quickMarkOrderPaid('${j.orderId}')" class="btn" style="background: #22c55e; color: #000; font-size: 10px; font-weight: 900; padding: 4px 8px; border: none; border-radius: 6px; cursor: pointer;">
-              💵 Liquidar
-            </button>
-            ${cleanPhone ? `
-              <a href="${waReminderUrl}" target="_blank" class="btn btn-outline" style="font-size: 10px; padding: 4px 8px; border-color: #22c55e; color: #22c55e; text-decoration: none;">
-                💬 Cobrar WhatsApp
-              </a>
-            ` : ''}
           `}
+          
+          <button type="button" onclick="openEditPaymentModal('${j.orderId}')" class="btn" style="background: #22c55e; color: #000; font-size: 10px; font-weight: 900; padding: 5px 10px; border: none; border-radius: 6px; cursor: pointer;">
+            💵 ${j.isPaid ? 'Ver Pagos' : 'Abonar / Liquidar'}
+          </button>
+          
+          ${!j.isPaid && cleanPhone ? `
+            <a href="${waReminderUrl}" target="_blank" class="btn btn-outline" style="font-size: 10px; padding: 4px 8px; border-color: #22c55e; color: #22c55e; text-decoration: none;">
+              💬 Cobrar WhatsApp
+            </a>
+          ` : ''}
         </div>
       </div>
     `;
   }).join('');
 }
 
-window.quickMarkOrderPaid = async function(orderId) {
-  if (!window.db) return;
-  try {
-    await db.collection('orders').doc(orderId).update({
-      paymentStatus: 'paid',
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch(e) {
-    alert("Error al liquidar pago: " + e.message);
-  }
-};
-
 // ============================================
-// MODAL: EDITAR ESTATUS DE PAGO
+// MODAL: REGISTRAR ABONOS, PAGOS Y LIQUIDACIÓN
 // ============================================
 let currentEditingOrderId = null;
+let currentEditingOrderRemaining = 0;
+
 window.openEditPaymentModal = function(orderId) {
   const order = allOrdersList.find(o => o.id === orderId);
   if (!order) return;
@@ -2749,32 +2753,137 @@ window.openEditPaymentModal = function(orderId) {
   const folioEl = document.getElementById('payModalOrderFolio');
   const custEl = document.getElementById('payModalCustomer');
   const totalEl = document.getElementById('payModalTotalAmount');
-  const statusSelect = document.getElementById('payModalStatusSelect');
+  const paidEl = document.getElementById('payModalPaidAmount');
+  const remainingEl = document.getElementById('payModalRemainingAmount');
+  const abonoInput = document.getElementById('payModalAbonoAmount');
+  const historyContainer = document.getElementById('payModalHistoryList');
+
+  const totalAmount = Number(order.totalAmount || 0);
+  const paidAmount = Number(order.paidAmount || (order.paymentStatus === 'paid' || order.status === 'delivered' ? totalAmount : 0));
+  const remainingAmount = Math.max(0, totalAmount - paidAmount);
+  currentEditingOrderRemaining = remainingAmount;
 
   if (folioEl) folioEl.textContent = '#' + orderId.slice(0, 7).toUpperCase();
   if (custEl) custEl.textContent = order.customerName || 'Cliente';
-  if (totalEl) totalEl.textContent = `$${Number(order.totalAmount || 0).toLocaleString('es-MX')} MXN`;
-  if (statusSelect) statusSelect.value = (order.paymentStatus === 'paid' || order.status === 'delivered') ? 'paid' : 'pending';
+  if (totalEl) totalEl.textContent = `$${totalAmount.toLocaleString('es-MX')} MXN`;
+  if (paidEl) paidEl.textContent = `$${paidAmount.toLocaleString('es-MX')} MXN`;
+  if (remainingEl) remainingEl.textContent = `$${remainingAmount.toLocaleString('es-MX')} MXN`;
+
+  if (abonoInput) {
+    abonoInput.value = remainingAmount > 0 ? remainingAmount : '';
+    abonoInput.placeholder = remainingAmount > 0 ? `Ej. ${Math.min(500, remainingAmount)}` : '0';
+  }
+
+  // Render previous payment installments history
+  if (historyContainer) {
+    const history = order.paymentsHistory || [];
+    if (history.length === 0) {
+      if (paidAmount > 0) {
+        historyContainer.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(34,197,94,0.1); border: 1px solid #22c55e44; border-radius: 6px; padding: 6px 10px; font-size: 11px;">
+            <div>
+              <div style="color: #fff; font-weight: bold;">Pago Inicial Registrado</div>
+              <div style="color: #888; font-size: 10px;">Liquidado al momento de la orden</div>
+            </div>
+            <div style="color: #22c55e; font-weight: 900; font-size: 12px;">+$${paidAmount.toLocaleString('es-MX')} MXN</div>
+          </div>
+        `;
+      } else {
+        historyContainer.innerHTML = '<div style="font-size: 11px; color: #666; text-align: center; padding: 10px;">Sin abonos registrados aún</div>';
+      }
+    } else {
+      historyContainer.innerHTML = history.map(h => `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 6px; padding: 6px 10px; font-size: 11px;">
+          <div>
+            <div style="color: #fff; font-weight: 800;">📅 ${h.dateStr || 'Reciente'} · ${h.method || 'Efectivo'}</div>
+            <div style="color: #888; font-size: 10px;">${h.note || 'Abono'} · Restante tras abono: <b style="color: #eab308;">$${Number(h.remainingAfter || 0).toLocaleString('es-MX')}</b></div>
+          </div>
+          <div style="color: #22c55e; font-weight: 900; font-size: 13px;">+$${Number(h.amount || 0).toLocaleString('es-MX')}</div>
+        </div>
+      `).join('');
+    }
+  }
 
   if (modal) modal.classList.add('active');
 };
 
 window.closeEditPaymentModal = () => document.getElementById('editPaymentModal')?.classList.remove('active');
 
-window.savePaymentStatusChange = async function(e) {
+window.setQuickAbono = function(amount) {
+  const abonoInput = document.getElementById('payModalAbonoAmount');
+  if (abonoInput) {
+    abonoInput.value = currentEditingOrderRemaining > 0 ? Math.min(amount, currentEditingOrderRemaining) : amount;
+  }
+};
+
+window.setQuickAbonoFull = function() {
+  const abonoInput = document.getElementById('payModalAbonoAmount');
+  if (abonoInput) {
+    abonoInput.value = currentEditingOrderRemaining;
+  }
+};
+
+window.submitNewPaymentAbono = async function(e) {
   e.preventDefault();
   if (!currentEditingOrderId || !window.db) return;
 
-  const newPaymentStatus = document.getElementById('payModalStatusSelect')?.value || 'paid';
+  const order = allOrdersList.find(o => o.id === currentEditingOrderId);
+  if (!order) return;
+
+  const abonoInput = document.getElementById('payModalAbonoAmount');
+  const abonoAmount = Number(abonoInput?.value || 0);
+  const method = document.getElementById('payModalMethod')?.value || 'Efectivo';
+  const note = document.getElementById('payModalNote')?.value.trim() || 'Abono a cuenta';
+
+  if (abonoAmount <= 0) {
+    alert("Por favor ingresa un monto de abono mayor a $0.");
+    return;
+  }
+
+  const totalAmount = Number(order.totalAmount || 0);
+  const currentPaid = Number(order.paidAmount || (order.paymentStatus === 'paid' || order.status === 'delivered' ? totalAmount : 0));
+  const newPaidAmount = Math.min(totalAmount, currentPaid + abonoAmount);
+  const remaining = Math.max(0, totalAmount - newPaidAmount);
+
+  let newPaymentStatus = 'partial';
+  if (remaining === 0 || newPaidAmount >= totalAmount) {
+    newPaymentStatus = 'paid';
+  } else if (newPaidAmount === 0) {
+    newPaymentStatus = 'pending';
+  }
+
+  const newHistoryEntry = {
+    amount: abonoAmount,
+    dateStr: new Date().toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }),
+    timestamp: Date.now(),
+    method: method,
+    note: note,
+    remainingAfter: remaining
+  };
+
   try {
     await db.collection('orders').doc(currentEditingOrderId).update({
+      paidAmount: newPaidAmount,
       paymentStatus: newPaymentStatus,
+      paymentsHistory: firebase.firestore.FieldValue.arrayUnion(newHistoryEntry),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+
     closeEditPaymentModal();
-    alert("✅ Estatus de pago actualizado correctamente.");
+
+    const shortId = currentEditingOrderId.slice(0, 7).toUpperCase();
+    const cleanPhone = (order.customerPhone || '').replace(/[^0-9]/g, '');
+    const waReceipt = encodeURIComponent(`¡Hola ${order.customerName || 'Cliente'}! En DXT Sports QRO registramos tu abono de $${abonoAmount.toLocaleString('es-MX')} MXN (${method}) para tu pedido #${shortId}.\n• Total Pedido: $${totalAmount.toLocaleString('es-MX')} MXN\n• Total Abonado: $${newPaidAmount.toLocaleString('es-MX')} MXN\n• Saldo Restante: $${remaining.toLocaleString('es-MX')} MXN\n¡Gracias por tu compra! 🏈🔥`);
+    
+    if (cleanPhone) {
+      if (confirm(`✅ ¡Abono de $${abonoAmount.toLocaleString('es-MX')} MXN registrado con éxito!\nSaldo restante: $${remaining.toLocaleString('es-MX')} MXN.\n\n¿Deseas enviar el comprobante de abono al cliente por WhatsApp?`)) {
+        window.open(`https://wa.me/52${cleanPhone.length === 10 ? cleanPhone : cleanPhone.replace(/^52/, '')}?text=${waReceipt}`, '_blank');
+      }
+    } else {
+      alert(`✅ ¡Abono de $${abonoAmount.toLocaleString('es-MX')} MXN registrado con éxito!\nSaldo restante: $${remaining.toLocaleString('es-MX')} MXN.`);
+    }
   } catch(err) {
-    alert("Error al actualizar pago: " + err.message);
+    alert("Error al registrar abono: " + err.message);
   }
 };
 

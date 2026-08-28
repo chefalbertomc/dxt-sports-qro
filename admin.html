@@ -79,14 +79,14 @@
           <span style="color:#ff1e38;">DXT</span>
           <span style="color:#00b0ff;">SPORTS</span>
           <span style="background:#ff1e38; color:#fff; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:2px;">ADMIN</span>
-          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v324.0</span>
+          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v325.0</span>
         </div>
-        <div class="logo-text-sub">LOGÍSTICA INTEGRAL · AUTO-RETORNO DE STOCK AL CANCELAR / ELIMINAR</div>
+        <div class="logo-text-sub">LOGÍSTICA INTEGRAL · ABONOS PARCIALES, HISTORIAL DE PAGOS & LIQUIDACIÓN</div>
       </div>
     </a>
     <div class="nav-actions">
       <span style="background:rgba(34, 197, 94, 0.15); border:1px solid #22c55e; color:#22c55e; font-size:10px; font-weight:800; padding:4px 8px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
-        🟢 v324.0 (Auto-Retorno de Stock)
+        🟢 v325.0 (Abonos & Liquidación)
       </span>
       <a href="index.html" target="_blank" rel="noopener" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">👁️ Ver Tienda ↗</a>
       <button id="btnLogout" class="btn btn-outline" style="display: none; font-size: 11px; padding: 6px 12px; border-color: #ef4444; color: #ef4444;">Salir</button>
@@ -734,29 +734,91 @@
     </div>
   </div>
 
-  <!-- MODAL: REGISTRAR / ACTUALIZAR PAGO DE PEDIDO -->
+  <!-- MODAL: REGISTRAR ABONOS, PAGOS PARCIALES Y LIQUIDACIÓN -->
   <div class="modal-overlay" id="editPaymentModal">
-    <div class="modal-box" style="max-width: 420px; padding: 20px;">
+    <div class="modal-box" style="max-width: 480px; padding: 20px; max-height: 88vh; overflow-y: auto;">
       <div class="modal-header" style="border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="color: #22c55e; font-size: 16px; margin: 0; font-weight: 900;">💵 Registrar / Actualizar Pago</h3>
+        <h3 style="color: #22c55e; font-size: 16px; margin: 0; font-weight: 900; display: flex; align-items: center; gap: 6px;">
+          💵 Registrar Abono / Liquidar Pedido
+        </h3>
         <button class="close-btn" onclick="closeEditPaymentModal()">✕</button>
       </div>
-      <form id="editPaymentForm" onsubmit="savePaymentStatusChange(event)">
+
+      <!-- RESUMEN FINANCIERO DEL PEDIDO -->
+      <div style="background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 10px; padding: 12px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+          <span style="color: #aaa;">Folio de Pedido:</span>
+          <b id="payModalOrderFolio" style="color: var(--accent-color);">#DXT-1234</b>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+          <span style="color: #aaa;">Cliente:</span>
+          <b id="payModalCustomer" style="color: #fff;">Juan Pérez</b>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+          <span style="color: #aaa;">Total del Pedido:</span>
+          <b id="payModalTotalAmount" style="color: #fff;">$1,499.00</b>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
+          <span style="color: #aaa;">Abonado hasta hoy:</span>
+          <b id="payModalPaidAmount" style="color: #22c55e;">$0.00</b>
+        </div>
+        <div style="border-top: 1px dashed #444; padding-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 12px; font-weight: 800; color: #eab308;">SALDO RESTANTE PENDIENTE:</span>
+          <span id="payModalRemainingAmount" style="font-size: 18px; font-weight: 900; color: #ef4444;">$1,499.00</span>
+        </div>
+      </div>
+
+      <!-- FORMULARIO DE REGISTRO DE ABONO -->
+      <form id="editPaymentForm" onsubmit="submitNewPaymentAbono(event)">
         <input type="hidden" id="payModalOrderId">
-        <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 12px;">
-          <div><b>Folio:</b> <span id="payModalOrderFolio" style="color: var(--accent-color);">#DXT-1234</span></div>
-          <div><b>Cliente:</b> <span id="payModalCustomer">Juan Pérez</span></div>
-          <div><b>Total Pedido:</b> <span id="payModalTotalAmount" style="color: #22c55e; font-weight: bold;">$1,499</span></div>
+        
+        <div style="font-size: 11px; font-weight: 800; color: #38bdf8; margin-bottom: 8px; text-transform: uppercase;">
+          ✍️ Registrar Nuevo Abono o Liquidar
         </div>
-        <div class="form-group" style="margin-bottom: 14px;">
-          <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 4px;">Estatus del Pago *</label>
-          <select id="payModalStatusSelect" class="form-control" style="padding: 8px; font-size: 12px;">
-            <option value="paid">🟢 Pagado Completo / Liquidado</option>
-            <option value="pending">🟡 Pendiente de Pago (Sin Cobrar)</option>
-          </select>
+
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 2px;">Monto a Abonar Hoy ($ MXN) *</label>
+          <input type="number" id="payModalAbonoAmount" class="form-control" required min="1" step="any" placeholder="Ej. 500" style="padding: 10px; font-size: 16px; font-weight: 900; color: #22c55e; border-color: #22c55e;">
         </div>
-        <button type="submit" class="btn btn-whatsapp" style="width: 100%; padding: 10px; font-size: 13px; font-weight: 900;">💾 Guardar Estatus de Pago</button>
+
+        <!-- BOTONES DE ABONO RÁPIDO -->
+        <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;" id="quickAbonoBtns">
+          <button type="button" onclick="setQuickAbono(200)" class="btn btn-outline" style="font-size: 11px; padding: 4px 8px;">+$200</button>
+          <button type="button" onclick="setQuickAbono(500)" class="btn btn-outline" style="font-size: 11px; padding: 4px 8px;">+$500</button>
+          <button type="button" onclick="setQuickAbono(1000)" class="btn btn-outline" style="font-size: 11px; padding: 4px 8px;">+$1,000</button>
+          <button type="button" onclick="setQuickAbonoFull()" class="btn" style="font-size: 11px; padding: 4px 8px; background: #22c55e; color: #000; font-weight: 900; border: none; margin-left: auto; cursor: pointer;">⚡ Liquidar Todo</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+          <div>
+            <label style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 2px;">Método de Pago *</label>
+            <select id="payModalMethod" class="form-control" style="padding: 6px 8px; font-size: 11px;">
+              <option value="Efectivo">💵 Efectivo</option>
+              <option value="Transferencia SPEI">🏦 Transferencia SPEI</option>
+              <option value="Tarjeta">💳 Tarjeta Débito / Crédito</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 10px; font-weight: 700; display: block; margin-bottom: 2px;">Nota / Referencia (Opcional)</label>
+            <input type="text" id="payModalNote" class="form-control" placeholder="Ej. Anticipo / Pago entrega" style="padding: 6px 8px; font-size: 11px;">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-whatsapp" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 900; border-radius: 8px; margin-bottom: 14px;">
+          💾 Guardar Abono & Actualizar Saldo →
+        </button>
       </form>
+
+      <!-- HISTORIAL DE ABONOS REGISTRADOS -->
+      <div style="border-top: 1px solid #333; padding-top: 12px;">
+        <div style="font-size: 11px; font-weight: 800; color: #aaa; margin-bottom: 8px; text-transform: uppercase;">
+          📋 Historial de Abonos de este Pedido:
+        </div>
+        <div id="payModalHistoryList" style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
+          <div style="font-size: 11px; color: #666; text-align: center; padding: 10px;">Sin abonos registrados</div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -863,8 +925,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   
-  <script src="js/firebase-config.js?v=324.0"></script>
-  <script src="js/teams.js?v=324.0"></script>
-  <script src="js/admin-v2.js?v=324.0"></script>
+  <script src="js/firebase-config.js?v=325.0"></script>
+  <script src="js/teams.js?v=325.0"></script>
+  <script src="js/admin-v2.js?v=325.0"></script>
 </body>
 </html>
