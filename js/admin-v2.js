@@ -164,36 +164,42 @@ window.switchAdminTab = function(tabName, skipPushHistory = false) {
   const manageCard = document.getElementById('manageSection');
   const singleCard = document.getElementById('singleUploadCard');
   const bulkCard = document.getElementById('bulkUploadCard');
+  const ordersCard = document.getElementById('ordersSection');
   
   const manageBtn = document.getElementById('tabManageBtn');
   const singleBtn = document.getElementById('tabSingleBtn');
   const bulkBtn = document.getElementById('tabBulkBtn');
+  const ordersBtn = document.getElementById('tabOrdersBtn');
 
   if (!skipPushHistory && history.pushState) {
     history.pushState({ adminTab: tabName, adminLock: true }, '', `#tab-${tabName}`);
   }
 
+  // Hide all sections first
+  if (manageCard) manageCard.style.display = 'none';
+  if (singleCard) singleCard.style.display = 'none';
+  if (bulkCard) bulkCard.style.display = 'none';
+  if (ordersCard) ordersCard.style.display = 'none';
+
+  // Deactivate all buttons
+  if (manageBtn) manageBtn.className = 'btn btn-outline';
+  if (singleBtn) singleBtn.className = 'btn btn-outline';
+  if (bulkBtn) bulkBtn.className = 'btn btn-outline';
+  if (ordersBtn) ordersBtn.className = 'btn btn-outline';
+
   if (tabName === 'manage') {
     if (manageCard) manageCard.style.display = 'block';
-    if (singleCard) singleCard.style.display = 'none';
-    if (bulkCard) bulkCard.style.display = 'none';
     if (manageBtn) manageBtn.className = 'btn active';
-    if (singleBtn) singleBtn.className = 'btn btn-outline';
-    if (bulkBtn) bulkBtn.className = 'btn btn-outline';
   } else if (tabName === 'single') {
-    if (manageCard) manageCard.style.display = 'none';
     if (singleCard) singleCard.style.display = 'block';
-    if (bulkCard) bulkCard.style.display = 'none';
-    if (manageBtn) manageBtn.className = 'btn btn-outline';
     if (singleBtn) singleBtn.className = 'btn active';
-    if (bulkBtn) bulkBtn.className = 'btn btn-outline';
-  } else {
-    if (manageCard) manageCard.style.display = 'none';
-    if (singleCard) singleCard.style.display = 'none';
+  } else if (tabName === 'bulk') {
     if (bulkCard) bulkCard.style.display = 'block';
-    if (manageBtn) manageBtn.className = 'btn btn-outline';
-    if (singleBtn) singleBtn.className = 'btn btn-outline';
     if (bulkBtn) bulkBtn.className = 'btn active';
+  } else if (tabName === 'orders') {
+    if (ordersCard) ordersCard.style.display = 'block';
+    if (ordersBtn) ordersBtn.className = 'btn active';
+    if (typeof loadAdminOrders === 'function') loadAdminOrders();
   }
 };
 
@@ -219,6 +225,9 @@ function initAdminForm() {
   onGenderSelectChange();
   if (window.syncCloudCustomTaxonomies) {
     window.syncCloudCustomTaxonomies();
+  }
+  if (typeof loadAdminOrders === 'function') {
+    loadAdminOrders();
   }
 }
 
@@ -2233,3 +2242,548 @@ document.getElementById('productForm')?.addEventListener('submit', async (e) => 
     btnSubmit.textContent = originalText;
   }
 });
+
+// ============================================
+// GESTIÓN DE PEDIDOS Y SURTIDO DE BODEGA (PICKING)
+// ============================================
+let allOrdersList = [];
+let currentOrdersFilter = 'all';
+let currentOrdersSearch = '';
+
+window.loadAdminOrders = function() {
+  const container = document.getElementById('ordersListContainer');
+  if (!window.db) {
+    if (container) container.innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Sin conexión a Firestore</div>';
+    return;
+  }
+
+  db.collection('orders').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+    allOrdersList = [];
+    snapshot.forEach(doc => {
+      allOrdersList.push({ id: doc.id, ...doc.data() });
+    });
+    updateOrdersKPICounters();
+    renderOrdersList();
+  }, (err) => {
+    console.error("Error loading orders:", err);
+    if (container) container.innerHTML = `<div style="text-align:center; padding:20px; color:#ef4444;">Error al cargar pedidos: ${err.message}</div>`;
+  });
+};
+
+function updateOrdersKPICounters() {
+  const pendingCount = allOrdersList.filter(o => o.status === 'pending' || !o.status).length;
+  const readyCount = allOrdersList.filter(o => o.status === 'ready').length;
+  const transitCount = allOrdersList.filter(o => o.status === 'transit').length;
+  const deliveredCount = allOrdersList.filter(o => o.status === 'delivered').length;
+
+  let totalRev = 0;
+  allOrdersList.forEach(o => {
+    if (o.status !== 'cancelled') {
+      totalRev += (Number(o.totalAmount) || 0);
+    }
+  });
+
+  const badge = document.getElementById('ordersBadgeCount');
+  if (badge) {
+    if (pendingCount > 0) {
+      badge.style.display = 'inline-block';
+      badge.textContent = `${pendingCount}`;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  const kpiPending = document.getElementById('kpiPendingOrders');
+  if (kpiPending) kpiPending.textContent = pendingCount;
+
+  const kpiReady = document.getElementById('kpiReadyOrders');
+  if (kpiReady) kpiReady.textContent = readyCount;
+
+  const kpiTransit = document.getElementById('kpiTransitOrders');
+  if (kpiTransit) kpiTransit.textContent = transitCount;
+
+  const kpiDelivered = document.getElementById('kpiDeliveredOrders');
+  if (kpiDelivered) kpiDelivered.textContent = deliveredCount;
+
+  const kpiRev = document.getElementById('kpiTotalRevenue');
+  if (kpiRev) kpiRev.textContent = `$${totalRev.toLocaleString('es-MX')}`;
+
+  const cAll = document.getElementById('countOrdAll');
+  if (cAll) cAll.textContent = allOrdersList.length;
+
+  const cPending = document.getElementById('countOrdPending');
+  if (cPending) cPending.textContent = pendingCount;
+
+  const cReady = document.getElementById('countOrdReady');
+  if (cReady) cReady.textContent = readyCount;
+
+  const cTransit = document.getElementById('countOrdTransit');
+  if (cTransit) cTransit.textContent = transitCount;
+
+  const cDelivered = document.getElementById('countOrdDelivered');
+  if (cDelivered) cDelivered.textContent = deliveredCount;
+}
+
+window.filterOrdersByStatus = function(status) {
+  currentOrdersFilter = status;
+  
+  const buttons = document.querySelectorAll('#orderFilterButtons button');
+  buttons.forEach(btn => btn.classList.remove('active'));
+
+  if (status === 'all') document.getElementById('btnFilterOrdAll')?.classList.add('active');
+  else if (status === 'pending') document.getElementById('btnFilterOrdPending')?.classList.add('active');
+  else if (status === 'ready') document.getElementById('btnFilterOrdReady')?.classList.add('active');
+  else if (status === 'transit') document.getElementById('btnFilterOrdTransit')?.classList.add('active');
+  else if (status === 'delivered') document.getElementById('btnFilterOrdDelivered')?.classList.add('active');
+  else if (status === 'cancelled') document.getElementById('btnFilterOrdCancelled')?.classList.add('active');
+
+  renderOrdersList();
+};
+
+window.onOrdersSearchInput = function(val) {
+  currentOrdersSearch = (val || '').toLowerCase().trim();
+  renderOrdersList();
+};
+
+function renderOrdersList() {
+  const container = document.getElementById('ordersListContainer');
+  if (!container) return;
+
+  let filtered = allOrdersList;
+
+  if (currentOrdersFilter !== 'all') {
+    if (currentOrdersFilter === 'pending') {
+      filtered = filtered.filter(o => o.status === 'pending' || !o.status);
+    } else {
+      filtered = filtered.filter(o => o.status === currentOrdersFilter);
+    }
+  }
+
+  if (currentOrdersSearch) {
+    filtered = filtered.filter(o => {
+      const name = (o.customerName || '').toLowerCase();
+      const phone = (o.customerPhone || '').toLowerCase();
+      const id = (o.id || '').toLowerCase();
+      const address = (o.address || '').toLowerCase();
+      return name.includes(currentOrdersSearch) || phone.includes(currentOrdersSearch) || id.includes(currentOrdersSearch) || address.includes(currentOrdersSearch);
+    });
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 40px 20px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px dashed #444;">
+        <div style="font-size: 32px; margin-bottom: 8px;">📦</div>
+        <div style="font-size: 14px; font-weight: 700; color: #aaa;">No hay pedidos en esta sección</div>
+        <p style="font-size: 11px; color: #666; margin-top: 4px;">Cuando un cliente compre en la tienda o registres una venta, aparecerá aquí.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered.map(order => renderSingleOrderCard(order)).join('');
+}
+
+function renderSingleOrderCard(order) {
+  const orderId = order.id;
+  const shortId = orderId.slice(0, 7).toUpperCase();
+  const dateStr = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : 'Recién recibido';
+
+  const st = order.status || 'pending';
+  let statusBadge = '';
+  if (st === 'pending') {
+    statusBadge = `<span style="background: rgba(234, 179, 8, 0.2); border: 1px solid #eab308; color: #eab308; font-size: 11px; font-weight: 900; padding: 4px 10px; border-radius: 20px;">🟡 Por Surtir en Bodega</span>`;
+  } else if (st === 'ready') {
+    statusBadge = `<span style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #38bdf8; font-size: 11px; font-weight: 900; padding: 4px 10px; border-radius: 20px;">📦 Surtido de Bodega (Listo p/ Entrega)</span>`;
+  } else if (st === 'transit') {
+    statusBadge = `<span style="background: rgba(168, 85, 247, 0.2); border: 1px solid #a855f7; color: #a855f7; font-size: 11px; font-weight: 900; padding: 4px 10px; border-radius: 20px;">🚚 En Ruta / Reparto</span>`;
+  } else if (st === 'delivered') {
+    statusBadge = `<span style="background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #22c55e; font-size: 11px; font-weight: 900; padding: 4px 10px; border-radius: 20px;">🟢 Entregado y Cobrado</span>`;
+  } else if (st === 'cancelled') {
+    statusBadge = `<span style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; font-size: 11px; font-weight: 900; padding: 4px 10px; border-radius: 20px;">🔴 Cancelado</span>`;
+  }
+
+  const cleanPhone = (order.customerPhone || '').replace(/[^0-9]/g, '');
+  const waMessage = encodeURIComponent(`¡Hola ${order.customerName || 'Cliente'}! Te contacto de DXT Sports QRO respecto a tu pedido #${shortId}.`);
+  const waUrl = cleanPhone ? `https://wa.me/52${cleanPhone.length === 10 ? cleanPhone : cleanPhone.replace(/^52/, '')}?text=${waMessage}` : '#';
+
+  const isPickup = order.deliveryMethod === 'pickup';
+  const deliveryLabel = isPickup ? '📍 Entrega Personal / Mostrador QRO' : `🏠 Envío a Domicilio: ${order.address || 'Querétaro'}`;
+
+  const items = order.items || [];
+  const itemsHtml = items.map((item, idx) => {
+    const itemImg = item.image || item.imageUrl || 'assets/dxt_logo.png';
+    const isPicked = item.isPicked || (st !== 'pending' && st !== 'cancelled');
+    return `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.4); border-radius: 8px; border: 1px solid #333; margin-bottom: 6px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <img src="${itemImg}" style="width: 44px; height: 44px; object-fit: contain; background: #111; border-radius: 6px; border: 1px solid #444;">
+          <div>
+            <div style="font-size: 12px; font-weight: 800; color: #fff;">${item.name || 'Jersey Deportivo'}</div>
+            <div style="font-size: 11px; color: #aaa;">
+              Talla: <b style="color: #38bdf8;">${item.size || 'Unitalla'}</b> · Cantidad: <b>${item.qty || 1} pza(s)</b> · Precio: $${Number(item.price || 0).toLocaleString('es-MX')}
+            </div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 13px; font-weight: 900; color: #22c55e;">$${((Number(item.price || 0)) * (Number(item.qty || 1))).toLocaleString('es-MX')}</div>
+          <button type="button" onclick="toggleOrderItemPicked('${orderId}', ${idx})" style="background: none; border: none; font-size: 10px; cursor: pointer; color: ${isPicked ? '#22c55e' : '#eab308'}; font-weight: bold;">
+            ${isPicked ? '✅ En Paquete' : '📦 Recoger en Bodega'}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div style="background: #181c24; border: 1px solid #2d3748; border-radius: 12px; padding: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
+      
+      <!-- CARD TOP HEADER -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; border-bottom: 1px solid #2d3748; padding-bottom: 8px;">
+        <div>
+          <span style="font-size: 13px; font-weight: 900; color: var(--accent-color);">#${shortId}</span>
+          <span style="font-size: 11px; color: #777; margin-left: 6px;">📅 ${dateStr}</span>
+        </div>
+        <div>
+          ${statusBadge}
+        </div>
+      </div>
+
+      <!-- CUSTOMER INFO & DELIVERY -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-bottom: 12px; background: rgba(0,0,0,0.25); padding: 10px; border-radius: 8px;">
+        <div>
+          <div style="font-size: 10px; font-weight: 800; color: #888; text-transform: uppercase;">Cliente:</div>
+          <div style="font-size: 13px; font-weight: 800; color: #fff;">${order.customerName || 'Cliente DXT'}</div>
+          <div style="font-size: 11px; color: #aaa; margin-top: 2px;">
+            📞 ${order.customerPhone || 'Sin teléfono'}
+            ${cleanPhone ? `<a href="${waUrl}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; background: #22c55e; color: #000; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 12px; text-decoration: none; margin-left: 6px;">💬 WhatsApp</a>` : ''}
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 10px; font-weight: 800; color: #888; text-transform: uppercase;">Entrega:</div>
+          <div style="font-size: 12px; font-weight: 700; color: #38bdf8;">${deliveryLabel}</div>
+        </div>
+      </div>
+
+      <!-- ITEMS LIST -->
+      <div style="margin-bottom: 12px;">
+        <div style="font-size: 11px; font-weight: 800; color: #a855f7; margin-bottom: 6px; text-transform: uppercase;">
+          👕 Artículos a Entregar (${items.length}):
+        </div>
+        ${itemsHtml}
+      </div>
+
+      <!-- CARD FOOTER: TOTAL & ACTIONS -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-top: 1px solid #2d3748; padding-top: 10px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div>
+            <span style="font-size: 11px; color: #888;">TOTAL:</span>
+            <span style="font-size: 18px; font-weight: 900; color: #22c55e; margin-left: 4px;">$${Number(order.totalAmount || 0).toLocaleString('es-MX')}</span>
+          </div>
+          ${order.transferProof ? `
+            <button type="button" onclick="viewTransferProof('${order.transferProof}')" class="btn btn-outline" style="font-size: 11px; padding: 4px 10px; border-color: #38bdf8; color: #38bdf8;">
+              📸 Ver Comprobante
+            </button>
+          ` : ''}
+        </div>
+
+        <!-- STATUS TRANSITION BUTTONS -->
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          ${st === 'pending' ? `
+            <button type="button" onclick="updateOrderStatus('${orderId}', 'ready')" class="btn" style="background: #38bdf8; color: #000; font-size: 11px; font-weight: 800; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer;">
+              📦 Marcar Surtido de Bodega →
+            </button>
+          ` : ''}
+          ${st === 'ready' ? `
+            <button type="button" onclick="updateOrderStatus('${orderId}', 'transit')" class="btn" style="background: #a855f7; color: #fff; font-size: 11px; font-weight: 800; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer;">
+              🚚 Enviar a Reparto →
+            </button>
+          ` : ''}
+          ${st === 'transit' || st === 'ready' ? `
+            <button type="button" onclick="updateOrderStatus('${orderId}', 'delivered')" class="btn btn-whatsapp" style="font-size: 11px; font-weight: 900; padding: 6px 12px;">
+              🟢 Marcar Entregado y Cobrado ✓
+            </button>
+          ` : ''}
+          ${st !== 'delivered' && st !== 'cancelled' ? `
+            <button type="button" onclick="cancelOrder('${orderId}')" class="btn btn-outline" style="font-size: 11px; padding: 6px 10px; border-color: #ef4444; color: #ef4444;">
+              ✕ Cancelar
+            </button>
+          ` : ''}
+          <button type="button" onclick="deleteOrder('${orderId}')" class="btn btn-outline" style="font-size: 11px; padding: 6px 8px; border-color: #444; color: #777;">
+            🗑️
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  `;
+}
+
+window.updateOrderStatus = async function(orderId, newStatus) {
+  if (!window.db) return;
+  try {
+    await db.collection('orders').doc(orderId).update({
+      status: newStatus,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) {
+    alert("Error al actualizar estado del pedido: " + e.message);
+  }
+};
+
+window.cancelOrder = async function(orderId) {
+  if (!confirm("¿Deseas cancelar este pedido?")) return;
+  if (!window.db) return;
+  try {
+    await db.collection('orders').doc(orderId).update({
+      status: 'cancelled',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("✅ Pedido cancelado.");
+  } catch (e) {
+    alert("Error al cancelar pedido: " + e.message);
+  }
+};
+
+window.deleteOrder = async function(orderId) {
+  if (!confirm("¿Seguro que deseas eliminar este registro de pedido de la base de datos?")) return;
+  if (!window.db) return;
+  try {
+    await db.collection('orders').doc(orderId).delete();
+  } catch (e) {
+    alert("Error al eliminar pedido: " + e.message);
+  }
+};
+
+window.toggleOrderItemPicked = async function(orderId, itemIndex) {
+  const order = allOrdersList.find(o => o.id === orderId);
+  if (!order || !order.items || !order.items[itemIndex]) return;
+
+  order.items[itemIndex].isPicked = !order.items[itemIndex].isPicked;
+
+  if (window.db) {
+    try {
+      await db.collection('orders').doc(orderId).update({
+        items: order.items
+      });
+    } catch (e) {}
+  }
+  renderOrdersList();
+};
+
+// ============================================
+// HOJA DE SURTIDO DE BODEGA (PICKING LIST)
+// ============================================
+window.openPickingListModal = function() {
+  const modal = document.getElementById('pickingListModal');
+  const content = document.getElementById('pickingListContent');
+  if (!modal || !content) return;
+
+  const pendingOrders = allOrdersList.filter(o => o.status === 'pending' || !o.status || o.status === 'ready');
+  
+  if (pendingOrders.length === 0) {
+    content.innerHTML = `
+      <div style="text-align:center; padding:30px 10px; color:#aaa;">
+        <div style="font-size:36px; margin-bottom:8px;">✨</div>
+        <div style="font-size:14px; font-weight:800;">¡No hay prendas pendientes por recoger en bodega!</div>
+        <p style="font-size:11px; color:#666;">Todos los pedidos actuales ya fueron entregados o no hay pedidos nuevos.</p>
+      </div>
+    `;
+  } else {
+    const pickingItems = [];
+    pendingOrders.forEach(o => {
+      const shortId = o.id.slice(0, 6).toUpperCase();
+      const customer = o.customerName || 'Cliente';
+      (o.items || []).forEach((item, idx) => {
+        pickingItems.push({
+          orderId: o.id,
+          shortId: shortId,
+          customer: customer,
+          itemIndex: idx,
+          name: item.name || 'Jersey Deportivo',
+          size: item.size || 'Unitalla',
+          qty: Number(item.qty || 1),
+          image: item.image || item.imageUrl || 'assets/dxt_logo.png',
+          isPicked: !!item.isPicked
+        });
+      });
+    });
+
+    content.innerHTML = `
+      <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid #a855f7; border-radius: 8px; padding: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; font-weight: 800; color: #fff;">📦 Total de Prendas a Recoger en Bodega:</span>
+        <span style="font-size: 16px; font-weight: 900; color: #a855f7;">${pickingItems.length} prendas</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        ${pickingItems.map((pi) => `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <input type="checkbox" ${pi.isPicked ? 'checked' : ''} onchange="toggleOrderItemPicked('${pi.orderId}', ${pi.itemIndex})" style="width: 18px; height: 18px; cursor: pointer; accent-color: #22c55e;">
+              <img src="${pi.image}" style="width: 46px; height: 46px; object-fit: contain; background: #111; border-radius: 6px; border: 1px solid #444;">
+              <div>
+                <div style="font-size: 13px; font-weight: 800; color: #fff;">${pi.name}</div>
+                <div style="font-size: 11px; color: #aaa;">
+                  Talla a Recoger: <b style="color: #38bdf8; font-size: 12px;">[ ${pi.size} ]</b> · Cantidad: <b>${pi.qty} pza(s)</b>
+                </div>
+                <div style="font-size: 10px; color: #777; margin-top: 2px;">
+                  Para: <b>${pi.customer}</b> (Pedido #${pi.shortId})
+                </div>
+              </div>
+            </div>
+            <div>
+              <span style="font-size: 11px; font-weight: 800; color: ${pi.isPicked ? '#22c55e' : '#eab308'};">
+                ${pi.isPicked ? '✅ Recogido' : '⏳ Pendiente'}
+              </span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  modal.classList.add('active');
+};
+
+window.closePickingListModal = () => document.getElementById('pickingListModal')?.classList.remove('active');
+
+window.copyPickingListToClipboard = function() {
+  const pendingOrders = allOrdersList.filter(o => o.status === 'pending' || !o.status || o.status === 'ready');
+  if (pendingOrders.length === 0) {
+    alert("No hay pedidos pendientes.");
+    return;
+  }
+
+  let text = `📦 HOJA DE SURTIDO DE BODEGA - DXT SPORTS QRO\nFecha: ${new Date().toLocaleDateString('es-MX')}\n----------------------------------\n`;
+  let count = 1;
+  pendingOrders.forEach(o => {
+    (o.items || []).forEach(item => {
+      text += `[ ] ${count}. ${item.name} (TALLA: ${item.size}) x ${item.qty || 1} pza(s) -> Para: ${o.customerName} (#${o.id.slice(0, 6).toUpperCase()})\n`;
+      count++;
+    });
+  });
+
+  navigator.clipboard.writeText(text).then(() => {
+    alert("📋 ¡Hoja de surtido copiada al portapapeles! Puedes pegarla en WhatsApp o Notas.");
+  }).catch(() => {
+    alert(text);
+  });
+};
+
+window.printPickingList = function() {
+  window.print();
+};
+
+// ============================================
+// REGISTRAR PEDIDO MANUAL / MOSTRADOR
+// ============================================
+window.openManualOrderModal = function() {
+  const modal = document.getElementById('manualOrderModal');
+  const prodSelect = document.getElementById('manualProductSelect');
+  if (!modal || !prodSelect) return;
+
+  const catalogProducts = window.allProductsList || [];
+  prodSelect.innerHTML = '<option value="">Selecciona un producto del catálogo...</option>' + 
+    catalogProducts.map(p => `<option value="${p.id}">${p.name} ($${p.price || 0})</option>`).join('');
+
+  modal.classList.add('active');
+};
+
+window.closeManualOrderModal = () => document.getElementById('manualOrderModal')?.classList.remove('active');
+
+window.onManualProductChange = function() {
+  const prodId = document.getElementById('manualProductSelect')?.value;
+  const sizeSelect = document.getElementById('manualSizeSelect');
+  const priceInput = document.getElementById('manualPrice');
+  if (!sizeSelect) return;
+
+  const product = (window.allProductsList || []).find(p => p.id === prodId);
+  if (!product) {
+    sizeSelect.innerHTML = '<option value="">Talla...</option>';
+    if (priceInput) priceInput.value = 0;
+    calcManualOrderTotal();
+    return;
+  }
+
+  if (priceInput) priceInput.value = product.price || 1499;
+
+  const sizeRows = product.sizeStockRows || [];
+  if (sizeRows.length > 0) {
+    sizeSelect.innerHTML = sizeRows.map(s => {
+      const stock = (Number(s.immediateQty) || 0) + (Number(s.warehouseQty) || 0);
+      return `<option value="${s.size}">Talla ${s.size} (Stock: ${stock})</option>`;
+    }).join('');
+  } else {
+    sizeSelect.innerHTML = '<option value="Unitalla">Unitalla</option>';
+  }
+
+  calcManualOrderTotal();
+};
+
+window.calcManualOrderTotal = function() {
+  const qty = Number(document.getElementById('manualQty')?.value || 1);
+  const price = Number(document.getElementById('manualPrice')?.value || 0);
+  const total = qty * price;
+  const display = document.getElementById('manualTotalDisplay');
+  if (display) display.textContent = `$${total.toLocaleString('es-MX')}`;
+};
+
+window.saveManualOrder = async function(e) {
+  e.preventDefault();
+  const name = document.getElementById('manualCustomerName')?.value.trim();
+  const phone = document.getElementById('manualCustomerPhone')?.value.trim();
+  const delivery = document.getElementById('manualDeliveryMethod')?.value;
+  const address = document.getElementById('manualAddress')?.value.trim();
+  const prodId = document.getElementById('manualProductSelect')?.value;
+  const size = document.getElementById('manualSizeSelect')?.value;
+  const qty = Number(document.getElementById('manualQty')?.value || 1);
+  const price = Number(document.getElementById('manualPrice')?.value || 0);
+
+  if (!name || !phone || !prodId || !size) {
+    alert("Por favor completa todos los campos obligatorios.");
+    return;
+  }
+
+  const product = (window.allProductsList || []).find(p => p.id === prodId);
+  const totalAmount = qty * price;
+
+  const orderPayload = {
+    customerName: name,
+    customerPhone: phone,
+    deliveryMethod: delivery,
+    address: address,
+    items: [{
+      id: prodId,
+      name: product?.name || 'Jersey Deportivo',
+      team: product?.team || 'Deportivo',
+      size: size,
+      qty: qty,
+      price: price,
+      image: product?.imageUrl || 'assets/dxt_logo.png'
+    }],
+    totalAmount: totalAmount,
+    status: 'pending',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  try {
+    await db.collection('orders').add(orderPayload);
+    closeManualOrderModal();
+    document.getElementById('manualOrderForm').reset();
+    alert("✅ Pedido registrado con éxito. Aparecerá en tu lista de recolección de bodega.");
+  } catch (err) {
+    alert("Error al guardar pedido: " + err.message);
+  }
+};
+
+window.viewTransferProof = function(proofUrl) {
+  const modal = document.getElementById('proofViewerModal');
+  const img = document.getElementById('proofViewerImage');
+  if (modal && img) {
+    img.src = proofUrl;
+    modal.classList.add('active');
+  }
+};
+
+window.closeProofViewerModal = () => document.getElementById('proofViewerModal')?.classList.remove('active');
+
