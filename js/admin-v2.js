@@ -959,36 +959,47 @@ Analiza detenidamente la fotografía de la prenda deportiva y extrae la informac
 
 Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
+  const models = ['gemini-flash-lite-latest', 'gemini-3.5-flash'];
+  let lastError = null;
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{
-        parts: [
-          { text: promptText },
-          { inline_data: { mime_type: "image/jpeg", data: pureBase64 } }
-        ]
-      }],
-      generationConfig: {
-        response_mime_type: "application/json",
-        temperature: 0.1,
-        maxOutputTokens: 250
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: promptText },
+              { inline_data: { mime_type: "image/jpeg", data: pureBase64 } }
+            ]
+          }],
+          generationConfig: {
+            response_mime_type: "application/json",
+            temperature: 0.1,
+            maxOutputTokens: 1000
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson?.error?.message || `HTTP ${response.status}`);
       }
-    })
-  });
 
-  if (!response.ok) {
-    const errJson = await response.json().catch(() => ({}));
-    throw new Error(errJson?.error?.message || `HTTP ${response.status}`);
+      const data = await response.json();
+      const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!textOutput) throw new Error("No hubo respuesta de Gemini AI.");
+
+      return JSON.parse(textOutput);
+    } catch (err) {
+      console.warn(`Attempt with ${model} failed, trying next:`, err);
+      lastError = err;
+    }
   }
 
-  const data = await response.json();
-  const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!textOutput) throw new Error("No hubo respuesta de Gemini AI.");
-
-  return JSON.parse(textOutput);
+  throw lastError || new Error("No fue posible conectar con Gemini AI.");
 }
 
 // Quick image compressor helper for AI payload (Lightweight 280px JPEG in 10ms)
