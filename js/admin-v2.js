@@ -920,23 +920,34 @@ async function analyzeImageWithGeminiVision(base64Image) {
     pureBase64 = pureBase64.split(',')[1];
   }
 
-  const promptText = `Eres un catalogador deportivo profesional de máxima precisión visual.
-Analiza detenidamente la fotografía de la prenda deportiva y extrae la información exacta sin inventar ni poner valores por defecto:
+  const promptText = `Eres un experto mundial y catalogador deportivo profesional de máxima precisión visual para tiendas de jerseys y coleccionismo oficial.
+Analiza detenidamente la fotografía de la prenda deportiva y extrae la información completa, rica, experta y exacta:
 
-1. "team": Nombre del equipo/escudería oficial (ej. "Real Madrid", "Barcelona", "América", "Chivas", "Red Bull Racing", "Ferrari", "Mercedes AMG F1", "McLaren F1", "Baltimore Ravens", "Steelers", "Dodgers", "Yankees", "Lakers", etc.).
-2. "sport": "futbol-soccer", "formula-1", "futbol-americano", "basquetbol" o "beisbol".
-3. "league": "La Liga (España)", "Liga MX (México)", "Fórmula 1", "NFL", "NBA", "MLB", "Premier League (Inglaterra)", "Serie A (Italia)".
-4. "season": Temporada o año EXACTO de la prenda:
-   - EN FÚTBOL: identifica la temporada real según diseño de cuello, color de vivos/franjas, patrocinador frontal (Teka, Siemens, Bwin, Fly Emirates, Emirates FLY BETTER, Spotify) y tipografía del dorsal (ej. "2017-2018", "2022-2023", "2023-2024", "2024-2025", "2025-2026", "2011-2012", etc.).
-   - EN FÓRMULA 1 (F1): identifica el año calendario exacto de la escudería según patrocinadores (ej. Puma vs Castore, Oracle Bybit, HP en Ferrari) y ediciones de Grandes Premios (ej. "2024", "2023", "2022", "2021", etc.).
-   - EN NFL / NBA / MLB: año o "2024", "2025", "retro", o "atemporal".
-   ¡MUY IMPORTANTE: NO asumas 2024-2025 si la prenda es de otro año o temporada!
-5. "player": Nombre y dorsal del jugador/piloto si lo tiene (ej. "Checo Pérez #11", "Max Verstappen #1", "Vinicius Jr #7", "Cristiano Ronaldo #7", "Bellingham #5", "Mbappé #9", "Lamar Jackson #8", o "Edición Oficial").
-6. "name": Título comercial formal en español con Deporte, Equipo, Temporada/Año, Jugador/Dorsal y Versión (ej. "Playera Polo F1 Red Bull Racing 2024 #11 Checo Pérez", "Jersey Fútbol Real Madrid 2017-2018 #7 Cristiano Ronaldo Local Kiev", "Jersey NFL Baltimore Ravens #8 Lamar Jackson Morado").
-7. "price": Precio sugerido entero en MXN (ej. 1499).
+1. "team": Nombre del equipo, franquicia o escudería oficial (ej. "Chicago Bears", "Real Madrid", "Red Bull Racing", "Dallas Cowboys", "Club América", "Los Angeles Lakers", "New York Yankees", "Scuderia Ferrari", "Manchester City", etc.).
+2. "sport": "futbol-americano", "futbol-soccer", "formula-1", "basquetbol" o "beisbol".
+3. "league": Liga oficial exacta (ej. "NFL (32 Equipos)", "La Liga", "Fórmula 1", "Liga MX", "NBA", "MLB", "Premier League", "Serie A").
+4. "season": Temporada o año EXACTO de la prenda (ej. "2024", "2024-2025", "2025-2026", "2023", "2022", "2018", etc.).
+5. "player": Identifica el número/dorsal visible y el nombre del jugador o piloto estrella según el roster oficial del equipo y año:
+   - Si ves un jersey de Chicago Bears con el número 18, identifica: "#18 Caleb Williams".
+   - Si ves Baltimore Ravens con el 8: "#8 Lamar Jackson".
+   - Si ves Kansas City Chiefs con el 15: "#15 Patrick Mahomes".
+   - Si ves Buffalo Bills con el 17: "#17 Josh Allen".
+   - Si ves Real Madrid con el 7: "#7 Vinicius Jr" (o "#7 Cristiano Ronaldo" en jerseys retro).
+   - Si ves Real Madrid con el 5: "#5 Bellingham".
+   - Si ves Real Madrid con el 9: "#9 Mbappé".
+   - Si ves Red Bull con el 11: "#11 Checo Pérez".
+   - Si ves Red Bull con el 1: "#1 Max Verstappen".
+   - Si no tiene número ni nombre visible pon "Edición Oficial".
+6. "name": Título comercial COMPLETO y detallado que DEBE INCLUIR: Tipo ("Jersey" / "Playera Polo" / "Gorra"), Liga ("NFL", "Fútbol", "F1"), Equipo ("Chicago Bears", "Real Madrid", etc.), Dorsal y Jugador si existe ("#18 Caleb Williams", "#11 Checo Pérez"), Color/Versión ("Home Azul Marino", "Local Blanco", "Away Blanco", "Alternate Naranja") y Temporada/Año ("2024", "2024-2025").
+   EJEMPLOS OBLIGATORIOS:
+   - "Jersey NFL Chicago Bears #18 Caleb Williams Home Azul Marino 2024"
+   - "Jersey Fútbol Real Madrid Local Blanco #7 Vinicius Jr 2024-2025"
+   - "Playera Polo F1 Red Bull Racing 2024 #11 Checo Pérez Edición Oficial"
+   - "Jersey NFL Baltimore Ravens #8 Lamar Jackson Morado 2024"
+7. "price": Precio sugerido en MXN (ej. 1499).
 8. "gender": "caballero", "dama", "nino" o "unisex".
-9. "category": "jerseys", "gorras", "chamarras", "calzado" o "balones".
-10. "description": Descripción breve de 1 oración destacando tela y detalles bordados oficiales.
+9. "category": "jerseys", "gorras", "chamarras", "polos", "chalecos" o "pants".
+10. "description": Descripción atractiva y elegante de 1 o 2 oraciones destacando equipo, jugador/dorsal, corte, parches oficiales y tela transpirable bordada de alta calidad.
 
 Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
 
