@@ -152,8 +152,134 @@ const SPORTS_CATALOG = [
     sport: "Fútbol",
     sportKey: "soccer",
     icon: "⚽",
-    leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/mex.1.png",
+    leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/uefa.champions.png",
     leagues: [
+      {
+        league: "La Liga (España)",
+        leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/esp.1.png",
+        teams: [
+          { id: "soc-realmadrid", name: "Real Madrid", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/86.png" },
+          { id: "soc-barcelona", name: "FC Barcelona", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/83.png" },
+          { id: "soc-atletico", name: "Atlético de Madrid", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/1068.png" },
+          { id: "soc-athletic", name: "Athletic Club Bilbao", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/93.png" },
+          { id: "soc-realsociedad", name: "Real Sociedad", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/89.png" },
+          { id: "soc-betis", name: "Real Betis", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/244.png" },
+          { id: "soc-sevilla", name: "Sevilla FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/243.png" },
+          { id: "soc-villarreal", name: "Villarreal CF", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/102.png" },
+          { id: "soc-valencia", name: "Valencia CF", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/94.png" },
+          { id: "soc-girona", name: "Girona FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/9812.png" },
+          { id: "soc-celta", name: "Celta de Vigo", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/85.png" },
+          { id: "soc-mallorca", name: "RCD Mallorca", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/84.png" },
+          { id: "soc-osasuna", name: "CA Osasuna", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/97.png" },
+          { id: "soc-rayo", name: "Rayo Vallecano", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/101.png" },
+          { id: "soc-getafe", name: "Getafe CF", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/2922.png" },
+          { id: "soc-alaves", name: "Deportivo Alavés", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/96.png" },
+          { id: "soc-laspalmas", name: "UD Las Palmas", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/98.png" },
+          { id: "soc-leganes", name: "CD Leganés", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/7982.png" },
+          { id: "soc-espanyol", name: "RCD Espanyol", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/88.png" },
+          { id: "soc-valladolid", name: "Real Valladolid", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/100.png" }
+        ]
+      },
+      {
+        league: "Premier League (Inglaterra)",
+        leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/eng.1.png",
+        teams: [
+          { id: "soc-arsenal", name: "Arsenal FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/359.png" },
+          { id: "soc-mancity", name: "Manchester City", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/382.png" },
+          { id: "soc-liverpool", name: "Liverpool FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/364.png" },
+          { id: "soc-manutd", name: "Manchester United", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/360.png" },
+          { id: "soc-chelsea", name: "Chelsea FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/363.png" },
+          { id: "soc-tottenham", name: "Tottenham Hotspur", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/367.png" },
+          { id: "soc-astonvilla", name: "Aston Villa", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/362.png" },
+          { id: "soc-newcastle", name: "Newcastle United", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/361.png" },
+          { id: "soc-brighton", name: "Brighton & Hove Albion", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/331.png" },
+          { id: "soc-westham", name: "West Ham United", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/371.png" },
+          { id: "soc-everton", name: "Everton FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/368.png" },
+          { id: "soc-fulham", name: "Fulham FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/370.png" },
+          { id: "soc-wolves", name: "Wolverhampton Wanderers", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/380.png" },
+          { id: "soc-crystalpalace", name: "Crystal Palace", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/384.png" },
+          { id: "soc-brentford", name: "Brentford FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/337.png" },
+          { id: "soc-bournemouth", name: "AFC Bournemouth", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/349.png" },
+          { id: "soc-nottingham", name: "Nottingham Forest", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/393.png" },
+          { id: "soc-leicester", name: "Leicester City", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/375.png" },
+          { id: "soc-southampton", name: "Southampton FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/376.png" },
+          { id: "soc-ipswich", name: "Ipswich Town", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/373.png" }
+        ]
+      },
+      {
+        league: "Serie A (Italia)",
+        leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/ita.1.png",
+        teams: [
+          { id: "soc-inter", name: "Inter de Milán", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/110.png" },
+          { id: "soc-acmilan", name: "AC Milan", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/103.png" },
+          { id: "soc-juventus", name: "Juventus", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/111.png" },
+          { id: "soc-napoli", name: "SSC Napoli", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/114.png" },
+          { id: "soc-roma", name: "AS Roma", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/104.png" },
+          { id: "soc-lazio", name: "SS Lazio", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/112.png" },
+          { id: "soc-atalanta", name: "Atalanta BC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/122.png" },
+          { id: "soc-fiorentina", name: "ACF Fiorentina", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/109.png" },
+          { id: "soc-bologna", name: "Bologna FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/107.png" },
+          { id: "soc-torino", name: "Torino FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/239.png" },
+          { id: "soc-genoa", name: "Genoa CFC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/3263.png" },
+          { id: "soc-monza", name: "AC Monza", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/2662.png" },
+          { id: "soc-udinese", name: "Udinese Calcio", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/118.png" },
+          { id: "soc-parma", name: "Parma Calcio", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/115.png" },
+          { id: "soc-verona", name: "Hellas Verona", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/119.png" },
+          { id: "soc-como", name: "Como 1907", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/3262.png" },
+          { id: "soc-cagliari", name: "Cagliari Calcio", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/108.png" },
+          { id: "soc-empoli", name: "Empoli FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/2565.png" },
+          { id: "soc-lecce", name: "US Lecce", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/113.png" },
+          { id: "soc-venezia", name: "Venezia FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/2483.png" }
+        ]
+      },
+      {
+        league: "Bundesliga (Alemania)",
+        leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/ger.1.png",
+        teams: [
+          { id: "soc-bayern", name: "Bayern Múnich", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/132.png" },
+          { id: "soc-dortmund", name: "Borussia Dortmund", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/124.png" },
+          { id: "soc-leverkusen", name: "Bayer Leverkusen", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/131.png" },
+          { id: "soc-rbleipzig", name: "RB Leipzig", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/11420.png" },
+          { id: "soc-frankfurt", name: "Eintracht Frankfurt", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/125.png" },
+          { id: "soc-stuttgart", name: "VfB Stuttgart", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/134.png" },
+          { id: "soc-monchengladbach", name: "Borussia Mönchengladbach", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/268.png" },
+          { id: "soc-wolfsburg", name: "VfL Wolfsburg", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/138.png" },
+          { id: "soc-freiburg", name: "SC Freiburg", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/126.png" },
+          { id: "soc-bremen", name: "Werder Bremen", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/137.png" },
+          { id: "soc-unionberlin", name: "Union Berlin", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/7911.png" },
+          { id: "soc-hoffenheim", name: "TSG Hoffenheim", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/7905.png" },
+          { id: "soc-mainz", name: "Mainz 05", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/2965.png" },
+          { id: "soc-augsburg", name: "FC Augsburg", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/3841.png" },
+          { id: "soc-stpauli", name: "FC St. Pauli", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/133.png" },
+          { id: "soc-heidenheim", name: "1. FC Heidenheim", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/8818.png" },
+          { id: "soc-bochum", name: "VfL Bochum", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/123.png" },
+          { id: "soc-kiel", name: "Holstein Kiel", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/7898.png" }
+        ]
+      },
+      {
+        league: "Ligue 1 (Francia)",
+        leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/fra.1.png",
+        teams: [
+          { id: "soc-psg", name: "Paris Saint-Germain", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/160.png" },
+          { id: "soc-marseille", name: "Olympique de Marsella", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/166.png" },
+          { id: "soc-monaco", name: "AS Mónaco", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/174.png" },
+          { id: "soc-lyon", name: "Olympique de Lyon", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/167.png" },
+          { id: "soc-lille", name: "Lille OSC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/165.png" },
+          { id: "soc-rennes", name: "Stade Rennais", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/168.png" },
+          { id: "soc-lens", name: "RC Lens", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/175.png" },
+          { id: "soc-nice", name: "OGC Nice", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/171.png" },
+          { id: "soc-nantes", name: "FC Nantes", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/164.png" },
+          { id: "soc-brest", name: "Stade Brestois", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/3236.png" },
+          { id: "soc-strasbourg", name: "RC Strasbourg", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/170.png" },
+          { id: "soc-toulouse", name: "Toulouse FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/177.png" },
+          { id: "soc-reims", name: "Stade de Reims", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/3243.png" },
+          { id: "soc-montpellier", name: "Montpellier HSC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/273.png" },
+          { id: "soc-saintetienne", name: "AS Saint-Étienne", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/169.png" },
+          { id: "soc-auxerre", name: "AJ Auxerre", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/172.png" },
+          { id: "soc-angers", name: "Angers SCO", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/3241.png" },
+          { id: "soc-lehavre", name: "Le Havre AC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/3245.png" }
+        ]
+      },
       {
         league: "Liga MX (18 Equipos)",
         leagueLogo: "https://assets.footylogos.com/logos/liga-mx/liga-mx-logo-footylogos.svg",
@@ -179,25 +305,67 @@ const SPORTS_CATALOG = [
         ]
       },
       {
-        league: "Europeas / UEFA",
+        league: "Selecciones Nacionales (FIFA / Mundial)",
+        leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/fifa.world.png",
+        teams: [
+          { id: "soc-mexico", name: "Selección Mexicana", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/203.png" },
+          { id: "soc-argentina", name: "Selección Argentina", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/202.png" },
+          { id: "soc-brasil", name: "Selección de Brasil", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/205.png" },
+          { id: "soc-espana", name: "Selección de España", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/164.png" },
+          { id: "soc-francia", name: "Selección de Francia", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/476.png" },
+          { id: "soc-alemania", name: "Selección de Alemania", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/481.png" },
+          { id: "soc-inglaterra", name: "Selección de Inglaterra", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/448.png" },
+          { id: "soc-portugal", name: "Selección de Portugal", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/482.png" },
+          { id: "soc-italia", name: "Selección de Italia", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/478.png" },
+          { id: "soc-paisesbajos", name: "Selección de Países Bajos (Holanda)", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/449.png" },
+          { id: "soc-colombia", name: "Selección de Colombia", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/206.png" },
+          { id: "soc-uruguay", name: "Selección de Uruguay", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/209.png" },
+          { id: "soc-usa", name: "Selección de Estados Unidos", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/629.png" },
+          { id: "soc-japon", name: "Selección de Japón", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/477.png" },
+          { id: "soc-croacia", name: "Selección de Croacia", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/475.png" },
+          { id: "soc-belgica", name: "Selección de Bélgica", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/474.png" }
+        ]
+      },
+      {
+        league: "UEFA Champions / Clubes de Europa",
         leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/uefa.champions.png",
         teams: [
-          { id: "soc-realmadrid", name: "Real Madrid", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/86.png" },
-          { id: "soc-barcelona", name: "FC Barcelona", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/83.png" },
-          { id: "soc-atletico", name: "Atlético de Madrid", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/1068.png" },
-          { id: "soc-manutd", name: "Manchester United", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/360.png" },
-          { id: "soc-mancity", name: "Manchester City", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/382.png" },
-          { id: "soc-liverpool", name: "Liverpool FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/364.png" },
-          { id: "soc-chelsea", name: "Chelsea FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/363.png" },
-          { id: "soc-arsenal", name: "Arsenal FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/359.png" },
-          { id: "soc-tottenham", name: "Tottenham Hotspur", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/367.png" },
-          { id: "soc-bayern", name: "Bayern Munich", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/132.png" },
-          { id: "soc-dortmund", name: "Borussia Dortmund", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/124.png" },
-          { id: "soc-leverkusen", name: "Bayer Leverkusen", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/131.png" },
-          { id: "soc-psg", name: "Paris Saint-Germain", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/160.png" },
-          { id: "soc-juventus", name: "Juventus", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/111.png" },
-          { id: "soc-inter", name: "Inter de Milán", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/110.png" },
-          { id: "soc-acmilan", name: "AC Milan", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/103.png" }
+          { id: "soc-benfica", name: "SL Benfica", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/1929.png" },
+          { id: "soc-sporting", name: "Sporting CP", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/1932.png" },
+          { id: "soc-porto", name: "FC Porto", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/1930.png" },
+          { id: "soc-ajax", name: "AFC Ajax", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/139.png" },
+          { id: "soc-psv", name: "PSV Eindhoven", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/148.png" },
+          { id: "soc-feyenoord", name: "Feyenoord", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/144.png" },
+          { id: "soc-celtic", name: "Celtic FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/301.png" },
+          { id: "soc-rangers", name: "Rangers FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/304.png" },
+          { id: "soc-galatasaray", name: "Galatasaray SK", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/432.png" },
+          { id: "soc-fenerbahce", name: "Fenerbahçe SK", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/431.png" },
+          { id: "soc-besiktas", name: "Besiktas JK", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/429.png" },
+          { id: "soc-shakhtar", name: "Shakhtar Donetsk", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/531.png" },
+          { id: "soc-olympiacos", name: "Olympiacos FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/261.png" }
+        ]
+      },
+      {
+        league: "Conmebol Sudamérica & Resto del Mundo",
+        leagueLogo: "https://a.espncdn.com/i/teamlogos/leagues/500/conmebol.libertadores.png",
+        teams: [
+          { id: "soc-boca", name: "Boca Juniors", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/5.png" },
+          { id: "soc-river", name: "River Plate", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/16.png" },
+          { id: "soc-flamengo", name: "Flamengo", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/349.png" },
+          { id: "soc-palmeiras", name: "Palmeiras", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/3408.png" },
+          { id: "soc-corinthians", name: "Corinthians", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/874.png" },
+          { id: "soc-saopaulo", name: "São Paulo FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/884.png" },
+          { id: "soc-santosfc", name: "Santos FC", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/883.png" },
+          { id: "soc-fluminense", name: "Fluminense", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/3445.png" },
+          { id: "soc-penarol", name: "Peñarol", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/2840.png" },
+          { id: "soc-nacionaluyu", name: "Nacional (Uruguay)", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/2839.png" },
+          { id: "soc-colocolo", name: "Colo-Colo", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/3081.png" },
+          { id: "soc-atlnacional", name: "Atlético Nacional", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/490.png" },
+          { id: "soc-intermiami", name: "Inter Miami CF (MLS)", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/19004.png" },
+          { id: "soc-lafc", name: "LAFC (MLS)", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/18966.png" },
+          { id: "soc-lagalaxy", name: "LA Galaxy (MLS)", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/187.png" },
+          { id: "soc-alnassr", name: "Al-Nassr FC (Arabia)", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/7311.png" },
+          { id: "soc-alhilal", name: "Al-Hilal (Arabia)", logo: "https://a.espncdn.com/i/teamlogos/soccer/500/7309.png" }
         ]
       }
     ]
@@ -403,6 +571,105 @@ function getCategoryLabel(catId) {
   return c ? c.label : "👕 Artículo Deportivo";
 }
 
+// ============================================
+// CUSTOM TAXONOMY PERSISTENCE (LocalStorage & Firestore)
+// ============================================
+function injectCustomTaxonomyItem(item) {
+  if (!item || !item.sportKey || !item.league) return;
+  let s = SPORTS_CATALOG.find(sp => sp.sportKey === item.sportKey);
+  if (!s) {
+    s = {
+      sport: item.sport || item.sportKey,
+      sportKey: item.sportKey,
+      icon: item.icon || "🏆",
+      leagueLogo: "assets/dxt_logo.png",
+      leagues: []
+    };
+    SPORTS_CATALOG.push(s);
+  }
+  let l = s.leagues.find(lg => lg.league.toLowerCase() === item.league.toLowerCase());
+  if (!l) {
+    l = {
+      league: item.league,
+      leagueLogo: item.leagueLogo || "assets/dxt_logo.png",
+      teams: []
+    };
+    s.leagues.push(l);
+  }
+  if (item.team) {
+    const tid = item.teamId || (item.sportKey.slice(0, 3) + '-' + item.team.toLowerCase().replace(/[^a-z0-9]/g, '-'));
+    if (!l.teams.some(t => t.id === tid || t.name.toLowerCase() === item.team.toLowerCase())) {
+      l.teams.push({
+        id: tid,
+        name: item.team,
+        logo: item.logo || "assets/dxt_logo.png"
+      });
+    }
+  }
+}
+
+function loadLocalCustomTaxonomies() {
+  try {
+    const raw = localStorage.getItem('dxt_custom_taxonomies');
+    if (!raw) return;
+    const custom = JSON.parse(raw);
+    if (!Array.isArray(custom)) return;
+    for (const item of custom) {
+      injectCustomTaxonomyItem(item);
+    }
+  } catch (e) {
+    console.warn("Could not load local custom taxonomies:", e);
+  }
+}
+
+// Load local custom items immediately on script load
+loadLocalCustomTaxonomies();
+
+window.saveAndPersistCustomTaxonomy = async function(sportKey, league, teamName, teamId) {
+  const item = { sportKey, league, team: teamName, teamId };
+  injectCustomTaxonomyItem(item);
+
+  // 1. LocalStorage
+  try {
+    let list = JSON.parse(localStorage.getItem('dxt_custom_taxonomies') || '[]');
+    list.push(item);
+    localStorage.setItem('dxt_custom_taxonomies', JSON.stringify(list));
+  } catch (e) {}
+
+  // 2. Firestore Sync
+  try {
+    if (window.db && typeof firebase !== 'undefined') {
+      await db.collection('settings').doc('custom_taxonomies').set({
+        items: firebase.firestore.FieldValue.arrayUnion(item),
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+  } catch (e) {
+    console.warn("Firestore sync custom taxonomy error:", e);
+  }
+
+  // Refresh UI
+  if (typeof populateAllTeamsDatalist === 'function') populateAllTeamsDatalist();
+  if (typeof onAdminSportChange === 'function') onAdminSportChange();
+};
+
+window.syncCloudCustomTaxonomies = async function() {
+  try {
+    if (!window.db) return;
+    const doc = await db.collection('settings').doc('custom_taxonomies').get();
+    if (doc.exists && doc.data()?.items) {
+      for (const item of doc.data().items) {
+        injectCustomTaxonomyItem(item);
+      }
+      localStorage.setItem('dxt_custom_taxonomies', JSON.stringify(doc.data().items));
+      if (typeof populateAllTeamsDatalist === 'function') populateAllTeamsDatalist();
+      if (typeof onAdminSportChange === 'function') onAdminSportChange();
+    }
+  } catch (e) {
+    console.warn("Could not sync cloud custom taxonomies:", e);
+  }
+};
+
 // Explicit Window Export
 window.SPORTS_CATALOG = SPORTS_CATALOG;
 window.GENDER_DEPARTMENTS = GENDER_DEPARTMENTS;
@@ -416,3 +683,5 @@ window.getLeagueByTeam = getLeagueByTeam;
 window.getGenderLabel = getGenderLabel;
 window.getSeasonLabel = getSeasonLabel;
 window.getCategoryLabel = getCategoryLabel;
+window.injectCustomTaxonomyItem = injectCustomTaxonomyItem;
+window.loadLocalCustomTaxonomies = loadLocalCustomTaxonomies;
