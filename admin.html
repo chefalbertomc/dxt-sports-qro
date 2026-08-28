@@ -71,8 +71,8 @@
   <!-- Navbar -->
   <nav class="navbar" style="padding: 10px 16px;">
     <a href="admin.html" class="logo-container">
-      <div class="logo-icon">
-        <img src="assets/dxt_logo.png" alt="DXT Sports QRO Logo" style="height: 34px; width: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #ff1e38;">
+      <div class="logo-icon" style="background:transparent; border:none; box-shadow:none;">
+        <img src="assets/dxt_logo.png" alt="DXT Sports QRO Logo" style="height: 38px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(255,30,56,0.5));">
       </div>
       <div class="logo-text" style="font-size: 16px;">
         <span style="color:#ff1e38; font-weight:950;">DXT</span>
@@ -119,9 +119,7 @@
       <div style="display: flex; gap: 8px; margin-bottom: 14px; justify-content: center; flex-wrap: wrap;">
         <button type="button" class="btn active" id="tabManageBtn" onclick="switchAdminTab('manage')" style="padding: 8px 12px; font-size: 12px;">📦 Catálogo e Inventario</button>
         <button type="button" class="btn btn-outline" id="tabSingleBtn" onclick="switchAdminTab('single')" style="padding: 8px 12px; font-size: 12px;">➕ Publicar Nuevo Artículo</button>
-        <button type="button" class="btn btn-outline" id="tabBulkBtn" onclick="switchAdminTab('bulk')" style="padding: 8px 12px; font-size: 12px;">⚡ Carga Masiva (Fotos)</button>
-        <button type="button" class="btn btn-outline" id="tabSeedBtn" onclick="seedDemoCatalogFull()" style="border-color: var(--accent-color); color: var(--accent-color); padding: 8px 12px; font-size: 12px;">🌱 Inyectar Demo (Todos Deportes)</button>
-        <button type="button" class="btn btn-outline" id="tabWipeBtn" onclick="deleteAllProducts()" style="border-color: #ef4444; color: #ef4444; padding: 8px 12px; font-size: 12px;">🗑️ Vaciar Todo (Proyecto Real)</button>
+        <button type="button" class="btn btn-outline" id="tabBulkBtn" onclick="switchAdminTab('bulk')" style="padding: 8px 12px; font-size: 12px;">⚡ Carga Masiva de Artículos</button>
       </div>
 
       <!-- VISTA 1: CATÁLOGO E INVENTARIO (PREDETERMINADA AL ENTRAR) -->
