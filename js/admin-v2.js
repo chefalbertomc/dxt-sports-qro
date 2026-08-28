@@ -3176,6 +3176,170 @@ window.toggleOrderItemPicked = async function(orderId, itemIndex) {
 };
 
 // ============================================
+// HOJA DE COMPRAS BODEGA CDMX (MARTES)
+// ============================================
+window.openCdmxShoppingModal = function() {
+  const modal = document.getElementById('cdmxShoppingModal');
+  const content = document.getElementById('cdmxShoppingContent');
+  if (!modal || !content) return;
+
+  const pendingOrders = allOrdersList.filter(o => o.status === 'pending' || !o.status || o.status === 'ready');
+
+  if (pendingOrders.length === 0) {
+    content.innerHTML = `
+      <div style="text-align:center; padding:30px 10px; color:#aaa;">
+        <div style="font-size:36px; margin-bottom:8px;">🇲🇽</div>
+        <div style="font-size:14px; font-weight:800; color:#fff;">¡No hay compras pendientes para Bodega CDMX!</div>
+        <p style="font-size:11px; color:#666;">Todos los pedidos de la semana ya fueron surtidos o entregados.</p>
+      </div>
+    `;
+  } else {
+    let totalPiecesToBuy = 0;
+    let totalDepositCollected = 0;
+    let totalBalancePending = 0;
+    const shoppingItems = [];
+
+    pendingOrders.forEach(o => {
+      const shortId = o.id.slice(0, 7).toUpperCase();
+      const customer = o.customerName || 'Cliente';
+      const phone = o.customerPhone || '';
+      const seller = o.seller || 'beto';
+      const sellerName = seller === 'beto' ? 'Beto' : (seller === 'arturo' ? 'Arturo' : (seller === 'elena' ? 'Elena' : 'Web'));
+      
+      const orderTotal = Number(o.totalAmount || 0);
+      const paid = Number(o.paidAmount || (o.paymentStatus === 'paid' ? orderTotal : 0));
+      const remaining = Math.max(0, orderTotal - paid);
+
+      totalDepositCollected += paid;
+      totalBalancePending += remaining;
+
+      (o.items || []).forEach((item, idx) => {
+        const qty = Number(item.qty || 1);
+        totalPiecesToBuy += qty;
+        shoppingItems.push({
+          orderId: o.id,
+          shortId: shortId,
+          customer: customer,
+          phone: phone,
+          sellerName: sellerName,
+          itemIndex: idx,
+          name: item.name || 'Jersey Deportivo',
+          size: item.size || 'Unitalla',
+          qty: qty,
+          image: item.image || item.imageUrl || 'assets/dxt_logo.png',
+          orderTotal: orderTotal,
+          paidAmount: paid,
+          remainingAmount: remaining,
+          isBought: !!item.isBought || !!item.isPicked
+        });
+      });
+    });
+
+    content.innerHTML = `
+      <!-- SUMMARY METRICS -->
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr 1.2fr; gap: 8px; margin-bottom: 12px;">
+        <div style="background: rgba(0, 176, 255, 0.1); border: 1px solid #00b0ff; border-radius: 8px; padding: 8px; text-align: center;">
+          <div style="font-size: 10px; font-weight: 800; color: #00b0ff;">👕 JERSEYS A COMPRAR</div>
+          <div style="font-size: 18px; font-weight: 900; color: #fff;">${totalPiecesToBuy} pzas</div>
+        </div>
+        <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 8px; padding: 8px; text-align: center;">
+          <div style="font-size: 10px; font-weight: 800; color: #22c55e;">💵 ANTICIPOS RECAUDADOS</div>
+          <div style="font-size: 16px; font-weight: 900; color: #22c55e;">$${totalDepositCollected.toLocaleString('es-MX')} MXN</div>
+        </div>
+        <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid #eab308; border-radius: 8px; padding: 8px; text-align: center;">
+          <div style="font-size: 10px; font-weight: 800; color: #eab308;">🚚 SALDO P/ JUEVES (QRO)</div>
+          <div style="font-size: 16px; font-weight: 900; color: #eab308;">$${totalBalancePending.toLocaleString('es-MX')} MXN</div>
+        </div>
+      </div>
+
+      <!-- SHOPPING ITEMS LIST -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        ${shoppingItems.map(si => `
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid ${si.isBought ? '#22c55e' : '#333'}; border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="checkbox" ${si.isBought ? 'checked' : ''} onchange="toggleOrderItemBought('${si.orderId}', ${si.itemIndex})" style="width: 20px; height: 20px; cursor: pointer; accent-color: #00b0ff;">
+              <img src="${si.image}" style="width: 44px; height: 44px; object-fit: contain; background: #111; border-radius: 6px; border: 1px solid #444;">
+              <div>
+                <div style="font-size: 13px; font-weight: 800; color: #fff;">${si.name}</div>
+                <div style="font-size: 11px; color: #aaa;">
+                  Talla: <b style="color: #00b0ff; font-size: 13px;">[ ${si.size} ]</b> · Cantidad: <b>${si.qty} pza(s)</b>
+                </div>
+                <div style="font-size: 10px; color: #888; margin-top: 2px;">
+                  👤 Cliente: <b style="color: #ddd;">${si.customer}</b> (${si.phone || 'Sin tel'}) · Vendedor: <b>${si.sellerName}</b> · Pedido: #${si.shortId}
+                </div>
+              </div>
+            </div>
+
+            <div style="text-align: right;">
+              <div style="font-size: 11px; font-weight: 800; color: ${si.paidAmount >= si.orderTotal ? '#22c55e' : '#eab308'};">
+                ${si.paidAmount >= si.orderTotal ? '🟢 Pagado 100%' : `🟡 Anticipo: $${si.paidAmount.toLocaleString('es-MX')} (Resta: $${si.remainingAmount.toLocaleString('es-MX')})`}
+              </div>
+              <div style="font-size: 10px; color: ${si.isBought ? '#22c55e' : '#aaa'}; font-weight: bold; margin-top: 2px;">
+                ${si.isBought ? '✅ Comprado en Bodega' : '⏳ Pendiente por Comprar'}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  modal.classList.add('active');
+};
+
+window.closeCdmxShoppingModal = () => document.getElementById('cdmxShoppingModal')?.classList.remove('active');
+
+window.toggleOrderItemBought = async function(orderId, itemIndex) {
+  const order = allOrdersList.find(o => o.id === orderId);
+  if (!order || !order.items || !order.items[itemIndex]) return;
+
+  order.items[itemIndex].isBought = !order.items[itemIndex].isBought;
+  order.items[itemIndex].isPicked = order.items[itemIndex].isBought;
+
+  if (window.db) {
+    try {
+      await db.collection('orders').doc(orderId).update({
+        items: order.items
+      });
+    } catch (e) {}
+  }
+  openCdmxShoppingModal();
+  renderOrdersList();
+};
+
+window.copyCdmxShoppingListToWhatsApp = function() {
+  const pendingOrders = allOrdersList.filter(o => o.status === 'pending' || !o.status || o.status === 'ready');
+  if (pendingOrders.length === 0) {
+    alert("No hay compras pendientes.");
+    return;
+  }
+
+  let totalPzas = 0;
+  let listText = '';
+  pendingOrders.forEach(o => {
+    const seller = o.seller === 'beto' ? 'Beto' : (o.seller === 'arturo' ? 'Arturo' : (o.seller === 'elena' ? 'Elena' : 'Web'));
+    (o.items || []).forEach(item => {
+      const qty = Number(item.qty || 1);
+      totalPzas += qty;
+      const statusBought = item.isBought ? '✅ Comprado' : '⏳ Por Comprar';
+      listText += `• ${qty}x ${item.name} (Talla: ${item.size}) - Cliente: ${o.customerName || 'Cliente'} [${seller}] [${statusBought}]\n`;
+    });
+  });
+
+  const msg = `🛍️ *LISTA DE COMPRAS BODEGA CDMX (MARTES)* 🇲🇽\n*DXT SPORTS QRO*\nTotal prendas a surtir: ${totalPzas} pzas\n----------------------------------\n${listText}\n----------------------------------\n¡Surtido listo para entrega en Querétaro el Jueves! 🏈🔥`;
+
+  navigator.clipboard.writeText(msg).then(() => {
+    alert("✅ Lista de compras copiada al portapapeles. ¡Pégala en tu grupo de WhatsApp!");
+  }).catch(() => {
+    alert("Lista:\n\n" + msg);
+  });
+};
+
+window.printCdmxShoppingList = function() {
+  window.print();
+};
+
+// ============================================
 // HOJA DE SURTIDO DE BODEGA (PICKING LIST)
 // ============================================
 window.openPickingListModal = function() {

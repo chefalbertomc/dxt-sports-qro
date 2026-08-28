@@ -79,14 +79,14 @@
           <span style="color:#ff1e38;">DXT</span>
           <span style="color:#00b0ff;">SPORTS</span>
           <span style="background:#ff1e38; color:#fff; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:2px;">ADMIN</span>
-          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v328.0</span>
+          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v329.0</span>
         </div>
-        <div class="logo-text-sub">LOGÍSTICA INTEGRAL · CONTROL ESTRICTO DE SOBREVENTA & SINCRONIZACIÓN DE STOCK</div>
+        <div class="logo-text-sub">LOGÍSTICA INTEGRAL · COMPRAS CDMX (MARTES) & ANTICIPO 50% / SALDO JUEVES</div>
       </div>
     </a>
     <div class="nav-actions">
       <span style="background:rgba(34, 197, 94, 0.15); border:1px solid #22c55e; color:#22c55e; font-size:10px; font-weight:800; padding:4px 8px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
-        🟢 v328.0 (Anti-Sobreventa & Stock Real)
+        🟢 v329.0 (Compras CDMX & Anticipo 50%)
       </span>
       <a href="index.html" target="_blank" rel="noopener" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">👁️ Ver Tienda ↗</a>
       <button id="btnLogout" class="btn btn-outline" style="display: none; font-size: 11px; padding: 6px 12px; border-color: #ef4444; color: #ef4444;">Salir</button>
@@ -474,6 +474,9 @@
             <button type="button" onclick="switchOrdersSubView('sellers')" id="subViewSellersBtn" class="btn btn-outline" style="font-size: 12px; padding: 7px 12px; border-color: #38bdf8; color: #38bdf8;">
               👥 Control Vendedores (Jerseys Pagados / Pendientes)
             </button>
+            <button type="button" onclick="openCdmxShoppingModal()" class="btn" style="background: linear-gradient(135deg, #00b0ff, #0081cb); color: #000; font-weight: 900; font-size: 12px; padding: 7px 12px; border: none; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,176,255,0.4); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              🛍️ Compras CDMX (Martes)
+            </button>
             <button type="button" onclick="openPickingListModal()" class="btn" style="background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; font-weight: 900; font-size: 12px; padding: 7px 12px; border: none; border-radius: 8px; box-shadow: 0 4px 14px rgba(168,85,247,0.4); display: flex; align-items: center; gap: 6px; cursor: pointer;">
               📋 Surtido Bodega
             </button>
@@ -591,6 +594,37 @@
 
     </div>
   </main>
+
+  <!-- MODAL: HOJA DE COMPRAS BODEGA CDMX (MARTES) -->
+  <div class="modal-overlay" id="cdmxShoppingModal">
+    <div class="modal-box" style="max-width: 680px; padding: 20px; max-height: 88vh; overflow-y: auto;">
+      <div class="modal-header" style="border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 14px;">
+        <div>
+          <h3 style="color: #00b0ff; font-size: 17px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; font-weight: 900;">
+            🛍️ 🇲🇽 Lista de Compras para Bodega CDMX (Martes)
+          </h3>
+          <p class="text-secondary" style="font-size: 11px; margin-bottom: 0;">Jerseys encargados con anticipo del 50% o pagados que debes surtir en México para entregar el jueves en Querétaro.</p>
+        </div>
+        <button class="close-btn" onclick="closeCdmxShoppingModal()">✕</button>
+      </div>
+
+      <div id="cdmxShoppingContent" style="margin-bottom: 16px;">
+        <!-- Dynamic shopping list -->
+      </div>
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid #333; padding-top: 12px; flex-wrap: wrap;">
+        <button type="button" onclick="copyCdmxShoppingListToWhatsApp()" class="btn btn-whatsapp" style="font-size: 12px; padding: 8px 14px; font-weight: 800;">
+          📲 Copiar Lista p/ WhatsApp
+        </button>
+        <button type="button" onclick="printCdmxShoppingList()" class="btn btn-outline" style="font-size: 12px; padding: 8px 14px;">
+          🖨️ Imprimir
+        </button>
+        <button type="button" onclick="closeCdmxShoppingModal()" class="btn" style="font-size: 12px; padding: 8px 16px;">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL: HOJA DE SURTIDO DE BODEGA (PICKING LIST) -->
   <div class="modal-overlay" id="pickingListModal">
@@ -925,8 +959,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   
-  <script src="js/firebase-config.js?v=328.0"></script>
-  <script src="js/teams.js?v=328.0"></script>
-  <script src="js/admin-v2.js?v=328.0"></script>
+  <script src="js/firebase-config.js?v=329.0"></script>
+  <script src="js/teams.js?v=329.0"></script>
+  <script src="js/admin-v2.js?v=329.0"></script>
 </body>
 </html>

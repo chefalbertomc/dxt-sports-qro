@@ -33,7 +33,7 @@
           <span style="color:#ff1e38;">DXT</span>
           <span style="color:#00b0ff;">SPORTS</span>
           <span style="background:linear-gradient(135deg, #ff1e38, #d50000); color:#fff; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:2px;">QRO</span>
-          <span style="background:#00b0ff; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v328.0</span>
+          <span style="background:#00b0ff; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v329.0</span>
         </div>
         <div class="logo-text-sub">OFICIAL · MERCHANDISE</div>
       </div>
@@ -279,6 +279,37 @@
           <input type="text" id="custAddress" class="form-control" required placeholder="Ej. Calle 5 de Mayo #123, Col. Centro / Punto de encuentro" style="padding: 8px; font-size: 12px;">
         </div>
 
+        <!-- PAYMENT AMOUNT SELECTION: 50% ANTICIPO VS 100% CONTADO -->
+        <div style="background: rgba(234, 179, 8, 0.08); border: 1px solid #eab308; border-radius: 10px; padding: 12px; margin-bottom: 14px;">
+          <div style="font-size: 11px; font-weight: 800; color: #eab308; margin-bottom: 8px; text-transform: uppercase;">
+            💰 2. Modalidad de Pago SPEI:
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; border: 1px solid #444;">
+              <input type="radio" name="paymentOption" value="50_percent" checked onchange="updateCheckoutPaymentOption()" style="margin-top: 3px; accent-color: #22c55e;">
+              <div>
+                <div style="font-size: 12px; font-weight: 800; color: #fff;">
+                  🔒 Pagar 50% de Anticipo: <span id="chkDepositAmount" style="color: #22c55e;">$0 MXN</span>
+                </div>
+                <div style="font-size: 10px; color: #aaa;">
+                  Apartas tu pedido para surtido en bodega CDMX (Martes). <b>Liquidas el 50% restante (<span id="chkRemainingAmount">$0 MXN</span>) al recibir en Querétaro (Jueves).</b>
+                </div>
+              </div>
+            </label>
+            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; border: 1px solid #444;">
+              <input type="radio" name="paymentOption" value="100_percent" onchange="updateCheckoutPaymentOption()" style="margin-top: 3px; accent-color: #22c55e;">
+              <div>
+                <div style="font-size: 12px; font-weight: 800; color: #fff;">
+                  ⚡ Liquidar 100% al Contado: <span id="chkFullAmount" style="color: #38bdf8;">$0 MXN</span>
+                </div>
+                <div style="font-size: 10px; color: #aaa;">
+                  Pago completo por adelantado. Tu pedido queda 100% saldado.
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
         <!-- UPLOAD PROOF OF PAYMENT -->
         <div style="background: rgba(255,255,255,0.03); border: 1px dashed #444; border-radius: 8px; padding: 10px; margin-bottom: 14px;">
           <label style="font-size: 11px; font-weight: 700; color: #fff; display: block; margin-bottom: 4px;">
@@ -292,8 +323,11 @@
 
         <!-- TOTAL RESUME -->
         <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-          <span style="font-size: 12px; font-weight: 800; color: #fff;">TOTAL DE TU PEDIDO:</span>
-          <span id="checkoutTotalAmount" style="font-size: 20px; font-weight: 900; color: #22c55e;">$0.00 MXN</span>
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: #aaa;">MONTO A TRANSFERIR HOY:</div>
+            <div id="checkoutPayNowLabel" style="font-size: 10px; color: #eab308; font-weight: bold;">(50% Anticipo Apartado)</div>
+          </div>
+          <span id="checkoutTotalAmount" style="font-size: 22px; font-weight: 900; color: #22c55e;">$0.00 MXN</span>
         </div>
 
         <button type="submit" class="btn btn-whatsapp" style="width: 100%; font-size: 15px; font-weight: 900; padding: 12px; border-radius: 10px;">
@@ -320,8 +354,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <script src="js/firebase-config.js?v=328.0"></script>
-  <script src="js/teams.js?v=328.0"></script>
-  <script src="js/app.js?v=328.0"></script>
+  <script src="js/firebase-config.js?v=329.0"></script>
+  <script src="js/teams.js?v=329.0"></script>
+  <script src="js/app.js?v=329.0"></script>
 </body>
 </html>

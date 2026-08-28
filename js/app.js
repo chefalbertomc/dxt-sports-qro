@@ -1626,7 +1626,11 @@ window.toggleCartDrawer = function(forceOpen) {
   }
 };
 
-// Checkout SPEI Modal & WhatsApp Submission
+// Checkout SPEI Modal & 50% Deposit Logic
+let checkoutDepositAmount = 0;
+let checkoutRemainingAmount = 0;
+let checkoutTotalOrderAmount = 0;
+
 window.openCheckoutModal = function() {
   if (cart.length === 0) {
     alert("Tu carrito está vacío. Agrega artículos primero.");
@@ -1634,9 +1638,19 @@ window.openCheckoutModal = function() {
   }
   
   const modal = document.getElementById('checkoutModal');
-  const totalAmount = cart.reduce((sum, item) => sum + ((Number(item.price) || 0) * (Number(item.qty) || 1)), 0);
-  const checkoutTotal = document.getElementById('checkoutTotalAmount');
-  if (checkoutTotal) checkoutTotal.textContent = formatPrice(totalAmount);
+  checkoutTotalOrderAmount = cart.reduce((sum, item) => sum + ((Number(item.price) || 0) * (Number(item.qty) || 1)), 0);
+  checkoutDepositAmount = Math.ceil(checkoutTotalOrderAmount * 0.5);
+  checkoutRemainingAmount = checkoutTotalOrderAmount - checkoutDepositAmount;
+
+  const depositEl = document.getElementById('chkDepositAmount');
+  const remEl = document.getElementById('chkRemainingAmount');
+  const fullEl = document.getElementById('chkFullAmount');
+
+  if (depositEl) depositEl.textContent = formatPrice(checkoutDepositAmount);
+  if (remEl) remEl.textContent = formatPrice(checkoutRemainingAmount);
+  if (fullEl) fullEl.textContent = formatPrice(checkoutTotalOrderAmount);
+
+  updateCheckoutPaymentOption();
 
   const chkBank = document.getElementById('chkBankName');
   const chkBenef = document.getElementById('chkBeneficiary');
@@ -1646,6 +1660,20 @@ window.openCheckoutModal = function() {
   if (chkClabe) chkClabe.textContent = STORE_BANK_DETAILS.clabe || '012680015897463219';
 
   if (modal) modal.classList.add('active');
+};
+
+window.updateCheckoutPaymentOption = function() {
+  const selected = document.querySelector('input[name="paymentOption"]:checked')?.value || '50_percent';
+  const checkoutTotal = document.getElementById('checkoutTotalAmount');
+  const payNowLabel = document.getElementById('checkoutPayNowLabel');
+
+  if (selected === '50_percent') {
+    if (checkoutTotal) checkoutTotal.textContent = formatPrice(checkoutDepositAmount);
+    if (payNowLabel) payNowLabel.textContent = `(50% Anticipo de Apartado · Restan ${formatPrice(checkoutRemainingAmount)} el Jueves)`;
+  } else {
+    if (checkoutTotal) checkoutTotal.textContent = formatPrice(checkoutTotalOrderAmount);
+    if (payNowLabel) payNowLabel.textContent = '(100% Pago Completo al Contado)';
+  }
 };
 
 window.checkoutWhatsApp = function() {
@@ -1696,6 +1724,7 @@ window.submitCheckoutOrder = async function(event) {
   const delivery = document.getElementById('custDeliveryMethod').value;
   const seller = document.getElementById('custSeller')?.value || 'web';
   const address = document.getElementById('custAddress').value.trim();
+  const payOption = document.querySelector('input[name="paymentOption"]:checked')?.value || '50_percent';
   
   if (!name || !phone || !address) {
     alert("Por favor completa todos los campos marcados con *");
@@ -1712,6 +1741,10 @@ window.submitCheckoutOrder = async function(event) {
   }
   
   const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const isDeposit = payOption === '50_percent';
+  const payNowAmount = isDeposit ? Math.ceil(totalAmount * 0.5) : totalAmount;
+  const remainingAtDelivery = totalAmount - payNowAmount;
+
   const deliveryText = delivery === 'domicilio' ? '🚚 Envío a Domicilio' : '🏪 Entrega en Sucursal QRO';
   const sellerLabel = seller === 'beto' ? '👤 Beto' : (seller === 'arturo' ? '👤 Arturo' : (seller === 'elena' ? '👤 Elena' : '🌐 Tienda Web'));
   
@@ -1733,12 +1766,23 @@ window.submitCheckoutOrder = async function(event) {
 📦 *PRODUCTOS:*
 ${itemsListText}
 
-💰 *TOTAL A PAGAR:* ${formatPrice(totalAmount)}
+💰 *TOTAL DEL PEDIDO:* ${formatPrice(totalAmount)}
+${isDeposit ? `🔒 *ANTICIPO TRANSFERIDO HOY (50%):* ${formatPrice(payNowAmount)} (Apartado para Surtir en Bodega CDMX el Martes)\n🚚 *SALDO RESTANTE A LA ENTREGA (50%):* ${formatPrice(remainingAtDelivery)} (Se liquida el Jueves al recibir)` : `⚡ *PAGO TOTAL (100% CONTADO):* ${formatPrice(totalAmount)} (Totalmente Liquidado)`}
 ----------------------------------
 💳 *MÉTODO DE PAGO:* Transferencia SPEI (${STORE_BANK_DETAILS.bank})
-📸 *Comprobante Adjunto:* ${transferProofBase64 ? 'Si (Captura lista)' : 'Pendiente por WhatsApp'}
+📸 *Comprobante:* ${transferProofBase64 ? 'Adjunto en el sistema' : 'Te lo envío por este chat'}
 ----------------------------------
-¡Hola! Ya envié mi orden de compra. Quedo atento a la entrega. 🏈🔥`;
+¡Hola! Ya registré mi pedido en la tienda web. Quedo atento a la confirmación y entrega. 🏈🔥`;
+
+  // Create payments history entry
+  const initialPaymentEntry = {
+    amount: payNowAmount,
+    dateStr: new Date().toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }),
+    timestamp: Date.now(),
+    method: 'Transferencia SPEI',
+    note: isDeposit ? 'Anticipo 50% de Apartado (Surtido Martes)' : 'Pago 100% al Contado',
+    remainingAfter: remainingAtDelivery
+  };
 
   // Try saving order doc to Firestore `orders` collection
   try {
@@ -1747,7 +1791,10 @@ ${itemsListText}
       customerPhone: phone,
       deliveryMethod: delivery,
       seller: seller,
-      paymentStatus: 'pending',
+      depositOption: payOption,
+      paidAmount: payNowAmount,
+      paymentStatus: isDeposit ? 'partial' : 'paid',
+      paymentsHistory: [initialPaymentEntry],
       address: address,
       items: cart,
       totalAmount: totalAmount,
