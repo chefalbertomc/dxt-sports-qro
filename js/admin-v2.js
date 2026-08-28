@@ -214,6 +214,7 @@ function initAdminForm() {
   populateAdminSports();
   populateCategoriesSelect();
   populateSeasonsSelect();
+  populateAllTeamsDatalist();
   populateBadgesSelect();
   onGenderSelectChange();
 }
@@ -222,15 +223,82 @@ function populateSeasonsSelect() {
   const seasonSelect = document.getElementById('prodSeason');
   if (!seasonSelect) return;
   const seasons = window.SEASONS_CATALOG || [
-    { id: "2025-2026", label: "2025-2026" },
-    { id: "2024-2025", label: "2024-2025", isCurrent: true },
+    { id: "2026-2027", label: "2026-2027" },
+    { id: "2025-2026", label: "2025-2026", isCurrent: true },
+    { id: "2024-2025", label: "2024-2025" },
     { id: "2023-2024", label: "2023-2024" },
     { id: "2022-2023", label: "2022-2023" },
+    { id: "2026", label: "2026" },
+    { id: "2025", label: "2025" },
+    { id: "2024", label: "2024" },
+    { id: "2023", label: "2023" },
+    { id: "2022", label: "2022" },
+    { id: "2021", label: "2021" },
     { id: "retro", label: "Retro / Vintage" },
     { id: "atemporal", label: "General / Atemporal" }
   ];
   seasonSelect.innerHTML = seasons.map(sea => `<option value="${sea.id}" ${sea.isCurrent ? 'selected' : ''}>${sea.label}</option>`).join('');
 }
+
+function populateAllTeamsDatalist() {
+  const datalist = document.getElementById('allTeamsDatalist');
+  if (!datalist) return;
+  const catalog = window.SPORTS_CATALOG || SPORTS_CATALOG;
+  const options = [];
+  for (const s of catalog) {
+    for (const l of s.leagues) {
+      for (const t of l.teams) {
+        options.push(`<option value="${t.name}">[${s.sport} · ${l.league}]</option>`);
+      }
+    }
+  }
+  datalist.innerHTML = options.join('');
+}
+
+window.onSearchableTeamInput = function(val) {
+  const catalog = window.SPORTS_CATALOG || SPORTS_CATALOG;
+  const query = (val || '').toLowerCase().trim();
+  const prodTeamHidden = document.getElementById('prodTeam');
+  if (!query) {
+    if (prodTeamHidden) prodTeamHidden.value = '';
+    return;
+  }
+
+  let matchedTeam = null;
+  let matchedSport = null;
+  let matchedLeague = null;
+
+  for (const s of catalog) {
+    for (const l of s.leagues) {
+      for (const t of l.teams) {
+        if (t.name.toLowerCase() === query || t.id.toLowerCase() === query) {
+          matchedTeam = t;
+          matchedSport = s;
+          matchedLeague = l;
+          break;
+        }
+      }
+      if (matchedTeam) break;
+    }
+    if (matchedTeam) break;
+  }
+
+  if (matchedTeam) {
+    if (prodTeamHidden) prodTeamHidden.value = matchedTeam.id;
+    if (document.getElementById('prodSport')) {
+      document.getElementById('prodSport').value = matchedSport.sportKey;
+      onAdminSportChange();
+    }
+    if (document.getElementById('prodLeague')) {
+      document.getElementById('prodLeague').value = matchedLeague.league;
+      onAdminLeagueChange();
+    }
+  } else {
+    // Custom typed team
+    const customId = query.replace(/[^a-z0-9]/g, '-');
+    if (prodTeamHidden) prodTeamHidden.value = customId;
+  }
+};
 
 function populateAdminSports() {
   const sportSelect = document.getElementById('prodSport');
@@ -547,13 +615,13 @@ function renderSizeStockRows() {
 
 window.addQuickSize = function(sizeLabel) {
   if (!currentSizeStockRows.some(r => r.size.toUpperCase() === sizeLabel.toUpperCase())) {
-    currentSizeStockRows.push({ size: sizeLabel, immediateQty: 1, warehouseQty: 3 });
+    currentSizeStockRows.push({ size: sizeLabel, immediateQty: 0, warehouseQty: 0 });
     renderSizeStockRows();
   }
 };
 
 window.addSizeStockRow = function() {
-  currentSizeStockRows.push({ size: "NUEVA", immediateQty: 1, warehouseQty: 3 });
+  currentSizeStockRows.push({ size: "M", immediateQty: 0, warehouseQty: 0 });
   renderSizeStockRows();
 };
 
@@ -972,6 +1040,10 @@ window.autoFillCurrentFormWithGemini = async function() {
         onAdminLeagueChange();
         if (tax.teamId) {
           document.getElementById('prodTeam').value = tax.teamId;
+          const detectedTeamName = getTeamName(tax.teamId) || aiResult.team || tax.teamId;
+          if (document.getElementById('prodTeamInput')) {
+            document.getElementById('prodTeamInput').value = detectedTeamName;
+          }
         }
       }
     }
@@ -1001,20 +1073,20 @@ window.autoFillCurrentFormWithGemini = async function() {
       document.getElementById('prodDesc').value = aiResult.description;
     }
 
-    // Ensure size rows are populated if empty
+    // Ensure size rows are populated if empty, with strictly 0 quantities
     if (!currentSizeStockRows || currentSizeStockRows.length === 0) {
       currentSizeStockRows = [
-        { size: "S", immediateQty: 2, warehouseQty: 5 },
-        { size: "M", immediateQty: 2, warehouseQty: 5 },
-        { size: "L", immediateQty: 2, warehouseQty: 5 },
-        { size: "XL", immediateQty: 2, warehouseQty: 5 }
+        { size: "S", immediateQty: 0, warehouseQty: 0 },
+        { size: "M", immediateQty: 0, warehouseQty: 0 },
+        { size: "L", immediateQty: 0, warehouseQty: 0 },
+        { size: "XL", immediateQty: 0, warehouseQty: 0 }
       ];
       renderSizeStockRows();
     }
 
     if (uploadStatus) {
       uploadStatus.style.color = '#4ade80';
-      uploadStatus.textContent = `✅ Gemini detectó: ${aiResult.name} (${aiResult.player || 'Oficial'}). Ajusta tus tallas y existencias en tienda/bodega.`;
+      uploadStatus.textContent = `✅ Gemini detectó: ${aiResult.name} (${aiResult.player || 'Oficial'}). Las tallas están en 0 para que ingreses tu inventario real.`;
     }
   } catch (err) {
     console.error('Error in autoFillCurrentFormWithGemini:', err);
@@ -1081,75 +1153,33 @@ if (bulkInput) {
   });
 }
 
-// Publish all bulk items with Automatic Gemini Flash AI Pre-Classification
-// Google Lens / Visual Image Search Helper
-window.openGoogleLensSearch = function(imageUrl, productName) {
-  if (imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
-    window.open(`https://lens.google.com/uploadbyurl?url=${encodeURIComponent(imageUrl)}`, '_blank');
-  } else {
-    const q = (productName && !productName.includes('Pendiente')) ? productName : 'jersey deportivo oficial playera';
-    window.open(`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(q)}`, '_blank');
-  }
-};
-
-// Publish all bulk items with High-Speed Parallel Processing
+// Publish all bulk items instantly to Firestore in batch mode (2 Seconds for 100 Photos!)
 window.publishAllBulkProducts = async function() {
   if (bulkItems.length === 0) return;
 
   const btnPublish = document.getElementById('btnPublishBulk');
   const statusEl = document.getElementById('bulkPublishStatus');
-  const progressContainer = document.getElementById('bulkProgressBarContainer');
-  const progressBar = document.getElementById('bulkProgressBar');
-  const progressText = document.getElementById('bulkProgressText');
-  const progressPercent = document.getElementById('bulkProgressPercent');
-  const shouldPreClassify = document.getElementById('bulkPreClassifyToggle')?.checked ?? true;
 
-  if (btnPublish) btnPublish.disabled = true;
-  if (progressContainer) progressContainer.style.display = 'block';
+  if (btnPublish) {
+    btnPublish.disabled = true;
+    btnPublish.innerHTML = '⚡ Subiendo fotos a Pendientes por Catalogar...';
+  }
+  if (statusEl) {
+    statusEl.style.color = '#38bdf8';
+    statusEl.textContent = `⚡ Subiendo ${bulkItems.length} prendas a la base de datos...`;
+  }
 
   try {
     const startTime = Date.now();
     const total = bulkItems.length;
+    const batchSize = 40;
 
-    if (!shouldPreClassify) {
-      // INSTANT BATCH WRITE MODE (2 Seconds for 100 Photos!)
-      if (progressText) progressText.textContent = `⚡ Guardando ${total} fotos en lote instantáneo...`;
-      if (progressBar) progressBar.style.width = '70%';
-      
-      const batchSize = 30;
-      for (let i = 0; i < total; i += batchSize) {
-        const chunk = bulkItems.slice(i, i + batchSize);
-        const batch = db.batch();
-        chunk.forEach(item => {
-          const ref = db.collection('products').doc();
-          batch.set(ref, {
-            name: '⚠️ Prenda Pendiente por Catalogar',
-            team: 'sin-categoria',
-            sport: 'sin-categoria',
-            league: 'General',
-            season: '2024-2025',
-            gender: 'caballero',
-            category: 'sin-categoria',
-            badge: 'ninguno',
-            price: 0,
-            originalPrice: null,
-            sizeStockMap: [],
-            sizes: [],
-            description: 'Pendiente de clasificar tallas y existencias.',
-            imageUrl: item.base64,
-            isPendingInventory: true,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        });
-        await batch.commit();
-      }
-    } else {
-      // HIGH-SPEED CONCURRENT PARALLEL CLASSIFIER (3 Workers simultaneously)
-      const concurrency = 3;
-      let finished = 0;
-
-      async function processSingleItem(item, idx) {
-        let productData = {
+    for (let i = 0; i < total; i += batchSize) {
+      const chunk = bulkItems.slice(i, i + batchSize);
+      const batch = db.batch();
+      chunk.forEach(item => {
+        const ref = db.collection('products').doc();
+        batch.set(ref, {
           name: '⚠️ Prenda Pendiente por Catalogar',
           team: 'sin-categoria',
           sport: 'sin-categoria',
@@ -1166,70 +1196,34 @@ window.publishAllBulkProducts = async function() {
           imageUrl: item.base64,
           isPendingInventory: true,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        try {
-          const compressed = await compressImageForAI(item.base64, 280, 0.5);
-          const aiResult = await analyzeImageWithGeminiVision(compressed);
-
-          if (aiResult) {
-            const tax = resolveTaxonomyFromAI(aiResult);
-            productData.name = aiResult.name || 'Jersey Deportivo';
-            productData.team = tax.teamId || 'sin-categoria';
-            productData.sport = tax.sport || 'futbol-americano';
-            productData.league = tax.league || 'General';
-            productData.season = aiResult.season || '2024-2025';
-            productData.gender = aiResult.gender || 'caballero';
-            productData.category = aiResult.category || 'jerseys';
-            productData.price = aiResult.price || 1499;
-            productData.description = aiResult.description || 'Prenda oficial de utilería bordada.';
-          }
-        } catch (aiErr) {
-          console.warn(`Item ${idx + 1} fallback to filename parser:`, aiErr);
-          const fallback = parseSportsInfoFromFilename(item.filename || '');
-          if (fallback) {
-            productData.name = fallback.name;
-            productData.team = fallback.teamId;
-            productData.category = fallback.category;
-            productData.price = fallback.price;
-          }
-        }
-
-        await db.collection('products').add(productData);
-        finished++;
-        const pct = Math.round((finished / total) * 100);
-        if (progressBar) progressBar.style.width = `${pct}%`;
-        if (progressPercent) progressPercent.textContent = `${pct}%`;
-        if (progressText) progressText.textContent = `⚡ Clasificadas ${finished} de ${total} prendas (${pct}%)...`;
-      }
-
-      // Execute in concurrent parallel chunks
-      for (let i = 0; i < total; i += concurrency) {
-        const chunk = bulkItems.slice(i, i + concurrency);
-        await Promise.all(chunk.map((item, cIdx) => processSingleItem(item, i + cIdx)));
-      }
+        });
+      });
+      await batch.commit();
     }
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    const uploadedCount = bulkItems.length;
     bulkItems = [];
 
     if (document.getElementById('bulkImagesInput')) document.getElementById('bulkImagesInput').value = '';
     if (document.getElementById('bulkPreviewContainer')) document.getElementById('bulkPreviewContainer').style.display = 'none';
-    if (progressContainer) progressContainer.style.display = 'none';
 
-    if (btnPublish) btnPublish.disabled = false;
+    if (btnPublish) {
+      btnPublish.disabled = false;
+      btnPublish.innerHTML = '⚡ Subir Todas las Fotos a "Pendientes por Catalogar" (2 Segundos) →';
+    }
     if (statusEl) statusEl.textContent = '';
 
     await loadAdminProducts();
     filterOnlyPendingCatalog();
 
-    alert(`🚀 ¡Éxito! Se subieron ${uploadedCount} prendas en solo ${elapsed}s. Ahora en "Pendientes por Catalogar" solo tocas cada una para asignar existencias de tienda y bodega.`);
+    alert(`🎉 ¡Éxito! Se subieron ${total} prendas a "Pendientes por Catalogar" en ${elapsed}s.\n\nAhora puedes abrir cada una para poner tallas e inventario.`);
   } catch (err) {
     console.error('Error publishing bulk:', err);
-    alert('Error al procesar fotos: ' + err.message);
-    if (btnPublish) btnPublish.disabled = false;
-    if (progressContainer) progressContainer.style.display = 'none';
+    alert('Error al subir fotos: ' + err.message);
+    if (btnPublish) {
+      btnPublish.disabled = false;
+      btnPublish.innerHTML = '⚡ Subir Todas las Fotos a "Pendientes por Catalogar" (2 Segundos) →';
+    }
   }
 };
 
@@ -1830,9 +1824,6 @@ function renderAdminProductsList(products) {
               <button class="btn" style="padding: 4px 10px; font-size: 11px; font-weight: 900; background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; border: none; border-radius: 6px; cursor: pointer;" onclick="startEditingProduct('${product.id}')">
                 📦 Poner Tallas e Inventario →
               </button>
-              <button class="btn btn-outline" style="border-color: #38bdf8; color: #38bdf8; padding: 3px 8px; font-size: 11px; height: 24px; display: inline-flex; align-items: center; gap: 3px;" onclick="openGoogleLensSearch('${product.imageUrl}', '${(product.name || '').replace(/'/g, "\\'")}')" title="Buscar en Google Lens / Imágenes">
-                🔍 Google Lens
-              </button>
               <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; padding: 3px 8px; font-size: 11px; height: 24px; line-height: 1;" onclick="deleteProduct('${product.id}')" title="Eliminar">
                 🗑️
               </button>
@@ -1950,6 +1941,15 @@ window.startEditingProduct = function(id) {
     onAdminSportChange();
   }
 
+  // Pre-fill Searchable Team Text Input
+  const teamDisplayName = (typeof getTeamName !== 'undefined' ? getTeamName(prod.team) : '') || prod.team || '';
+  if (document.getElementById('prodTeamInput')) {
+    document.getElementById('prodTeamInput').value = (prod.team === 'sin-categoria') ? '' : teamDisplayName;
+  }
+  if (document.getElementById('prodTeam')) {
+    document.getElementById('prodTeam').value = prod.team || '';
+  }
+
   // Pre-fill Season
   if (document.getElementById('prodSeason')) {
     document.getElementById('prodSeason').value = prod.season || '2024-2025';
@@ -1972,17 +1972,17 @@ window.startEditingProduct = function(id) {
   }
   selectedFile = null;
 
-  // Pre-fill size stock rows
+  // Pre-fill size stock rows - strictly initialized with 0
   if (prod.sizeStockMap && prod.sizeStockMap.length > 0) {
     currentSizeStockRows = JSON.parse(JSON.stringify(prod.sizeStockMap));
   } else if (prod.sizes && prod.sizes.length > 0) {
-    currentSizeStockRows = prod.sizes.map(s => ({ size: s, immediateQty: 2, warehouseQty: 5 }));
+    currentSizeStockRows = prod.sizes.map(s => ({ size: s, immediateQty: 0, warehouseQty: 0 }));
   } else {
     currentSizeStockRows = [
-      { size: "S", immediateQty: 2, warehouseQty: 5 },
-      { size: "M", immediateQty: 2, warehouseQty: 5 },
-      { size: "L", immediateQty: 2, warehouseQty: 5 },
-      { size: "XL", immediateQty: 2, warehouseQty: 5 }
+      { size: "S", immediateQty: 0, warehouseQty: 0 },
+      { size: "M", immediateQty: 0, warehouseQty: 0 },
+      { size: "L", immediateQty: 0, warehouseQty: 0 },
+      { size: "XL", immediateQty: 0, warehouseQty: 0 }
     ];
   }
 
@@ -2048,7 +2048,12 @@ document.getElementById('productForm')?.addEventListener('submit', async (e) => 
   
   try {
     const name = document.getElementById('prodName').value.trim();
-    const team = document.getElementById('prodTeam').value;
+    const teamInputVal = document.getElementById('prodTeamInput')?.value.trim();
+    let team = document.getElementById('prodTeam')?.value;
+    if (!team && teamInputVal) {
+      team = teamInputVal.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    }
+    if (!team) team = 'otros';
     const season = document.getElementById('prodSeason')?.value || '2024-2025';
     const gender = document.getElementById('prodGender').value;
     const category = document.getElementById('prodCategory').value;
