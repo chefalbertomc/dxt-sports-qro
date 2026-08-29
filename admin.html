@@ -21,9 +21,9 @@
     // Register Service Worker for PWA install support & Auto-update
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=330.2')
+        navigator.serviceWorker.register('./sw.js?v=330.3')
           .then(reg => {
-            console.log('✅ SW Admin v330.2 registrado:', reg.scope);
+            console.log('✅ SW Admin v330.3 registrado:', reg.scope);
             reg.update();
             document.addEventListener('visibilitychange', () => {
               if (document.visibilityState === 'visible') {
@@ -104,14 +104,14 @@
           <span style="color:#ff1e38;">DXT</span>
           <span style="color:#00b0ff;">SPORTS</span>
           <span style="background:#ff1e38; color:#fff; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:2px;">ADMIN</span>
-          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v330.0</span>
+          <span style="background:#22c55e; color:#000; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px;">v330.3</span>
         </div>
-        <div class="logo-text-sub">LOGÍSTICA INTEGRAL · ADMIN PANEL v330.0 · OPTIMIZADO MÓVIL & LAPTOP</div>
+        <div class="logo-text-sub">LOGÍSTICA INTEGRAL · ADMIN PANEL v330.3 · OPTIMIZADO MÓVIL & LAPTOP</div>
       </div>
     </a>
     <div class="nav-actions">
       <span style="background:rgba(34, 197, 94, 0.15); border:1px solid #22c55e; color:#22c55e; font-size:10px; font-weight:800; padding:4px 8px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
-        🟢 v330.0 (Panel Admin Rediseñado)
+        🟢 v330.3 (Panel Admin Rediseñado)
       </span>
       <a href="index.html" target="_blank" rel="noopener" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">👁️ Ver Tienda ↗</a>
       <button id="btnLogout" class="btn btn-outline" style="display: none; font-size: 11px; padding: 6px 12px; border-color: #ef4444; color: #ef4444;">Salir</button>
@@ -1080,9 +1080,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js"></script>
   
-  <script src="js/firebase-config.js?v=330.2"></script>
-  <script src="js/notifications.js?v=330.2"></script>
-  <script src="js/teams.js?v=330.2"></script>
-  <script src="js/admin-v2.js?v=330.2"></script>
+  <script src="js/firebase-config.js?v=330.3"></script>
+  <script src="js/notifications.js?v=330.3"></script>
+  <script src="js/teams.js?v=330.3"></script>
+  <script src="js/admin-v2.js?v=330.3"></script>
 </body>
 </html>
