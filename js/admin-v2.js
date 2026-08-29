@@ -846,7 +846,14 @@ function resizeImage(file, maxWidth = 600, maxHeight = 600, quality = 0.70) {
 const DEFAULT_GEMINI_KEY = atob('QVEuQWI4Uk42SVNNa0RzZjA2SU1od09zZTJSZTN2OFh6RVJfU1lwZVRhS080X1ZEbDROOFE=');
 
 function getStoredGeminiApiKey() {
-  return localStorage.getItem('dxt_gemini_api_key') || DEFAULT_GEMINI_KEY;
+  // Limpiar llaves viejas que puedan estar en localStorage
+  const stored = localStorage.getItem('dxt_gemini_api_key');
+  if (stored && stored === atob('QVEuQWI4Uk42SUdDWDA0aWhlY2FQYWJmLTh4Y19yOUg2UUV3VkE4RnFpVTZkcXg2b2g0S1E=')) {
+    // Borrar llave vieja automáticamente
+    localStorage.removeItem('dxt_gemini_api_key');
+    return DEFAULT_GEMINI_KEY;
+  }
+  return stored || DEFAULT_GEMINI_KEY;
 }
 
 window.toggleGeminiKeySettings = function() {
@@ -1019,10 +1026,7 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas.`;
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey
-        },
+        headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
         body: JSON.stringify({
           contents: [{
