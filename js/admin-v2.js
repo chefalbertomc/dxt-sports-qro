@@ -45,8 +45,14 @@ async function isAuthorizedAdminEmail(email) {
   return false;
 }
 
+// Bandera para acceso local (evita que Firebase cierre sesión al usuario local)
+let localAccessGranted = false;
+
 // Handle Auth State
 auth.onAuthStateChanged(async (user) => {
+  // Si ya se concedió acceso local, no interferir
+  if (localAccessGranted) return;
+
   if (user) {
     const isAllowed = await isAuthorizedAdminEmail(user.email);
     if (!isAllowed) {
@@ -166,6 +172,9 @@ document.getElementById('btnLogin')?.addEventListener('click', async () => {
 
 // Quick 1-Click Master Admin Access
 window.quickAdminAccess = function(email) {
+  // Marcar acceso local para que Firebase no interfiera
+  localAccessGranted = true;
+
   const loginSec = document.getElementById('loginSection');
   const adminSec = document.getElementById('adminSection');
   const manageSec = document.getElementById('manageSection');
@@ -189,7 +198,11 @@ window.quickAdminAccess = function(email) {
 // Logout
 if (btnLogout) {
   btnLogout.addEventListener('click', () => {
-    auth.signOut();
+    localAccessGranted = false;
+    auth.signOut().catch(() => {
+      // Si no hay sesión Firebase, solo recargar la página
+      window.location.reload();
+    });
   });
 }
 
