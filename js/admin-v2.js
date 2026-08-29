@@ -830,7 +830,7 @@ function resizeImage(file, maxWidth = 600, maxHeight = 600, quality = 0.70) {
 // ============================================
 // GEMINI AI VISION BULK SCANNING & CLASSIFIER
 // ============================================
-const DEFAULT_GEMINI_KEY = atob('QVEuQWI4Uk42SUdDWDA0aWhlY2FQYWJmLTh4Y19yOUg2UUV3VkE4RnFpVTZkcXg2b2g0S1E=');
+const DEFAULT_GEMINI_KEY = atob('QVEuQWI4Uk42SVNNa0RzZjA2SU1od09zZTJSZTN2OFh6RVJfU1lwZVRhS080X1ZEbDROOFE=');
 
 function getStoredGeminiApiKey() {
   return localStorage.getItem('dxt_gemini_api_key') || DEFAULT_GEMINI_KEY;
